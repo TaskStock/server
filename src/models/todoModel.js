@@ -22,4 +22,25 @@ module.exports = {
                 throw e;
             });
     },
+    updateTodo: async(t_data)=>{
+        const todo_id = t_data.todo_id;
+        const title = t_data.title;
+        const content = t_data.content;
+        const level = t_data.level;
+        const user_id = t_data.user_id;
+        const project_id = t_data.project_id;
+
+        const query = "update \"Todo\" set title=$1, content=$2, level=$3, user_id=$4, project_id=$5 where todo_id=$6";
+        const values = [title, content, level, user_id, project_id, todo_id];
+
+        await db.query(query, values)
+            .then(res => {
+                console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }

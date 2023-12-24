@@ -13,4 +13,15 @@ module.exports = {
         
         res.json({result: "success"});
     },
+    updateTodo: async(req, res, next) =>{
+        const todoData = req.body;
+        
+        try{
+            await todoModel.updateTodo(todoData);
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
 }
