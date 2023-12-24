@@ -15,11 +15,11 @@ module.exports = {
                 for (let i = 0; i < 6; i++) {
                     authCode += Math.floor(Math.random() * 10);
                 } //여섯자리 숫자로 이루어진 인증코드 생성(string)
-            const mailResult = await mailer(authCode);
-            if (mailResult) {
-                res.json({ result: "success", authCode: authCode });
-            }
-        } 
+                const mailResult = await mailer(emailData.email, authCode);
+                if (mailResult) {
+                    res.json({ result: "success", authCode: authCode });
+                }
+            } 
         } catch (error) {
             console.log(error);
             res.json({ result: "fail" });
