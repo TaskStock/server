@@ -62,4 +62,21 @@ module.exports = {
                 throw e;
             });
     },
+    deleteTodo: async(t_data)=>{
+        const todo_id = t_data.todo_id;
+        const user_id = t_data.user_id;
+
+        const query = "delete from \"Todo\" where todo_id=$1 and user_id=$2";
+        const values = [todo_id, user_id];
+
+        await db.query(query, values)
+            .then(res => {
+                console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }

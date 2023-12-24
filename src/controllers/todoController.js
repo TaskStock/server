@@ -38,4 +38,16 @@ module.exports = {
         
         res.json({result: "success"});
     },
+    // 유저 id와 todo id를 받아 해당 todo 삭제
+    deleteTodo: async(req, res, next) =>{
+        const todoData = req.body;
+        
+        try{
+            await todoModel.deleteTodo(todoData);
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
 }

@@ -6,5 +6,6 @@ const todoController = require('../controllers/todoController.js');
 router.post('/new', todoController.newTodo);
 router.get('/read', todoController.readTodo);
 router.post('/update', todoController.updateTodo);
+router.delete('/delete', todoController.deleteTodo);
 
 module.exports = router;
