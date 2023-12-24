@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 //Router
 const postRouter = require("./routers/postRouter.js");
 const accountRouter = require("./routers/accountRouter.js");
+const todoRouter = require("./routers/todoRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
 
 app.use("/post", postRouter);
 app.use("/account", accountRouter);
+app.use("/todo", todoRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {
