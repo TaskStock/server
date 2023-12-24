@@ -10,12 +10,10 @@ module.exports = {
         const query = "insert into \"User\" (id, password, name, nickname) VALUES ($1, $2, $3, $4) RETURNING user_id";  // returning으로 user_id를 반환하도록 설정
         const values = [id, password, name, nickname];
 
-        let userId;
-
-        await db.query(query, values)
+        const userId = await db.query(query, values)
             .then(res => {
                 console.log(res.rows[0]);
-                userId = res.rows[0].user_id;
+                return res.rows[0].user_id;
             })
             .catch(e => {
                 console.error(e.stack);

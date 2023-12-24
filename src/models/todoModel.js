@@ -22,6 +22,25 @@ module.exports = {
                 throw e;
             });
     },
+    readTodo: async(t_data)=>{
+        const user_id = t_data.user_id;
+        const date = t_data.date;   // 클라이언트로부터 받은 시간 정보를 UTC 기준으로 변환한 후 년,월,일까지 저장 ex. 2023-12-24
+
+        const query = "select * from \"Todo\" where user_id=$1 and DATE(date)=$2";
+        const values = [user_id, date];
+
+        const todos = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return todos;
+    },
     updateTodo: async(t_data)=>{
         const todo_id = t_data.todo_id;
         const title = t_data.title;
