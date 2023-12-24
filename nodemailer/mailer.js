@@ -36,7 +36,7 @@ module.exports = async (email, code) => {
     const htmlBody = codeHTML(code);
     try {
         const info = await transporter.sendMail({
-            from: process.env.OAUTH_TS_MAIL,
+            from: `TaskStock <${process.env.OAUTH_USER}>`,
             to: email,
             subject: "[TaskStock] 이메일 인증 코드입니다.",
             html: htmlBody,
