@@ -21,15 +21,17 @@ module.exports = {
         return codeId 
     },
     checkCode: async(inputData) => {
-        const query = 'SELECT authCode FROM "Code" WHERE code_id = $1';
-        const codeId = inputData.codeId;
+        const query = 'SELECT auth_code FROM "Code" WHERE code_id = $1';
+        const codeId = [inputData.codeId];
         const {rows} = await db.query(query, codeId);
         
-        const authCode = rows[0].authCode; // 인증코드
+        const authCode = rows[0].auth_code; // 인증코드
         const inputCode = inputData.inputCode; // 사용자가 입력한 코드
 
         if (authCode == inputCode) {
             return true;
+        } else {
+            return false;
         }
 
     },

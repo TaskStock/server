@@ -37,7 +37,8 @@ module.exports = {
             } else {
                 res.status(200).json({ result: "fail" });
             }
-        } catch {
+        } catch (error) {
+            console.log(error);
             res.status(500).json({ result: "fail", message: "서버 오류" });
         }
         
