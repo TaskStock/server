@@ -6,7 +6,7 @@ module.exports = {
     sendMail: async (req, res) => {
         try {
             const emailData = req.body;
-            const availible = await accountModel.availible(emailData);
+            const availible = await accountModel.checkAvailible(emailData);
 
             if (!availible) {
                 res.status(200).json({ result: "fail" , message: "이미 가입된 이메일입니다."});
@@ -33,9 +33,14 @@ module.exports = {
             const checkResult = await accountModel.checkCode(inputData);
             
             if (checkResult) {
-                res.status(200).json({ result: "success" });
+                
+                const wellDeleted = await accountModel.deleteCode(inputData);
+                if (!wellDeleted) {
+                    res.status(500).json({ result: "success", message: "인증은 성공, 코드 삭제에서 오류" });
+                }
+                res.status(200).json({ result: "success", message: "코드 DB에서 삭제" });
             } else {
-                res.status(200).json({ result: "fail" });
+                res.status(200).json({ result: "fail", message: "인증코드가 일치하지 않음" });
             }
         } catch (error) {
             console.log(error);

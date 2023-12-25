@@ -1,7 +1,7 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    availible: async(emailData) => {
+    checkAvailible: async(emailData) => {
         const query = 'SELECT user_id FROM "User" WHERE email = $1';
         const email = [emailData.email];
         console.log(email);
@@ -13,7 +13,7 @@ module.exports = {
         }
     },
     saveCode: async(authCode) => {
-        const query = 'INSERT INTO "Code" (authCode) VALUES ($1) RETURNING code_id';
+        const query = 'INSERT INTO "Code" (auth_code) VALUES ($1) RETURNING code_id';
         const code = [authCode];
         const {rows} = await db.query(query, code); // 구조분해 할당
         const codeId = rows[0].code_id; 
@@ -24,7 +24,7 @@ module.exports = {
         const query = 'SELECT auth_code FROM "Code" WHERE code_id = $1';
         const codeId = [inputData.codeId];
         const {rows} = await db.query(query, codeId);
-        
+
         const authCode = rows[0].auth_code; // 인증코드
         const inputCode = inputData.inputCode; // 사용자가 입력한 코드
 
@@ -33,7 +33,16 @@ module.exports = {
         } else {
             return false;
         }
-
     },
-
-    }
+    deleteCode: async(inputData) => {
+        const query = 'DELETE FROM "Code" WHERE code_id = $1';
+        const code = [inputData.codeId];
+        deleteResult = await db.query(query, code);
+        
+        if (deleteResult.rowCount === 1) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+}
