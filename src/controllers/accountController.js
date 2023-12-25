@@ -24,7 +24,7 @@ module.exports = {
             } 
         } catch (error) {
             console.log(error);
-            res.status(500).json({ result: "fail", message: "서버 오류"});
+            res.status(500).json({ result: "error", message: "서버 오류"});
         }
     },
     checkCode: async (req, res) => {
@@ -44,7 +44,7 @@ module.exports = {
             }
         } catch (error) {
             console.log(error);
-            res.status(500).json({ result: "fail", message: "서버 오류" });
+            res.status(500).json({ result: "error", message: "서버 오류" });
         }
         
     
