@@ -95,11 +95,10 @@ module.exports = {
             const registerData = req.body;
             const userData = await accountModel.register(registerData);
 
-            if (req.body.email == inserted_email) {
+            if (req.body.email == userData.email) {
                 
                 //accessToken 처리
                 const [accessToken, expiresIn] = generateAccessToken(userData);
-                console.log(expiresIn)
                 const utcNow = dayjs.utc();
                 const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
                 console.log(expireTime)
@@ -111,7 +110,7 @@ module.exports = {
                 console.log("회원가입 성공");
                 res.status(200).json({ 
                     result: "success", 
-                    message: `${inserted_email} 회원가입 성공`, 
+                    message: `${userData.email} 회원가입 성공`, 
                     accessToken: accessToken, 
                     refreshToken: refreshToken,
                     expireTime: expireTime
@@ -160,8 +159,8 @@ module.exports = {
     logout: async (req, res) => {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
-            const refreshToken = req.body.refreshToken;
-            const deleteResult = await accountModel.deleteRefreshToken(refreshToken);
+            const userEmail = req.user.email; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
+            const deleteResult = await accountModel.deleteRefreshToken(userEmail);
             
             if (deleteResult) {
                 res.status(200).json({ 
