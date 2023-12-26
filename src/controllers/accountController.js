@@ -1,7 +1,7 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
-const dayjs = require('dayjs');
+const dayjs = require('dayjs');x
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
@@ -102,6 +102,7 @@ module.exports = {
                 const refreshToken = generateRefreshToken(req.body.email);
                 await accountModel.saveRefreshToken(req.body.email, refreshToken);
 
+                console.log("회원가입 성공");
                 res.status(200).json({ 
                     result: "success", 
                     message: `${inserted_email} 회원가입 성공`, 
@@ -109,12 +110,11 @@ module.exports = {
                     refreshToken: refreshToken,
                     expireTime: expireTime
                 });
-                console.log("회원가입 성공");
             } else {
+                console.log("회원가입 오류")
                 res.status(200).json({ 
                     result: "fail", 
                     message: "회원가입 실패. 잘못된 이메일이 DB에 들어감" });
-                console.log("회원가입 실패")
             }
         } catch (error) {
             console.log(error);
@@ -123,6 +123,31 @@ module.exports = {
                 message: "서버 오류"
             });
         }
-
     },
+    //이메일 로그인
+    loginEmail: async (req, res) => {
+        try {
+            const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
+            const [accessToken, expiresIn] = generateAccessToken(userData.email);
+            const utcNow = dayjs.utc();
+            const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+            const refreshToken = generateRefreshToken(userData.email);
+            await accountModel.saveRefreshToken(userData.email, refreshToken);
+
+            console.log("로그인 성공");
+            res.status(200).json({ 
+                result: "success", 
+                message: `${userData.email} 로그인 성공`, 
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+                expireTime: expireTime
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    }
 }
