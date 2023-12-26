@@ -1,7 +1,7 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
-const dayjs = require('dayjs');x
+const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
@@ -142,6 +142,29 @@ module.exports = {
                 refreshToken: refreshToken,
                 expireTime: expireTime
             });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    }, logout: async (req, res) => {
+        try {
+            // 로그아웃 시 refreshToken 삭제, accessToken은 클라이언트에서 삭제
+            const refreshToken = req.body.refreshToken;
+            const deleteResult = await accountModel.deleteRefreshToken(refreshToken);
+            if (deleteResult) {
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "로그아웃 성공" 
+                });
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "로그아웃 실패" 
+                });
+            }
         } catch (error) {
             console.log(error);
             res.status(500).json({ 

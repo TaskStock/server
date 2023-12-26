@@ -30,9 +30,9 @@ passport.use(new LocalStrategy({
     }
 ));
 
-passport.use(new JWTStrategy({ // ?세부 로직 로그인 구현 후 수정 필요
+passport.use(new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey: process.env.JWT_SECRET
+    secretOrKey: process.env.ACCESS_TOKEN_SECRET
 },
     async (jwtPayload, done) => {
         try {
