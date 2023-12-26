@@ -5,14 +5,20 @@ const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
-function generateAccessToken(email) {
+// 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
+function generateAccessToken(userData) {
     const expiresIn = "1h";
+    const email = userData.email;
     const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+
     return [accessToken, expiresIn];
 }
 
-function generateRefreshToken(email) {
-    return jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET);
+function generateRefreshToken(userData) {
+    const email = userData.email;
+    const refreshToken = jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET);
+    
+    return refreshToken;
 }
 
 module.exports = {
@@ -87,19 +93,19 @@ module.exports = {
     register: async (req, res) => {
         try {
             const registerData = req.body;
-            const inserted_email = await accountModel.register(registerData);
+            const userData = await accountModel.register(registerData);
 
             if (req.body.email == inserted_email) {
                 
                 //accessToken 처리
-                const [accessToken, expiresIn] = generateAccessToken(req.body.email);
+                const [accessToken, expiresIn] = generateAccessToken(userData);
                 console.log(expiresIn)
                 const utcNow = dayjs.utc();
                 const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
                 console.log(expireTime)
 
                 // refreshToken 처리
-                const refreshToken = generateRefreshToken(req.body.email);
+                const refreshToken = generateRefreshToken(userData);
                 await accountModel.saveRefreshToken(req.body.email, refreshToken);
 
                 console.log("회원가입 성공");
@@ -128,10 +134,10 @@ module.exports = {
     loginEmail: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const [accessToken, expiresIn] = generateAccessToken(userData.email);
+            const [accessToken, expiresIn] = generateAccessToken(userData);
             const utcNow = dayjs.utc();
             const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
-            const refreshToken = generateRefreshToken(userData.email);
+            const refreshToken = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(userData.email, refreshToken);
 
             console.log("로그인 성공");
@@ -149,11 +155,14 @@ module.exports = {
                 message: "서버 오류"
             });
         }
-    }, logout: async (req, res) => {
+    }, 
+    //로그아웃
+    logout: async (req, res) => {
         try {
-            // 로그아웃 시 refreshToken 삭제, accessToken은 클라이언트에서 삭제
+            // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const refreshToken = req.body.refreshToken;
             const deleteResult = await accountModel.deleteRefreshToken(refreshToken);
+            
             if (deleteResult) {
                 res.status(200).json({ 
                     result: "success", 

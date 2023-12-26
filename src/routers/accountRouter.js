@@ -9,6 +9,6 @@ router.post('/sendMail', accountController.sendMail);
 router.post('/checkCode', accountController.checkCode);
 router.post('/register', accountController.register);
 router.post('/loginEmail', passport.authenticate('local', { session: false }), accountController.loginEmail);
-router.post('/logout', accountController.logout);
+router.delete('/logout', accountController.logout);
 
 module.exports = router;
