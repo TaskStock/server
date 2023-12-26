@@ -1,5 +1,19 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
+const jwt = require('jsonwebtoken');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
+
+function generateAccessToken(email) {
+    const expiresIn = "1h";
+    const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+    return [accessToken, expiresIn];
+}
+
+function generateRefreshToken(email) {
+    return jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET);
+}
 
 module.exports = {
     //이메일 인증
@@ -9,7 +23,10 @@ module.exports = {
             const availible = await accountModel.checkAvailible(emailData);
 
             if (!availible) {
-                res.status(200).json({ result: "fail" , message: "이미 가입된 이메일입니다."});
+                res.status(200).json({ 
+                    result: "fail" ,
+                    message: "이미 가입된 이메일입니다."
+                });
             } else {
                 let authCode = '';
                 for (let i = 0; i < 6; i++) {
@@ -19,14 +36,21 @@ module.exports = {
                 if (mailResult) {
                     const codeId = await accountModel.saveCode(authCode);
                     
-                    res.status(200).json({ result: "success", codeId: codeId});
+                    res.status(200).json({ 
+                        result: "success", 
+                        codeId: codeId
+                    });
                 }
             } 
         } catch (error) {
             console.log(error);
-            res.status(500).json({ result: "error", message: "서버 오류"});
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
         }
     },
+    //인증코드 확인
     checkCode: async (req, res) => {
         try {
             const inputData = req.body;
@@ -36,17 +60,69 @@ module.exports = {
                 
                 const wellDeleted = await accountModel.deleteCode(inputData);
                 if (!wellDeleted) {
-                    res.status(500).json({ result: "success", message: "인증은 성공, 코드 삭제에서 오류" });
+                    res.status(500).json({ 
+                        result: "success", 
+                        message: "인증은 성공, 코드 삭제에서 오류"
+                    });
                 }
-                res.status(200).json({ result: "success", message: "코드 DB에서 삭제" });
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "코드 DB에서 삭제" 
+                });
             } else {
-                res.status(200).json({ result: "fail", message: "인증코드가 일치하지 않음" });
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "인증코드가 일치하지 않음" 
+                });
             }
         } catch (error) {
             console.log(error);
-            res.status(500).json({ result: "error", message: "서버 오류" });
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
         }
-        
-    
-    }
+    },
+    //이메일 회원가입
+    register: async (req, res) => {
+        try {
+            const registerData = req.body;
+            const inserted_email = await accountModel.register(registerData);
+
+            if (req.body.email == inserted_email) {
+                
+                //accessToken 처리
+                const [accessToken, expiresIn] = generateAccessToken(req.body.email);
+                console.log(expiresIn)
+                const utcNow = dayjs.utc();
+                const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+                console.log(expireTime)
+
+                // refreshToken 처리
+                const refreshToken = generateRefreshToken(req.body.email);
+                await accountModel.saveRefreshToken(req.body.email, refreshToken);
+
+                res.status(200).json({ 
+                    result: "success", 
+                    message: `${inserted_email} 회원가입 성공`, 
+                    accessToken: accessToken, 
+                    refreshToken: refreshToken,
+                    expireTime: expireTime
+                });
+                console.log("회원가입 성공");
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "회원가입 실패. 잘못된 이메일이 DB에 들어감" });
+                console.log("회원가입 실패")
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+
+    },
 }
