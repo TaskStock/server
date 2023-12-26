@@ -78,6 +78,7 @@ module.exports = {
         const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
         await db.query(query, [email, refreshToken]);
     },
+
     getUser: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         const query = 'SELECT * FROM "User" WHERE email = $1';
         const {rows} = await db.query(query, [email]);
@@ -99,5 +100,22 @@ module.exports = {
         } else {
             return false;
         }
+    },
+    getUserData: async(user_id) => {
+        const query = 'SELECT * FROM "User" WHERE user_id = $1';
+        const values = [user_id];
+
+        const user = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return user;
+
     },
 }
