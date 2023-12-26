@@ -27,6 +27,7 @@ module.exports = {
             res.status(500).json({ result: "error", message: "서버 오류"});
         }
     },
+    //인증코드 확인
     checkCode: async (req, res) => {
         try {
             const inputData = req.body;
@@ -46,7 +47,24 @@ module.exports = {
             console.log(error);
             res.status(500).json({ result: "error", message: "서버 오류" });
         }
-        
-    
-    }
+    },
+    //이메일 회원가입
+    register: async (req, res) => {
+        try {
+            const registerData = req.body;
+            const registerResult = await accountModel.register(registerData);
+
+            if (req.body.email == registerData.email) {
+                res.status(200).json({ result: "success", message: `${registerResult.email} 회원가입 성공` });
+                console.log("회원가입 성공");
+            } else {
+                res.status(200).json({ result: "fail", message: "회원가입 실패. 잘못된 이메일이 DB에 들어감" });
+                console.log("회원가입 실패")
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ result: "error", message: "서버 오류" });
+        }
+
+    },
 }

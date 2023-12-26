@@ -12,9 +12,6 @@
         { name: 'id', tableID: 12345, columnID: 1, dataTypeID: 23, ... },
         { name: 'username', tableID: 12345, columnID: 2, dataTypeID: 1043, ... },
         { name: 'email', tableID: 12345, columnID: 3, dataTypeID: 1043, ... }
-    // ...
-    ],
-  // ... 추가적인 내부 속성들이 있을 수 있음
 }
 */
 const db = require('../config/db.js');
@@ -64,5 +61,17 @@ module.exports = {
         } else {
             return false;
         }
+    },
+    register: async(registerData) => {
+        const {email, userName, password, isAgree} = registerData;
+        // 비밀번호 암호화
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        //email, password user_name, hide, follower_count, following_count, premium, cumulative_value, value_month_age, created_time, image, introduce, group_id, is_agree
+        const query = 'INSERT INTO "User" (email, password, user_name, is_agree) VALUES ($1, $2, $3, $4) RETRUNING email';
+        const {rows} = await db.query(query, [email, hashedPassword, userName, isAgree]);
+        
+        const user_email = rows[0].email;
+        return user_email;
     },
 }
