@@ -79,4 +79,20 @@ module.exports = {
         const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2) RETURNING email';
         await db.query(query, [email, refreshToken]);
     },
+    getUserData: async(user_id) => {
+        const query = 'SELECT * FROM "User" WHERE user_id = $1';
+        const values = [user_id];
+
+        const user = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return user;
+    },
 }
