@@ -75,4 +75,8 @@ module.exports = {
         const user_email = rows[0].email;
         return user_email;
     },
+    saveRefreshToken: async(email, refreshToken) => {
+        const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2) RETURNING email';
+        await db.query(query, [email, refreshToken]);
+    },
 }
