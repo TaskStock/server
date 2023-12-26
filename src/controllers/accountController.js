@@ -5,14 +5,20 @@ const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
-function generateAccessToken(email) {
+// 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
+function generateAccessToken(userData) {
     const expiresIn = "1h";
+    const email = userData.email;
     const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+
     return [accessToken, expiresIn];
 }
 
-function generateRefreshToken(email) {
-    return jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET);
+function generateRefreshToken(userData) {
+    const email = userData.email;
+    const refreshToken = jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET);
+    
+    return refreshToken;
 }
 
 module.exports = {
@@ -87,34 +93,33 @@ module.exports = {
     register: async (req, res) => {
         try {
             const registerData = req.body;
-            const inserted_email = await accountModel.register(registerData);
+            const userData = await accountModel.register(registerData);
 
-            if (req.body.email == inserted_email) {
+            if (req.body.email == userData.email) {
                 
                 //accessToken 처리
-                const [accessToken, expiresIn] = generateAccessToken(req.body.email);
-                console.log(expiresIn)
+                const [accessToken, expiresIn] = generateAccessToken(userData);
                 const utcNow = dayjs.utc();
                 const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
                 console.log(expireTime)
 
                 // refreshToken 처리
-                const refreshToken = generateRefreshToken(req.body.email);
+                const refreshToken = generateRefreshToken(userData);
                 await accountModel.saveRefreshToken(req.body.email, refreshToken);
 
+                console.log("회원가입 성공");
                 res.status(200).json({ 
                     result: "success", 
-                    message: `${inserted_email} 회원가입 성공`, 
+                    message: `${userData.email} 회원가입 성공`, 
                     accessToken: accessToken, 
                     refreshToken: refreshToken,
                     expireTime: expireTime
                 });
-                console.log("회원가입 성공");
             } else {
+                console.log("회원가입 오류")
                 res.status(200).json({ 
                     result: "fail", 
                     message: "회원가입 실패. 잘못된 이메일이 DB에 들어감" });
-                console.log("회원가입 실패")
             }
         } catch (error) {
             console.log(error);
@@ -123,6 +128,57 @@ module.exports = {
                 message: "서버 오류"
             });
         }
-
     },
+    //이메일 로그인
+    loginEmail: async (req, res) => {
+        try {
+            const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
+            const [accessToken, expiresIn] = generateAccessToken(userData);
+            const utcNow = dayjs.utc();
+            const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+            const refreshToken = generateRefreshToken(userData);
+            await accountModel.saveRefreshToken(userData.email, refreshToken);
+
+            console.log("로그인 성공");
+            res.status(200).json({ 
+                result: "success", 
+                message: `${userData.email} 로그인 성공`, 
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+                expireTime: expireTime
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    }, 
+    //로그아웃
+    logout: async (req, res) => {
+        try {
+            // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
+            const userEmail = req.user.email; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
+            const deleteResult = await accountModel.deleteRefreshToken(userEmail);
+            
+            if (deleteResult) {
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "로그아웃 성공" 
+                });
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "로그아웃 실패" 
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    }
 }

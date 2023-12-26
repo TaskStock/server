@@ -21,7 +21,6 @@ module.exports = {
     checkAvailible: async(emailData) => {
         const query = 'SELECT user_id FROM "User" WHERE email = $1';
         const email = emailData.email;
-        console.log(email);
 
         const {rowCount} = await db.query(query, [email]);
         if(rowCount === 0){ // 가입된 이메일이 없을 경우
@@ -69,15 +68,38 @@ module.exports = {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         //email, password user_name, hide, follower_count, following_count, premium, cumulative_value, value_month_age, created_time, image, introduce, group_id, is_agree
-        const query = 'INSERT INTO "User" (email, password, user_name, is_agree) VALUES ($1, $2, $3, $4) RETURNING email';
+        const query = 'INSERT INTO "User" (email, password, user_name, is_agree) VALUES ($1, $2, $3, $4) RETURNING *';
         const {rows} = await db.query(query, [email, hashedPassword, userName, isAgree]);
         
-        const user_email = rows[0].email;
-        return user_email;
+        const userData = rows[0];
+        return userData;
     },
     saveRefreshToken: async(email, refreshToken) => {
-        const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2) RETURNING email';
+        const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
         await db.query(query, [email, refreshToken]);
+    },
+
+    getUser: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
+        const query = 'SELECT * FROM "User" WHERE email = $1';
+        const {rows} = await db.query(query, [email]);
+        const userData = rows[0];
+        if (userData === undefined) {
+            return null;
+        } else {
+            return userData;
+        }
+    },
+    deleteRefreshToken: async(userEmail) => {
+        console.log(userEmail)
+        const query = 'DELETE FROM "Token" WHERE email = $1';
+        const {rowCount} = await db.query(query, [userEmail]);
+        
+
+        if (rowCount === 1) {
+            return true;
+        } else {
+            return false;
+        }
     },
     getUserData: async(user_id) => {
         const query = 'SELECT * FROM "User" WHERE user_id = $1';
@@ -94,5 +116,6 @@ module.exports = {
                 throw e;
             });
         return user;
+
     },
 }
