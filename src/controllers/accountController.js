@@ -52,10 +52,10 @@ module.exports = {
     register: async (req, res) => {
         try {
             const registerData = req.body;
-            const registerResult = await accountModel.register(registerData);
+            const inserted_email = await accountModel.register(registerData);
 
-            if (req.body.email == registerData.email) {
-                res.status(200).json({ result: "success", message: `${registerResult.email} 회원가입 성공` });
+            if (req.body.email == inserted_email) {
+                res.status(200).json({ result: "success", message: `${inserted_email} 회원가입 성공` });
                 console.log("회원가입 성공");
             } else {
                 res.status(200).json({ result: "fail", message: "회원가입 실패. 잘못된 이메일이 DB에 들어감" });

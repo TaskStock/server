@@ -15,6 +15,7 @@
 }
 */
 const db = require('../config/db.js');
+const bcrypt = require('bcrypt');
 
 module.exports = {
     checkAvailible: async(emailData) => {
@@ -68,7 +69,7 @@ module.exports = {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         //email, password user_name, hide, follower_count, following_count, premium, cumulative_value, value_month_age, created_time, image, introduce, group_id, is_agree
-        const query = 'INSERT INTO "User" (email, password, user_name, is_agree) VALUES ($1, $2, $3, $4) RETRUNING email';
+        const query = 'INSERT INTO "User" (email, password, user_name, is_agree) VALUES ($1, $2, $3, $4) RETURNING email';
         const {rows} = await db.query(query, [email, hashedPassword, userName, isAgree]);
         
         const user_email = rows[0].email;
