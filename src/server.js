@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 //Router
 const accountRouter = require("./routers/accountRouter.js");
 const todoRouter = require("./routers/todoRouter.js");
+const followRouter = require("./routers/followRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
 
 app.use("/account", accountRouter);
 app.use("/todo", todoRouter);
+app.use("/follow", followRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {
