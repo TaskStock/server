@@ -32,7 +32,7 @@ module.exports = {
     saveCode: async(authCode) => {
         const query = 'INSERT INTO "Code" (auth_code) VALUES ($1) RETURNING code_id';
         const code = authCode;
-        const {rows} = await db.query(query, [code]); // 구조분해 할당
+        const {rows} = await db.query(query, [code]); 
         const codeId = rows[0].code_id; 
         console.log("코드 db에 저장 완료");
         return codeId 
@@ -54,7 +54,10 @@ module.exports = {
     deleteCode: async(inputData) => {
         const query = 'DELETE FROM "Code" WHERE code_id = $1';
         const code = inputData.codeId;
-        deleteResult = await db.query(query, [code]);
+        deleteResult = await db.query(query, [code])
+            .then(e => {
+                console.log(e.stack);
+            });
         
         if (deleteResult.rowCount === 1) {
             return true;
@@ -63,20 +66,30 @@ module.exports = {
         }
     },
     register: async(registerData) => {
-        const {email, userName, password, isAgree} = registerData;
+        const {email, userName, password, isAgree, theme} = registerData;        
         // 비밀번호 암호화
         const hashedPassword = await bcrypt.hash(password, 10);
         
         //email, password user_name, hide, follower_count, following_count, premium, cumulative_value, value_month_age, created_time, image, introduce, group_id, is_agree
-        const query = 'INSERT INTO "User" (email, password, user_name, is_agree) VALUES ($1, $2, $3, $4) RETURNING *';
-        const {rows} = await db.query(query, [email, hashedPassword, userName, isAgree]);
+        const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
+        const {rows} = await db.query(query, [email, hashedPassword, userName]);
         
+        //초기 설정 저장
+        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, screeen) VALUES ($1, $2, $3, $4) ';
+        await db.query(settingQuery, [rows[0].user_id, isAgree, theme, '임시 데이터'])
+            .then(e => {
+                console.log(e.stack);
+            })
+
         const userData = rows[0];
         return userData;
     },
     saveRefreshToken: async(email, refreshToken) => {
         const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
-        await db.query(query, [email, refreshToken]);
+        await db.query(query, [email, refreshToken])
+            .then(e => {
+                console.log(e.stack);
+            });
     },
 
     getUserByEmail: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
@@ -92,7 +105,10 @@ module.exports = {
     deleteRefreshToken: async(userEmail) => {
         console.log(userEmail)
         const query = 'DELETE FROM "Token" WHERE email = $1';
-        const {rowCount} = await db.query(query, [userEmail]);
+        const {rowCount} = await db.query(query, [userEmail])
+            .then(e => {
+                console.log(e.stack);
+            });
         
 
         if (rowCount === 1) {
