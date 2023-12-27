@@ -1,7 +1,6 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
-dayjs.extend(utc);
 
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
@@ -97,7 +96,6 @@ module.exports = {
                 
                 //accessToken 처리
                 const accessToken = generateAccessToken(userData);
-                console.log(expireTime)
 
                 // refreshToken 처리
                 const refreshToken = generateRefreshToken(userData);
@@ -109,7 +107,6 @@ module.exports = {
                     message: `${userData.email} 회원가입 성공`, 
                     accessToken: accessToken, 
                     refreshToken: refreshToken,
-                    expireTime: expireTime
                 });
             } else {
                 console.log("회원가입 오류")
@@ -139,7 +136,6 @@ module.exports = {
                 message: `${userData.email} 로그인 성공`, 
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
-                expireTime: expireTime
             });
         } catch (error) {
             console.log(error);
