@@ -8,8 +8,8 @@ module.exports = {
         // ispublic : 그룹 공개 여부
         
         try{
-            const group_id = await groupModel.ishaveGroup(user_id);
-            if(group_id!==null){
+            const u_group_id = await groupModel.ishaveGroup(user_id);
+            if(u_group_id!==null){
                 res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
             }else{
                 await groupModel.insertGroup(user_id, name, ispublic);
@@ -21,6 +21,24 @@ module.exports = {
             }else{
                 next(error);
             }
+        }
+    },
+    joinGroup: async(req, res, next) =>{
+        const {user_id, group_id} = req.body;
+        
+        try{
+            const u_group_id = await groupModel.ishaveGroup(user_id);
+            const status = await groupModel.statusPeopleNum(group_id);
+            if(u_group_id !== null){
+                res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
+            }else if(status.people_maxnum < status.people_count){
+                res.status(409).json({result: "fail", message: "해당 그룹의 인원이 가득 찼습니다."});
+            }else{
+                await groupModel.joinGroup(user_id, group_id);
+                res.json({result: "success"});
+            }
+        }catch(error){
+            next(error);
         }
     },
 }
