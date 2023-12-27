@@ -116,6 +116,17 @@ module.exports = {
                 throw e;
             });
         return user;
-
     },
+    checkRefreshToken: async(email, refreshToken) => {
+        const query = 'SELECT refresh_token FROM "Token" WHERE email = $1';
+        const {rows} = await db.query(query, [email]);
+        
+        const savedRefreshToken = rows[0].refresh_token;
+        
+        if (refreshToken === savedRefreshToken) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
