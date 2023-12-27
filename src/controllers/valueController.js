@@ -41,4 +41,18 @@ module.exports = {
             }
         }
     },
+    getValues: async(req, res, next) =>{
+        const {user_id, region, start_date, end_date} = req.body;
+        // start_date : 가져올 시작 날짜
+        // end_date : 가져올 끝 날짜
+        // ex. start_date="2023-12-26", end_date="2023-12-28" => 26일~28일 전부 가져옴
+        // region에 따른 date 변환 필요
+        
+        try{
+            const values = await valueModel.getValues(user_id, start_date, end_date);
+            res.json({values: values});
+        }catch(error){
+            next(error);
+        }
+    },
 }
