@@ -7,5 +7,6 @@ router.post('/create', groupController.createGroup);
 router.post('/join', groupController.joinGroup);
 router.get('/rank', groupController.getRank);
 router.post('/change', groupController.changeHead);
+router.delete('/delete', groupController.deleteGroup);
 
 module.exports = router;

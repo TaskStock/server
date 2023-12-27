@@ -119,9 +119,37 @@ module.exports = {
             });
         return head_id;
     },
-    updateHead: async(user_id, group_id)=>{
+    updateHead: async(group_id, user_id)=>{
         const query = "update \"Group\" set user_id=$1 where group_id=$2";
         const values = [user_id, group_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
+    deleteGroup: async(group_id, user_id)=>{
+        const query = "delete from \"Group\" where group_id=$1 and user_id=$2";
+        const values = [group_id, user_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
+    deleteUserGroupId: async(group_id)=>{
+        const query = "update \"User\" set group_id=null where group_id=$1";
+        const values = [group_id];
 
         await db.query(query, values)
             .then(res => {

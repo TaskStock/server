@@ -68,7 +68,23 @@ module.exports = {
             }else if(u_group_id !== group_id){  // 새로운 그룹장이 그룹원이 아닌 경우
                 res.status(403).json({result: "fail", message: "그룹원만 그룹장으로 임명할 수 있습니다."});
             }else{
-                await groupModel.updateHead(to_id, group_id);
+                await groupModel.updateHead(group_id, to_id);
+                res.json({result: "success"});
+            }
+        }catch(error){
+            next(error);
+        }
+    },
+    deleteGroup: async(req, res, next) =>{
+        const {group_id, user_id} = req.body;
+        
+        try{
+            const now_head_id = await groupModel.getHeadId(group_id);
+            if(now_head_id !== user_id){    // 그룹장이 아닌 경우
+                res.status(403).json({result: "fail", message: "그룹장만 그룹을 삭제할 수 있습니다."});
+            }else{
+                await groupModel.deleteGroup(group_id, user_id);
+                await groupModel.deleteUserGroupId(group_id);
                 res.json({result: "success"});
             }
         }catch(error){
