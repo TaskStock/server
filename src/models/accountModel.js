@@ -54,14 +54,16 @@ module.exports = {
     deleteCode: async(inputData) => {
         const query = 'DELETE FROM "Code" WHERE code_id = $1';
         const code = inputData.codeId;
-        deleteResult = await db.query(query, [code])
-            .then(e => {
-                console.log(e.stack);
-            });
-        
-        if (deleteResult.rowCount === 1) {
-            return true;
-        } else {
+        try {
+            const deleteResult = await db.query(query, [code]);
+            
+            if (deleteResult.rowCount === 1) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            console.log(error.stack);
             return false;
         }
     },
@@ -86,10 +88,11 @@ module.exports = {
     },
     saveRefreshToken: async(email, refreshToken) => {
         const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
-        await db.query(query, [email, refreshToken])
-            .then(e => {
-                console.log(e.stack);
-            });
+        try {
+            await db.query(query, [email, refreshToken]);
+        } catch (error) {          
+            console.log(error.stack);
+        }
     },
 
     getUserByEmail: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
@@ -105,15 +108,15 @@ module.exports = {
     deleteRefreshToken: async(userEmail) => {
         console.log(userEmail)
         const query = 'DELETE FROM "Token" WHERE email = $1';
-        const {rowCount} = await db.query(query, [userEmail])
-            .then(e => {
-                console.log(e.stack);
-            });
-        
-
-        if (rowCount === 1) {
-            return true;
-        } else {
+        try {
+            const {rowCount} = await db.query(query, [userEmail])
+            if (rowCount === 1) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            console.log(error.stack);
             return false;
         }
     },

@@ -1,7 +1,6 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
-dayjs.extend(utc);
 
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
