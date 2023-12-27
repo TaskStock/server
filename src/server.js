@@ -18,6 +18,7 @@ app.use(passport.initialize());
 const accountRouter = require("./routers/accountRouter.js");
 const todoRouter = require("./routers/todoRouter.js");
 const followRouter = require("./routers/followRouter.js");
+const groupRouter = require("./routers/groupRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 app.use("/account", accountRouter);
 app.use("/todo", todoRouter);
 app.use("/follow", followRouter);
+app.use("/group", groupRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {
