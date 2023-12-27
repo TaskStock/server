@@ -183,7 +183,7 @@ module.exports = {
     },
     //accessToken 재발급
     refresh: async (req, res) => {
-        const email = req.user.email;
+        const email = req.body.email;
         const refreshToken = req.body.refreshToken;
 
         if (refreshToken === null) {
