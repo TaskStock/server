@@ -41,4 +41,14 @@ module.exports = {
             next(error);
         }
     },
+    getRank: async(req, res, next) =>{
+        const {group_id} = req.body;
+        
+        try{
+            const ranking = await groupModel.groupRanking(group_id);
+            res.json({rank: ranking});
+        }catch(error){
+            next(error);
+        }
+    },
 }

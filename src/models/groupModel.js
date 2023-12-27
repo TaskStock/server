@@ -89,4 +89,19 @@ module.exports = {
                 throw e;
             });
     },
+    groupRanking: async(group_id)=>{
+        const query = "select count(*)+1 as ranking from \"Group\" where value_sum > (select value_sum from \"Group\" where group_id=$1)";
+        const values = [group_id];
+
+        const ranking = await db.query(query, values)
+            .then(res => {
+                return parseInt(res.rows[0].ranking);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return ranking;
+    },
 }
