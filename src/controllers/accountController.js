@@ -1,8 +1,6 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
@@ -11,7 +9,7 @@ function generateAccessToken(userData) {
     const email = userData.email;
     const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
 
-    return [accessToken, expiresIn];
+    return accessToken;
 }
 
 function generateRefreshToken(userData) {
@@ -98,9 +96,7 @@ module.exports = {
             if (req.body.email == userData.email) {
                 
                 //accessToken 처리
-                const [accessToken, expiresIn] = generateAccessToken(userData);
-                const utcNow = dayjs.utc();
-                const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+                const accessToken = generateAccessToken(userData);
                 console.log(expireTime)
 
                 // refreshToken 처리
@@ -133,9 +129,7 @@ module.exports = {
     loginEmail: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const [accessToken, expiresIn] = generateAccessToken(userData);
-            const utcNow = dayjs.utc();
-            const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+            const accessToken = generateAccessToken(userData);
             const refreshToken = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(userData.email, refreshToken);
 
@@ -183,39 +177,47 @@ module.exports = {
     },
     //accessToken 재발급
     refresh: async (req, res) => {
-        const email = req.body.email;
-        const refreshToken = req.body.refreshToken;
+        try {
+            const email = req.body.email;
+            const refreshToken = req.body.refreshToken;
 
-        if (refreshToken === null) {
-            return res.status(401).json({ 
-                result: "fail", 
-                message: "refreshToken이 없습니다." 
+            if (refreshToken === null) {
+                return res.status(401).json({ 
+                    result: "fail", 
+                    message: "refreshToken이 없습니다." 
+                });
+            }
+            const found = await accountModel.checkRefreshToken(email, refreshToken);
+
+            if (!found) {
+                return res.status(403).json({
+                    result: "fail",
+                    message: "refreshToken이 유효하지 않습니다."
+                });
+            } else {
+                jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, userData) => {
+                    if (err) {
+                        return res.status(403).json({
+                            result: "fail",
+                            message: "refreshToken이 유효하지 않습니다."
+                        });
+                    } else {
+                        const accessToken = generateAccessToken(userData);
+                        return res.status(200).json({
+                            result: "success",
+                            message: "accessToken 재발급 성공",
+                            accessToken: accessToken,
+                        });
+                    }
+                });
+            }
+            
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
             });
         }
-        const found = await accountModel.checkRefreshToken(email, refreshToken);
-
-        if (!found) {
-            return res.status(403).json({
-                result: "fail",
-                message: "refreshToken이 유효하지 않습니다."
-            });
-        } else {
-            jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, userData) => {
-                if (err) {
-                    return res.status(403).json({
-                        result: "fail",
-                        message: "refreshToken이 유효하지 않습니다."
-                    });
-                } else {
-                    const accessToken = generateAccessToken(userData);
-                    return res.status(200).json({
-                        result: "success",
-                        message: "accessToken 재발급 성공",
-                        accessToken: accessToken,
-                    });
-                }
-            });
-        }
-        
     }
 }
