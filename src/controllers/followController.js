@@ -19,12 +19,12 @@ module.exports = {
         }
     },
     unfollow: async(req, res, next) =>{
-        const {user_id, followed_id} = req.body;
+        const {user_id, unfollowed_id} = req.body;
         // user_id
-        // followed_id : 언팔로우하는 사람의 user_id
+        // unfollowed_id : 언팔로우하는 사람의 user_id
         
         try{
-            await followModel.deleteMapping(user_id, followed_id);
+            await followModel.deleteMapping(user_id, unfollowed_id);
             res.json({result: "success"});
         }catch(error){
             next(error);
