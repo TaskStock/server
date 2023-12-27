@@ -96,7 +96,6 @@ module.exports = {
                 
                 //accessToken 처리
                 const accessToken = generateAccessToken(userData);
-                console.log(expireTime)
 
                 // refreshToken 처리
                 const refreshToken = generateRefreshToken(userData);
@@ -108,7 +107,6 @@ module.exports = {
                     message: `${userData.email} 회원가입 성공`, 
                     accessToken: accessToken, 
                     refreshToken: refreshToken,
-                    expireTime: expireTime
                 });
             } else {
                 console.log("회원가입 오류")
@@ -138,7 +136,6 @@ module.exports = {
                 message: `${userData.email} 로그인 성공`, 
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
-                expireTime: expireTime
             });
         } catch (error) {
             console.log(error);

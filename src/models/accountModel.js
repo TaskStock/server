@@ -77,7 +77,7 @@ module.exports = {
         const {rows} = await db.query(query, [email, hashedPassword, userName]);
         
         //초기 설정 저장
-        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, screeen) VALUES ($1, $2, $3, $4) ';
+        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, screen) VALUES ($1, $2, $3, $4) ';
         await db.query(settingQuery, [rows[0].user_id, isAgree, theme, '임시 데이터'])
             .then(e => {
                 console.log(e.stack);
