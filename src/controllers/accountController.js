@@ -1,8 +1,6 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
@@ -11,7 +9,7 @@ function generateAccessToken(userData) {
     const email = userData.email;
     const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
 
-    return [accessToken, expiresIn];
+    return accessToken;
 }
 
 function generateRefreshToken(userData) {
@@ -98,9 +96,7 @@ module.exports = {
             if (req.body.email == userData.email) {
                 
                 //accessToken 처리
-                const [accessToken, expiresIn] = generateAccessToken(userData);
-                const utcNow = dayjs.utc();
-                const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+                const accessToken = generateAccessToken(userData);
                 console.log(expireTime)
 
                 // refreshToken 처리
@@ -133,9 +129,7 @@ module.exports = {
     loginEmail: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const [accessToken, expiresIn] = generateAccessToken(userData);
-            const utcNow = dayjs.utc();
-            const expireTime = utcNow.add(parseInt(expiresIn), 'hour').format('YYYY-MM-DD HH:mm:ss')
+            const accessToken = generateAccessToken(userData);
             const refreshToken = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(userData.email, refreshToken);
 
