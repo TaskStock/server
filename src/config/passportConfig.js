@@ -16,7 +16,7 @@ passport.use(new LocalStrategy({
 },
     async (email, password, done) => {
         try {
-            const userData = await accountModel.getUser(email);
+            const userData = await accountModel.getUserByEmail(email);
             if (userData === null) {
                 return done(null, false, { message: '존재하지 않는 이메일입니다.' }); //done(error, user, info)
             }
@@ -41,7 +41,7 @@ passport.use(new JWTStrategy({
     async (jwtPayload, done) => {
         try {
             console.log(jwtPayload)
-            const userData = await accountModel.getUser(jwtPayload.email);
+            const userData = await accountModel.getUserByEmail(jwtPayload.email);
             if (userData === null) {
                 return done(null, false, { message: '존재하지 않는 이메일입니다.' });
             } else {

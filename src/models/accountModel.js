@@ -79,7 +79,7 @@ module.exports = {
         await db.query(query, [email, refreshToken]);
     },
 
-    getUser: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
+    getUserByEmail: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         const query = 'SELECT * FROM "User" WHERE email = $1';
         const {rows} = await db.query(query, [email]);
         const userData = rows[0];
