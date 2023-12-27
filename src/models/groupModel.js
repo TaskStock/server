@@ -1,7 +1,7 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    ishaveGroup: async(user_id)=>{
+    getUserGroupId: async(user_id)=>{
         const query = "select group_id from \"User\" where user_id=$1";
         const values = [user_id];
 
@@ -103,5 +103,34 @@ module.exports = {
                 throw e;
             });
         return ranking;
+    },
+    getHeadId: async(group_id)=>{
+        const query = "select user_id from \"Group\" where group_id=$1";
+        const values = [group_id];
+
+        const head_id = await db.query(query, values)
+            .then(res => {
+                return res.rows[0].user_id;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return head_id;
+    },
+    updateHead: async(user_id, group_id)=>{
+        const query = "update \"Group\" set user_id=$1 where group_id=$2";
+        const values = [user_id, group_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
     },
 }
