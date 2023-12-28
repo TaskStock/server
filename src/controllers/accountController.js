@@ -92,8 +92,7 @@ module.exports = {
             const registerData = req.body;
             const userData = await accountModel.register(registerData);
 
-            if (req.body.email == userData.email) {
-                
+            if (req.body.email == userData.email) { //성공적으로 회원가입이 되었을 경우                
                 //accessToken 처리
                 const accessToken = generateAccessToken(userData);
 
@@ -103,8 +102,9 @@ module.exports = {
 
                 console.log("회원가입 성공");
                 res.status(200).json({ 
-                    result: "success", 
+                    result: "success",
                     message: `${userData.email} 회원가입 성공`, 
+                    user_id: userData.user_id,
                     accessToken: accessToken, 
                     refreshToken: refreshToken,
                 });
@@ -122,8 +122,26 @@ module.exports = {
             });
         }
     },
+    //초기 설정 저장
+    createSetting: async (req, res) => {
+        try {
+            const settingData = req.body;
+            await accountModel.createSetting(settingData);
+            res.status(200).json({ 
+                result: "success", 
+                message: "초기 설정 저장 성공"
+            }); 
+            
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    },
     //이메일 로그인
-    loginEmail: async (req, res) => {
+    login: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
             const accessToken = generateAccessToken(userData);
@@ -215,21 +233,16 @@ module.exports = {
             });
         }
     },
-    //구글 로그인
-    loginGoogle: async (req, res) => {
+    //초기 설정 저장
+    createSetting: async (req, res) => {
         try {
-            const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const accessToken = generateAccessToken(userData);
-            const refreshToken = generateRefreshToken(userData);
-            await accountModel.saveRefreshToken(userData.email, refreshToken);
-
-            console.log("로그인 성공");
+            const settingData = req.body;
+            await accountModel.createSetting(settingData);
             res.status(200).json({ 
                 result: "success", 
-                message: `${userData.email} 로그인 성공`, 
-                accessToken: accessToken, 
-                refreshToken: refreshToken,
-            });
+                message: "초기 설정 저장 성공"
+            }); 
+            
         } catch (error) {
             console.log(error);
             res.status(500).json({ 
@@ -237,5 +250,6 @@ module.exports = {
                 message: "서버 오류"
             });
         }
-    }
+    },
+
 }

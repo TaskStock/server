@@ -68,13 +68,13 @@ module.exports = {
         }
     },
     register: async(registerData) => {
-        const {email, userName, password, isAgree, theme, language} = registerData; 
+        const {email, userName, password} = registerData; 
         let rows;      
         if (password === null) { //소셜 로그인의 경우
             const query = 'INSERT INTO "User" (email, user_name) VALUES ($1, $2) RETURNING *';
             const {rows: _rows} = await db.query(query, [email, userName])
-                .then(e => {
-                    console.log(e.stack);
+                .catch(e => {
+                    console.error(e.stack);
                 });
             rows = _rows;
         } else {    //로컬 로그인의 경우
@@ -83,20 +83,19 @@ module.exports = {
             
             const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
             const {rows: _rows} = await db.query(query, [email, hashedPassword, userName])
-                .then(e => {
-                    console.log(e.stack);
+                .catch(e => {
+                    console.error(e.stack);
                 });
             rows = _rows;
         }
-        
-        //초기 설정 저장
-        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme language) VALUES ($1, $2, $3, $4) ';
-        await db.query(settingQuery, [rows[0].user_id, isAgree, theme, language])
-            .then(e => {
-                console.log(e.stack);
-            })
-
         const userData = rows[0];
+        const settingQuery = 'INSERT INTO "UserSetting" (user_id) VALUES ($1)';
+        const defaultSet = [userData.user_id];
+        await db.query(settingQuery, defaultSet)
+            .catch(e => {
+                console.error(e.stack);
+            });
+
         return userData;
     },
     saveRefreshToken: async(email, refreshToken) => {
@@ -107,8 +106,8 @@ module.exports = {
         } catch (error) {          
             const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE email = $2';
             await db.query(updateQuery, [refreshToken, email])
-                .then(e => {
-                    console.log(e.stack);
+                .catch(e => {
+                    console.error(e.stack);
                 })
             console.log(error.stack);
         }
@@ -134,8 +133,8 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (error) {
-            console.log(error.stack);
+        } catch (e) {
+            console.log(e.stack);
             return false;
         }
     },
@@ -167,5 +166,18 @@ module.exports = {
             return false;
         }
     },
+    //초기 설정 저장
+    createSetting: async(settingData) => {
+        const {user_id, isAgree, theme} = settingData;
+        const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3 WHERE user_id = $1';
+        const values = [user_id, isAgree, theme];
 
+        await db.query(query, values)
+
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    }
 }
