@@ -20,7 +20,7 @@ passport.use(new LocalStrategy({
         try {
             const userData = await accountModel.getUserByEmail(email);
             if (userData === null) {
-                return done(null, false, { message: '존재하지 않는 이메일입니다.' }); //done(error, user, info)
+                return done(null, false, { message: '가입 정보가 없습니다.' }); //done(error, user, info)
             }
             const result = await bcrypt.compare(password, userData.password);
             if (result) {
@@ -45,7 +45,7 @@ passport.use(new JWTStrategy({
             console.log(jwtPayload)
             const userData = await accountModel.getUserByEmail(jwtPayload.email);
             if (userData === null) {
-                return done(null, false, { message: '존재하지 않는 이메일입니다.' });
+                return done(null, false, { message: '가입 정보가 없습니다.' });
             } else {
                 return done(null, userData);
             }
@@ -82,7 +82,7 @@ passport.use(new GoogleStrategy({
             }
             else {
                 if (userData.strategy != 'google') { // 다른 방식으로 회원가입 되어 있음. 근데 구글로 로그인 시도함.
-                    return done(null, false, { message: '다른 방식으로 가입된 이메일입니다.', strategy: userData.strategy });
+                    return done(null, false, { message: '다른 방식으로 가입된 이메일입니다.' });
                 }
                 else {  // 구글로 회원가입 되어 있음. 구글로 로그인 시도함.
                     return done(null, userData);
