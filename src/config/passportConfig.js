@@ -64,9 +64,9 @@ passport.use(new GoogleStrategy({
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
-            console.log(profile);
             const userName = profile.displayName;
             const userEmail = profile.emails[0].value;
+            const userPicture = profile.photos[0].value;
             const userData = await accountModel.getUserByEmail(userEmail);
 
             if (userData === null) { // 구글로 회원가입 하는 경우 (처음 로그인) 내 이름, 이메일 주소
@@ -75,7 +75,8 @@ passport.use(new GoogleStrategy({
                     userName: userName,
                     password: null,
                     isAgree: 1,
-                    strategy: 'google'
+                    strategy: 'google',
+                    userPicture: userPicture
                 };
                 const userData = await accountModel.register(registerData);
                 return done(null, userData); // callback url(login)에 넘겨서 바로 로그인 시키기
