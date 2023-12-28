@@ -18,17 +18,6 @@ const db = require('../config/db.js');
 const bcrypt = require('bcrypt');
 
 module.exports = {
-    checkAvailible: async(emailData) => {
-        const query = 'SELECT user_id FROM "User" WHERE email = $1';
-        const email = emailData.email;
-
-        const {rowCount} = await db.query(query, [email]);
-        if(rowCount === 0){ // 가입된 이메일이 없을 경우
-            return true;
-        }else{  // 가입된 이메일이 있을 경우
-            return false;
-        }
-    },
     saveCode: async(authCode) => {
         const query = 'INSERT INTO "Code" (auth_code) VALUES ($1) RETURNING code_id';
         const code = authCode;
@@ -68,29 +57,53 @@ module.exports = {
         }
     },
     register: async(registerData) => {
-        const {email, userName, password, isAgree, theme} = registerData;        
-        // 비밀번호 암호화
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const {email, userName, password, isAgree, strategy, userPicture} = registerData; 
         
-        //email, password user_name, hide, follower_count, following_count, premium, cumulative_value, value_month_age, created_time, image, introduce, group_id, is_agree
-        const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
-        const {rows} = await db.query(query, [email, hashedPassword, userName]);
-        
-        //초기 설정 저장
-        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, screen) VALUES ($1, $2, $3, $4) ';
-        await db.query(settingQuery, [rows[0].user_id, isAgree, theme, '임시 데이터'])
-            .then(e => {
-                console.log(e.stack);
-            })
-
+        let rows;      
+        if (password === null) { //소셜 로그인의 경우
+            if (strategy === 'google') {
+            const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
+            const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
+                .catch(e => {
+                    console.error(e.stack);
+                });
+            rows = _rows;
+            }
+        } else {    //로컬 로그인의 경우
+            // 비밀번호 암호화
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
+            const {rows: _rows} = await db.query(query, [email, hashedPassword, userName])
+                .catch(e => {
+                    console.error(e.stack);
+                });
+            rows = _rows;
+        }
         const userData = rows[0];
+
+        // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
+        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree) VALUES ($1, $2)';
+        const defaultSet = [userData.user_id, isAgree];
+
+        await db.query(settingQuery, defaultSet)
+            .catch(e => {
+                console.error(e.stack);
+            });
+
         return userData;
     },
     saveRefreshToken: async(email, refreshToken) => {
         const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
+        
         try {
             await db.query(query, [email, refreshToken]);
         } catch (error) {          
+            const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE email = $2';
+            await db.query(updateQuery, [refreshToken, email])
+                .catch(e => {
+                    console.error(e.stack);
+                })
             console.log(error.stack);
         }
     },
@@ -99,6 +112,7 @@ module.exports = {
         const query = 'SELECT * FROM "User" WHERE email = $1';
         const {rows} = await db.query(query, [email]);
         const userData = rows[0];
+
         if (userData === undefined) {
             return null;
         } else {
@@ -115,8 +129,8 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (error) {
-            console.log(error.stack);
+        } catch (e) {
+            console.log(e.stack);
             return false;
         }
     },
@@ -147,5 +161,15 @@ module.exports = {
         } else {
             return false;
         }
+    },
+    //초기 설정 저장
+    createSetting: async(settingData) => {
+        const {user_id, isAgree, theme, language} = settingData;
+        const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
+
+        await db.query(query, [user_id, isAgree, theme, language])
+            .catch(e => {
+                console.error(e.stack);
+            });
     }
 }
