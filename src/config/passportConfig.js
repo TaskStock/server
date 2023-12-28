@@ -65,8 +65,8 @@ passport.use(new GoogleStrategy({
     async (accessToken, refreshToken, profile, done) => {
         try {
             console.log(profile);
-            userName = profile.displayName;
-            userEmail = profile.emails[0].value;
+            const userName = profile.displayName;
+            const userEmail = profile.emails[0].value;
             const userData = await accountModel.getUserByEmail(userEmail);
             if (userData === null) { // 구글로 회원가입 하는 경우 (처음 로그인) 내 이름, 이메일 주소
                 await accountModel.register(registerData);

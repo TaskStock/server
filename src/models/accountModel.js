@@ -68,7 +68,8 @@ module.exports = {
         }
     },
     register: async(registerData) => {
-        const {email, userName, password} = registerData; 
+        const {email, userName, password, language} = registerData; 
+        
         let rows;      
         if (password === null) { //소셜 로그인의 경우
             const query = 'INSERT INTO "User" (email, user_name) VALUES ($1, $2) RETURNING *';
@@ -168,16 +169,12 @@ module.exports = {
     },
     //초기 설정 저장
     createSetting: async(settingData) => {
-        const {user_id, isAgree, theme} = settingData;
-        const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3 WHERE user_id = $1';
-        const values = [user_id, isAgree, theme];
-
-        await db.query(query, values)
-
+        const {user_id, isAgree, theme, language} = settingData;
+        const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
+        
+        await db.query(query, [user_id, isAgree, theme, language])
             .catch(e => {
                 console.error(e.stack);
-
-                throw e;
             });
     }
 }

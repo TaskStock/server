@@ -140,7 +140,7 @@ module.exports = {
             });
         }
     },
-    //이메일 로그인
+    //로그인
     login: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
