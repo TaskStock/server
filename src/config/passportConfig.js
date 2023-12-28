@@ -31,7 +31,7 @@ passport.use(new LocalStrategy({
         } catch (error) {
             console.log(error);
             return done(error);
-        }
+        } 
     }
 ));
 
@@ -60,7 +60,7 @@ passport.use(new JWTStrategy({
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/account/google/callback'
+    callbackURL: '/account/login/google/callback'
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -77,14 +77,15 @@ passport.use(new GoogleStrategy({
                     isAgree: 1,
                     strategy: 'google'
                 };
-                await accountModel.register(registerData);
+                const userData = await accountModel.register(registerData);
+                return done(null, userData); // callback url(login)에 넘겨서 바로 로그인 시키기
             }
             else {
                 if (userData.strategy != 'google') { // 다른 방식으로 회원가입 되어 있음. 근데 구글로 로그인 시도함.
-                    return
+                    return done(null, false, { message: '다른 방식으로 가입된 이메일입니다.', strategy: userData.strategy });
                 }
                 else {  // 구글로 회원가입 되어 있음. 구글로 로그인 시도함.
-                    return
+                    return done(null, userData);
                 }
             }
         } catch (error) {

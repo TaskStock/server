@@ -92,7 +92,7 @@ module.exports = {
         const userData = rows[0];
 
         // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
-        const settingQuery = 'INSERT INTO "UserSetting" (user_id, isAgree) VALUES ($1, $2)';
+        const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree) VALUES ($1, $2)';
         const defaultSet = [userData.user_id, isAgree];
 
         await db.query(settingQuery, defaultSet)
