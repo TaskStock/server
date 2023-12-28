@@ -68,12 +68,12 @@ module.exports = {
         }
     },
     register: async(registerData) => {
-        const {email, userName, password, language} = registerData; 
+        const {email, userName, password, isAgree, strategy} = registerData; 
         
         let rows;      
         if (password === null) { //소셜 로그인의 경우
-            const query = 'INSERT INTO "User" (email, user_name) VALUES ($1, $2) RETURNING *';
-            const {rows: _rows} = await db.query(query, [email, userName])
+            const query = 'INSERT INTO "User" (email, user_name, strategy) VALUES ($1, $2, $3) RETURNING *';
+            const {rows: _rows} = await db.query(query, [email, userName, strategy])
                 .catch(e => {
                     console.error(e.stack);
                 });
@@ -90,8 +90,11 @@ module.exports = {
             rows = _rows;
         }
         const userData = rows[0];
-        const settingQuery = 'INSERT INTO "UserSetting" (user_id) VALUES ($1)';
-        const defaultSet = [userData.user_id];
+
+        // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
+        const settingQuery = 'INSERT INTO "UserSetting" (user_id, isAgree) VALUES ($1, $2)';
+        const defaultSet = [userData.user_id, isAgree];
+
         await db.query(settingQuery, defaultSet)
             .catch(e => {
                 console.error(e.stack);
@@ -118,6 +121,7 @@ module.exports = {
         const query = 'SELECT * FROM "User" WHERE email = $1';
         const {rows} = await db.query(query, [email]);
         const userData = rows[0];
+
         if (userData === undefined) {
             return null;
         } else {
@@ -171,7 +175,7 @@ module.exports = {
     createSetting: async(settingData) => {
         const {user_id, isAgree, theme, language} = settingData;
         const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
-        
+
         await db.query(query, [user_id, isAgree, theme, language])
             .catch(e => {
                 console.error(e.stack);

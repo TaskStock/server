@@ -24,7 +24,7 @@ passport.use(new LocalStrategy({
             }
             const result = await bcrypt.compare(password, userData.password);
             if (result) {
-                return done(null, userData);
+                return done(null, userData); // 로그인 성공
             } else {
                 return done(null, false, { message: '비밀번호가 일치하지 않습니다.' });
             }
@@ -68,7 +68,15 @@ passport.use(new GoogleStrategy({
             const userName = profile.displayName;
             const userEmail = profile.emails[0].value;
             const userData = await accountModel.getUserByEmail(userEmail);
+
             if (userData === null) { // 구글로 회원가입 하는 경우 (처음 로그인) 내 이름, 이메일 주소
+                const registerData = {
+                    email: userEmail,
+                    userName: userName,
+                    password: null,
+                    isAgree: 1,
+                    strategy: 'google'
+                };
                 await accountModel.register(registerData);
             }
             else {
