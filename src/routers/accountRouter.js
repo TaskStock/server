@@ -8,7 +8,7 @@ const accountController = require('../controllers/accountController.js');
 router.post('/sendMail', accountController.sendMail);
 router.post('/checkCode', accountController.checkCode);
 router.post('/register', accountController.register);
-router.post('/loginEmail', passport.authenticate('local', { session: false }), accountController.loginEmail);
+router.post('/login/email', passport.authenticate('local', { session: false }), accountController.loginEmail);
 router.delete('/logout', passport.authenticate('jwt', { session: false }), accountController.logout);
 router.post('/refresh', accountController.refresh);
 

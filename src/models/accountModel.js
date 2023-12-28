@@ -88,9 +88,15 @@ module.exports = {
     },
     saveRefreshToken: async(email, refreshToken) => {
         const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
+        
         try {
             await db.query(query, [email, refreshToken]);
         } catch (error) {          
+            const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE email = $2';
+            await db.query(updateQuery, [refreshToken, email])
+                .then(e => {
+                    console.log(e.stack);
+                })
             console.log(error.stack);
         }
     },

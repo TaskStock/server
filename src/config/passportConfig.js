@@ -3,6 +3,8 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const JWTStrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 require("dotenv").config();
 
 
@@ -53,5 +55,27 @@ passport.use(new JWTStrategy({
         }
     }
 ));
+
+//구글 로그인을 위한 google strategy
+// passport.use(new GoogleStrategy({
+//     clientID: process.env.GOOGLE_CLIENT_ID,
+//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//     callbackURL: '/account/google/callback'
+// },
+//     async (accessToken, refreshToken, profile, done) => {
+//         try {
+//             const userData = await accountModel.getUserByEmail(profile.emails[0].value);
+//             if (userData === null) {
+//                 return done(null, false, { message: '존재하지 않는 이메일입니다.' });
+//             } else {
+//                 return done(null, userData);
+//             }
+//         } catch (error) {
+//             console.log(error);
+//             return done(error);
+//         }
+//     }
+// ));
+
 
 module.exports = passport;
