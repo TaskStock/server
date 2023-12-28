@@ -18,17 +18,6 @@ const db = require('../config/db.js');
 const bcrypt = require('bcrypt');
 
 module.exports = {
-    checkAvailible: async(emailData) => {
-        const query = 'SELECT user_id FROM "User" WHERE email = $1';
-        const email = emailData.email;
-
-        const {rowCount} = await db.query(query, [email]);
-        if(rowCount === 0){ // 가입된 이메일이 없을 경우
-            return true;
-        }else{  // 가입된 이메일이 있을 경우
-            return false;
-        }
-    },
     saveCode: async(authCode) => {
         const query = 'INSERT INTO "Code" (auth_code) VALUES ($1) RETURNING code_id';
         const code = authCode;

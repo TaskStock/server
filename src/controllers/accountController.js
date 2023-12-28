@@ -22,20 +22,22 @@ module.exports = {
     //이메일 인증
     sendMail: async (req, res) => {
         try {
-            const emailData = req.body;
-            const availible = await accountModel.checkAvailible(emailData);
+            const email = req.body.email;
+            const userData = await accountModel.getUserByEmail(email);
 
+            const availible = (userData === null) ? true : false;
             if (!availible) {
                 res.status(200).json({ 
                     result: "fail" ,
-                    message: "이미 가입된 이메일입니다."
+                    message: "이미 가입된 이메일입니다.",
+                    strategy: userData.strategy 
                 });
             } else {
                 let authCode = '';
                 for (let i = 0; i < 6; i++) {
                     authCode += Math.floor(Math.random() * 10);
                 } //여섯자리 숫자로 이루어진 인증코드 생성(string)
-                const mailResult = await mailer(emailData.email, authCode);
+                const mailResult = await mailer(email, authCode);
                 if (mailResult) {
                     const codeId = await accountModel.saveCode(authCode);
                     
