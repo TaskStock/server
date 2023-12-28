@@ -56,26 +56,35 @@ passport.use(new JWTStrategy({
     }
 ));
 
-//구글 로그인을 위한 google strategy
-// passport.use(new GoogleStrategy({
-//     clientID: process.env.GOOGLE_CLIENT_ID,
-//     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//     callbackURL: '/account/google/callback'
-// },
-//     async (accessToken, refreshToken, profile, done) => {
-//         try {
-//             const userData = await accountModel.getUserByEmail(profile.emails[0].value);
-//             if (userData === null) {
-//                 return done(null, false, { message: '존재하지 않는 이메일입니다.' });
-//             } else {
-//                 return done(null, userData);
-//             }
-//         } catch (error) {
-//             console.log(error);
-//             return done(error);
-//         }
-//     }
-// ));
+// 구글 로그인을 위한 google strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: '/account/google/callback'
+},
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            console.log(profile);
+            userName = profile.displayName;
+            userEmail = profile.emails[0].value;
+            const userData = await accountModel.getUserByEmail(userEmail);
+            if (userData === null) { // 구글로 회원가입 하는 경우 (처음 로그인) 내 이름, 이메일 주소
+                await accountModel.register(registerData);
+            }
+            else {
+                if (userData.strategy != 'google') { // 다른 방식으로 회원가입 되어 있음. 근데 구글로 로그인 시도함.
+                    return
+                }
+                else {  // 구글로 회원가입 되어 있음. 구글로 로그인 시도함.
+                    return
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            return done(error);
+        }
+    }
+));
 
 
 module.exports = passport;

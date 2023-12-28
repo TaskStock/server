@@ -207,7 +207,29 @@ module.exports = {
                     }
                 });
             }
-            
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    },
+    //구글 로그인
+    loginGoogle: async (req, res) => {
+        try {
+            const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
+            const accessToken = generateAccessToken(userData);
+            const refreshToken = generateRefreshToken(userData);
+            await accountModel.saveRefreshToken(userData.email, refreshToken);
+
+            console.log("로그인 성공");
+            res.status(200).json({ 
+                result: "success", 
+                message: `${userData.email} 로그인 성공`, 
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+            });
         } catch (error) {
             console.log(error);
             res.status(500).json({ 

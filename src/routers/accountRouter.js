@@ -11,5 +11,8 @@ router.post('/register', accountController.register);
 router.post('/login/email', passport.authenticate('local', { session: false }), accountController.loginEmail);
 router.delete('/logout', passport.authenticate('jwt', { session: false }), accountController.logout);
 router.post('/refresh', accountController.refresh);
+//구글 로그인 관련
+router.get('/login/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/login/google/callback', passport.authenticate('google', { session: false }), accountController.loginGoogle);
 
 module.exports = router;
