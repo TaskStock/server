@@ -1,6 +1,7 @@
 const alarmModel = require('../models/alarmModel.js');
 
 module.exports = {
+    // 임시로 만든 컨트롤러
     createAlarm: async(req, res, next) =>{
         const {user_id, content} = req.body;
         
@@ -11,5 +12,16 @@ module.exports = {
         }
         
         res.json({result: "success"});
+    },
+    readAllAlarms: async(req, res, next) =>{
+        const {user_id} = req.body;
+        
+        try{
+            const alarms = await alarmModel.readAlarms(user_id);
+            
+            res.json({alarms: alarms});
+        }catch(error){
+            next(error);
+        }
     },
 }
