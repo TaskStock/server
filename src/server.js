@@ -20,6 +20,7 @@ const todoRouter = require("./routers/todoRouter.js");
 const followRouter = require("./routers/followRouter.js");
 const groupRouter = require("./routers/groupRouter.js");
 const valueRouter = require("./routers/valueRouter.js");
+const projectRouter = require("./routers/projectRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -30,6 +31,7 @@ app.use("/todo", todoRouter);
 app.use("/follow", followRouter);
 app.use("/group", groupRouter);
 app.use("/value", valueRouter);
+app.use("/project", projectRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {
