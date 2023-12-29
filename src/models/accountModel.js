@@ -61,7 +61,7 @@ module.exports = {
         
         let rows;      
         if (password === null) { //소셜 로그인의 경우
-            if (strategy === 'google') {
+            if (strategy === 'google' || strategy === 'kakao') {
             const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
             const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
                 .catch(e => {
