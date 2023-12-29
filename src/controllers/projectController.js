@@ -1,4 +1,5 @@
 const projectModel = require('../models/projectModel.js');
+const todoModel = require('../models/todoModel.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{
@@ -33,5 +34,17 @@ module.exports = {
         }
     
         res.json({result: "success"});
+    },
+    // 프로젝트와 해당 프로젝트의 todo들 반환
+    readProjectWithTodos: async(req, res, next) =>{
+        const {project_id, user_id} = req.body;
+        
+        try{
+            const project = await projectModel.readProject(project_id, user_id);
+            const todos = await todoModel.readTodosUsingProject(project_id, user_id);
+            res.json({project: project, todos: todos});
+        }catch(error){
+            next(error);
+        }
     },
 }
