@@ -60,15 +60,14 @@ module.exports = {
         const {email, userName, password, isAgree, strategy, userPicture} = registerData; 
         
         let rows;      
-        if (password === null) { //소셜 로그인의 경우
-            if (strategy === 'google') {
+        if (password === null) {    //소셜 로그인의 경우
             const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
             const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
                 .catch(e => {
                     console.error(e.stack);
                 });
             rows = _rows;
-            }
+
         } else {    //로컬 로그인의 경우
             // 비밀번호 암호화
             const hashedPassword = await bcrypt.hash(password, 10);

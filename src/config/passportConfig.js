@@ -4,6 +4,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const JWTStrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const KakaoStrategy = require('passport-kakao').Strategy;
 
 require("dotenv").config();
 
@@ -95,6 +96,46 @@ passport.use(new GoogleStrategy({
         }
     }
 ));
+
+passport.use(new KakaoStrategy(
+    {
+        clientID: process.env.KAKAO_REST_API_KEY,
+        callbackURL: '/account/login/kakao/callback'
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            console.log(profile);
+            const userName = profile._json.properties.nickname; //username은 실제 이름이고 displayName은 카카오에서 설정한 이름
+            const userEmail = profile._json.kakao_account.email; 
+            const userPicture = profile._json.properties.profile_image;
+            const userData = await accountModel.getUserByEmail(userEmail);
+
+            if (userData === null) { // 카카오로 회원가입 하는 경우 (처음 로그인) 내 이름, 이메일 주소
+                const registerData = {
+                    email: userEmail,
+                    userName: userName,
+                    password: null,
+                    isAgree: 1,
+                    strategy: 'kakao',
+                    userPicture: userPicture
+                };
+                const userData = await accountModel.register(registerData);
+                return done(null, userData); // callback url(login)에 넘겨서 바로 로그인 시키기
+            }
+            else {
+                if (userData.strategy != 'kakao') { // 다른 방식으로 회원가입 되어 있음. 근데 카카오로 로그인 시도함.
+                    return done(null, false, { message: '다른 방식으로 가입된 이메일입니다.' });
+                }
+                else {  // 카카오로 회원가입 되어 있음. 카카오로 로그인 시도함.
+                    return done(null, userData);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            return done(error);
+        }
+    }
+))
 
 
 module.exports = passport;
