@@ -15,4 +15,18 @@ module.exports = {
                 throw e;
             });
     },
+    updateProject: async(project_id, user_id, name, ispublic)=>{
+        const query = "update \"Project\" set name=$1, ispublic=$2 where user_id=$3 and project_id=$4";
+        const values = [name, ispublic, user_id, project_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }
