@@ -47,4 +47,14 @@ module.exports = {
             next(error);
         }
     },
+    readAllProjects: async(req, res, next) =>{
+        const {user_id} = req.body;
+        
+        try{
+            const projects = await projectModel.readAllProjects(user_id);
+            res.json({projects: projects});
+        }catch(error){
+            next(error);
+        }
+    },
 }
