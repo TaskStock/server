@@ -104,7 +104,6 @@ passport.use(new KakaoStrategy(
     },
     async (accessToken, refreshToken, profile, done) => {
         try {
-            console.log(profile);
             const userName = profile._json.properties.nickname; //username은 실제 이름이고 displayName은 카카오에서 설정한 이름
             const userEmail = profile._json.kakao_account.email; 
             const userPicture = profile._json.properties.profile_image;

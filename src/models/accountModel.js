@@ -93,20 +93,22 @@ module.exports = {
         return userData;
     },
     saveRefreshToken: async(email, refreshToken) => {
-        const query = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
-        
-        try {
-            await db.query(query, [email, refreshToken]);
-        } catch (error) {          
+        const selectQuery = 'SELECT * FROM "Token" WHERE email = $1';
+        const {rowCount} = await db.query(selectQuery, [email]);
+        if (rowCount === 0) {
+            const insertQuery = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
+            await db.query(insertQuery, [email, refreshToken])
+                .catch(e => {
+                    console.error(e.stack);
+                });
+        } else {
             const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE email = $2';
             await db.query(updateQuery, [refreshToken, email])
                 .catch(e => {
                     console.error(e.stack);
-                })
-            console.log(error.stack);
+                });
         }
     },
-
     getUserByEmail: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         const query = 'SELECT * FROM "User" WHERE email = $1';
         const {rows} = await db.query(query, [email]);
