@@ -24,4 +24,15 @@ module.exports = {
             next(error);
         }
     },
+    readAlarm: async(req, res, next) =>{
+        const {alarm_id, user_id} = req.body;
+        
+        try{
+            const alarm = await alarmModel.readAlarmAndUpdateIsread(alarm_id, user_id);
+        
+            res.json({alarm: alarm});
+        }catch(error){
+            next(error);
+        }
+    },
 }
