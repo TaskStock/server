@@ -92,18 +92,18 @@ module.exports = {
 
         return userData;
     },
-    saveRefreshToken: async(email, refreshToken) => {
-        const selectQuery = 'SELECT * FROM "Token" WHERE email = $1';
-        const {rowCount} = await db.query(selectQuery, [email]);
+    saveRefreshToken: async(user_id, refreshToken) => {
+        const selectQuery = 'SELECT * FROM "Token" WHERE user_id = $1';
+        const {rowCount} = await db.query(selectQuery, [user_id]);
         if (rowCount === 0) {
-            const insertQuery = 'INSERT INTO "Token" (email, refresh_token) VALUES ($1, $2)';
-            await db.query(insertQuery, [email, refreshToken])
+            const insertQuery = 'INSERT INTO "Token" (user_id, refresh_token) VALUES ($1, $2)';
+            await db.query(insertQuery, [user_id, refreshToken])
                 .catch(e => {
                     console.error(e.stack);
                 });
         } else {
-            const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE email = $2';
-            await db.query(updateQuery, [refreshToken, email])
+            const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE user_id = $2';
+            await db.query(updateQuery, [refreshToken, user_id])
                 .catch(e => {
                     console.error(e.stack);
                 });
@@ -120,11 +120,10 @@ module.exports = {
             return userData;
         }
     },
-    deleteRefreshToken: async(userEmail) => {
-        console.log(userEmail)
-        const query = 'DELETE FROM "Token" WHERE email = $1';
+    deleteRefreshToken: async(user_id) => {
+        const query = 'DELETE FROM "Token" WHERE user_id = $1';
         try {
-            const {rowCount} = await db.query(query, [userEmail])
+            const {rowCount} = await db.query(query, [user_id])
             if (rowCount === 1) {
                 return true;
             } else {
@@ -151,9 +150,9 @@ module.exports = {
             });
         return user;
     },
-    checkRefreshToken: async(email, refreshToken) => {
-        const query = 'SELECT refresh_token FROM "Token" WHERE email = $1';
-        const {rows} = await db.query(query, [email]);
+    checkRefreshToken: async(user_id, refreshToken) => {
+        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
+        const {rows} = await db.query(query, [user_id]);
         
         const savedRefreshToken = rows[0].refresh_token;
         

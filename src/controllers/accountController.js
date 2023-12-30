@@ -5,15 +5,28 @@ const jwt = require('jsonwebtoken');
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
     const expiresIn = "1h";
-    const email = userData.email;
-    const accessToken = jwt.sign({email}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+    const accessToken = jwt.sign(
+        {
+            user_id: userData.user_id,
+            email: userData.email,
+            strategy: userData.strategy,
+            user_name: userData.user_name,
+            introduce: userData.introduce,
+            user_image: userData.user_image,
+            hide: userData.hide,
+            follower_cnt: userData.follower_cnt,
+            following_cnt: userData.following_cnt,
+            premium: userData.premium,
+            cumulative_value: userData.cumulative_value,
+            value_month_ago: userData.value_month_ago,
+        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
 
     return accessToken;
 }
 
 function generateRefreshToken(userData) {
-    const email = userData.email;
-    const refreshToken = jwt.sign({email}, process.env.REFRESH_TOKEN_SECRET);
+    const user_id = userData.user_id;
+    const refreshToken = jwt.sign({user_id}, process.env.REFRESH_TOKEN_SECRET);
     
     return refreshToken;
 }
@@ -23,7 +36,7 @@ module.exports = {
     sendMail: async (req, res) => {
         try {
             const email = req.body.email;
-            const userData = await accountModel.getUserByEmail(email);
+            const userData = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
 
             const availible = (userData === null) ? true : false;
             if (!availible) {
@@ -59,7 +72,7 @@ module.exports = {
     checkCode: async (req, res) => {
         try {
             const inputData = req.body;
-            const checkResult = await accountModel.checkCode(inputData);
+            const checkResult = await accountModel.checkCode(inputData);    
             
             if (checkResult) {
                 
@@ -91,31 +104,25 @@ module.exports = {
     //이메일 회원가입
     register: async (req, res) => {
         try {
-            const registerData = req.body;
+            const registerData = req.body; 
             const userData = await accountModel.register(registerData);
 
-            if (req.body.email == userData.email) { //성공적으로 회원가입이 되었을 경우                
-                //accessToken 처리
-                const accessToken = generateAccessToken(userData);
+            //accessToken 처리
+            const accessToken = generateAccessToken(userData);
 
-                // refreshToken 처리
-                const refreshToken = generateRefreshToken(userData);
-                await accountModel.saveRefreshToken(req.body.email, refreshToken);
+            // refreshToken 처리
+            const refreshToken = generateRefreshToken(userData);
+            await accountModel.saveRefreshToken(userData.user_id, refreshToken); // refreshToken DB에 저장(user_id가 PK)
 
-                console.log("회원가입 성공");
-                res.status(200).json({ 
-                    result: "success",
-                    message: `${userData.email} 회원가입 성공`, 
-                    user_id: userData.user_id,
-                    accessToken: accessToken, 
-                    refreshToken: refreshToken,
-                });
-            } else {
-                console.log("회원가입 오류")
-                res.status(200).json({ 
-                    result: "fail", 
-                    message: "회원가입 실패. 잘못된 이메일이 DB에 들어감" });
-            }
+            console.log("회원가입 성공");
+            res.status(200).json({ 
+                result: "success",
+                message: `${userData.email} 회원가입 성공`, 
+                user_id: userData.user_id,
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+            });
+
         } catch (error) {
             console.log(error);
             res.status(500).json({ 
@@ -148,12 +155,13 @@ module.exports = {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
             const accessToken = generateAccessToken(userData);
             const refreshToken = generateRefreshToken(userData);
-            await accountModel.saveRefreshToken(userData.email, refreshToken);
+            await accountModel.saveRefreshToken(userData.user_id, refreshToken);
 
             console.log("로그인 성공");
             res.status(200).json({ 
                 result: "success", 
                 message: `${userData.email} 로그인 성공`, 
+                user_id: userData.user_id,
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
             });
@@ -169,8 +177,8 @@ module.exports = {
     logout: async (req, res) => {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
-            const userEmail = req.user.email; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
-            const deleteResult = await accountModel.deleteRefreshToken(userEmail);
+            const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
+            const deleteResult = await accountModel.deleteRefreshToken(user_id);
             
             if (deleteResult) {
                 res.status(200).json({ 
@@ -194,7 +202,7 @@ module.exports = {
     //accessToken 재발급
     refresh: async (req, res) => {
         try {
-            const email = req.body.email;
+            const user_id = req.body.user_id;
             const refreshToken = req.body.refreshToken;
 
             if (refreshToken === null) {
@@ -203,7 +211,7 @@ module.exports = {
                     message: "refreshToken이 없습니다." 
                 });
             }
-            const found = await accountModel.checkRefreshToken(email, refreshToken);
+            const found = await accountModel.checkRefreshToken(user_id, refreshToken);
 
             if (!found) {
                 return res.status(403).json({
@@ -235,23 +243,6 @@ module.exports = {
             });
         }
     },
-    //초기 설정 저장
-    createSetting: async (req, res) => {
-        try {
-            const settingData = req.body;
-            await accountModel.createSetting(settingData);
-            res.status(200).json({ 
-                result: "success", 
-                message: "초기 설정 저장 성공"
-            }); 
-            
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
-        }
-    },
+
 
 }
