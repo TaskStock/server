@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const passport = require('../src/config/passportConfig.js');
+const cors = require('cors');
 
 require("dotenv").config();
 
@@ -10,6 +11,14 @@ app.set('port', process.env.PORT || 8000);
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+//cors 설정
+const corsConfig = {
+    origin: 'http://localhost:8081',
+    credentials: true
+};
+
+app.use(cors(corsConfig));
 
 // passport 초기화
 app.use(passport.initialize());
