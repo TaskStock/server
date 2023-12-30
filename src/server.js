@@ -14,10 +14,15 @@ app.use(bodyParser.json());
 
 //cors 설정
 const corsConfig = {
-    origin: 'http://localhost:8081',
+    origin: [
+        'http://localhost:8000', // Node.js 서버
+        'http://localhost:8081', // Merto Bundler 서버
+        'http://localhost:19000', // Expo 서버
+        'http://localhost:19001', // Expo Metro Bundler 서버
+        'http://localhost:19002', // Expo 개발자 도구
+    ],
     credentials: true
 };
-
 app.use(cors(corsConfig));
 
 // passport 초기화
