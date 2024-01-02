@@ -134,6 +134,21 @@ module.exports = {
             return false;
         }
     },
+    getUserById: async(user_id) => { //user_id로 유저 정보 가져오기
+        const query = 'SELECT * FROM "User" WHERE user_id = $1';
+
+        const user = await db.query(query, [user_id])
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return user;
+    },
     getUserData: async(user_id) => {
         const query = 'SELECT * FROM "User" WHERE user_id = $1';
         const values = [user_id];
@@ -150,16 +165,14 @@ module.exports = {
             });
         return user;
     },
-    checkRefreshToken: async(user_id, refreshToken) => {
-        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
-        const {rows} = await db.query(query, [user_id]);
-        
-        const savedRefreshToken = rows[0].refresh_token;
-        
-        if (refreshToken === savedRefreshToken) {
-            return true;
-        } else {
+    checkRefreshToken: async(refreshToken) => {
+        const query = 'SELECT refresh_token FROM "Token" WHERE refresh_token = $1';
+        const {rows} = await db.query(query, [refreshToken]);
+
+        if (rows.length === 0) { //토큰이 DB에 없는 경우
             return false;
+        } else {    //토큰이 DB에 있는 경우
+        return true;
         }
     },
     //초기 설정 저장

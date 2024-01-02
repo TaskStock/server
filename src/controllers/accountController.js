@@ -202,7 +202,6 @@ module.exports = {
     //accessToken 재발급
     refresh: async (req, res) => {
         try {
-            const user_id = req.body.user_id;
             const refreshToken = req.body.refreshToken;
 
             if (refreshToken === null) {
@@ -211,7 +210,7 @@ module.exports = {
                     message: "refreshToken이 없습니다." 
                 });
             }
-            const found = await accountModel.checkRefreshToken(user_id, refreshToken);
+            const found = await accountModel.checkRefreshToken(refreshToken);
 
             if (!found) {
                 return res.status(403).json({
@@ -219,14 +218,21 @@ module.exports = {
                     message: "refreshToken이 유효하지 않습니다."
                 });
             } else {
-                jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, userData) => {
+                jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
                         return res.status(403).json({
                             result: "fail",
                             message: "refreshToken이 유효하지 않습니다."
                         });
                     } else {
-                        const accessToken = generateAccessToken(userData);
+                        const user_id = payload.user_id;
+                        let accessToken;
+                        await accountModel.getUserById(user_id)
+                            .then(res => {
+                                userData = res[0];
+                                console.log(userData);
+                                accessToken = generateAccessToken(userData)
+                            })
                         return res.status(200).json({
                             result: "success",
                             message: "accessToken 재발급 성공",
