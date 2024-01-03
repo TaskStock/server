@@ -91,6 +91,17 @@ module.exports = {
     //이메일 회원가입
     register: async (req, res) => {
         try {
+            const email = req.body.email;
+            const queryResult = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
+
+            //앞에서 확인하긴 했는데 공격에 대비해서 한번 더 확인
+            if (queryResult !== null) {
+                return res.status(200).json({
+                    result: "fail",
+                    message: "이미 가입된 이메일입니다."
+                })
+            }
+
             const registerData = req.body; 
             const userData = await accountModel.register(registerData);
 
@@ -102,10 +113,8 @@ module.exports = {
             await accountModel.saveRefreshToken(userData.user_id, refreshToken); // refreshToken DB에 저장(user_id가 PK)
 
             console.log("회원가입 성공");
-            res.status(200).json({ 
+            return res.status(200).json({ 
                 result: "success",
-                message: `${userData.email} 회원가입 성공`, 
-                user_id: userData.user_id,
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
             });
