@@ -20,6 +20,7 @@ const corsConfig = {
         'http://localhost:19000', // Expo 서버
         'http://localhost:19001', // Expo Metro Bundler 서버
         'http://localhost:19002', // Expo 개발자 도구
+        'http://192.168.0.5:8081' // Merto Bundler 서버
     ],
     credentials: true
 };
@@ -42,12 +43,12 @@ app.get('/', (req, res) => {
 });
 
 app.use("/account", accountRouter);
-app.use("/todo", todoRouter);
-app.use("/follow", followRouter);
-app.use("/group", groupRouter);
-app.use("/value", valueRouter);
-app.use("/project", projectRouter);
-app.use("/alarm", alarmRouter);
+app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
+app.use("/follow", passport.authenticate('jwt', { session: false }), followRouter);
+app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
+app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
+app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
+app.use("/alarm", passport.authenticate('jwt', { session: false }), alarmRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {

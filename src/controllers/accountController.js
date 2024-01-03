@@ -5,21 +5,8 @@ const jwt = require('jsonwebtoken');
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
     const expiresIn = "1h";
-    const accessToken = jwt.sign(
-        {
-            user_id: userData.user_id,
-            email: userData.email,
-            strategy: userData.strategy,
-            user_name: userData.user_name,
-            introduce: userData.introduce,
-            user_image: userData.user_image,
-            hide: userData.hide,
-            follower_cnt: userData.follower_cnt,
-            following_cnt: userData.following_cnt,
-            premium: userData.premium,
-            cumulative_value: userData.cumulative_value,
-            value_month_ago: userData.value_month_ago,
-        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+    const user_id = userData.user_id;
+    const accessToken = jwt.sign({user_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
 
     return accessToken;
 }
@@ -78,14 +65,14 @@ module.exports = {
                 
                 const wellDeleted = await accountModel.deleteCode(inputData);
                 if (!wellDeleted) {
-                    res.status(500).json({ 
-                        result: "success", 
-                        message: "인증은 성공, 코드 삭제에서 오류"
+                    console.log("인증 성공, 코드 삭제 실패");
+                    res.status(200).json({ 
+                        result: "success"
                     });
                 }
+                console.log("인증 성공, 코드 삭제 완료");
                 res.status(200).json({ 
-                    result: "success", 
-                    message: "코드 DB에서 삭제" 
+                    result: "success"
                 });
             } else {
                 res.status(200).json({ 
@@ -104,6 +91,17 @@ module.exports = {
     //이메일 회원가입
     register: async (req, res) => {
         try {
+            const email = req.body.email;
+            const queryResult = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
+
+            //앞에서 확인하긴 했는데 공격에 대비해서 한번 더 확인
+            if (queryResult !== null) {
+                return res.status(200).json({
+                    result: "fail",
+                    message: "이미 가입된 이메일입니다."
+                })
+            }
+
             const registerData = req.body; 
             const userData = await accountModel.register(registerData);
 
@@ -115,10 +113,8 @@ module.exports = {
             await accountModel.saveRefreshToken(userData.user_id, refreshToken); // refreshToken DB에 저장(user_id가 PK)
 
             console.log("회원가입 성공");
-            res.status(200).json({ 
+            return res.status(200).json({ 
                 result: "success",
-                message: `${userData.email} 회원가입 성공`, 
-                user_id: userData.user_id,
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
             });
@@ -181,19 +177,19 @@ module.exports = {
             const deleteResult = await accountModel.deleteRefreshToken(user_id);
             
             if (deleteResult) {
-                res.status(200).json({ 
+                return res.status(200).json({ 
                     result: "success", 
                     message: "로그아웃 성공" 
                 });
             } else {
-                res.status(200).json({ 
+                return res.status(200).json({ 
                     result: "fail", 
                     message: "로그아웃 실패" 
                 });
             }
         } catch (error) {
             console.log(error);
-            res.status(500).json({ 
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
@@ -230,7 +226,6 @@ module.exports = {
                         await accountModel.getUserById(user_id)
                             .then(res => {
                                 userData = res[0];
-                                console.log(userData);
                                 accessToken = generateAccessToken(userData)
                             })
                         return res.status(200).json({
