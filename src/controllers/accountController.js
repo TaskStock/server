@@ -65,14 +65,14 @@ module.exports = {
                 
                 const wellDeleted = await accountModel.deleteCode(inputData);
                 if (!wellDeleted) {
-                    res.status(500).json({ 
-                        result: "success", 
-                        message: "인증은 성공, 코드 삭제에서 오류"
+                    console.log("인증 성공, 코드 삭제 실패");
+                    res.status(200).json({ 
+                        result: "success"
                     });
                 }
+                console.log("인증 성공, 코드 삭제 완료");
                 res.status(200).json({ 
-                    result: "success", 
-                    message: "코드 DB에서 삭제" 
+                    result: "success"
                 });
             } else {
                 res.status(200).json({ 
@@ -174,7 +174,6 @@ module.exports = {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
-            console.log(user_id)
             const deleteResult = await accountModel.deleteRefreshToken(user_id);
             
             if (deleteResult) {

@@ -140,7 +140,7 @@ module.exports = {
 
         const user = await db.query(query, [user_id])
             .then(res => {
-                console.log(res.rows);
+                // console.log(res.rows);
                 return res.rows;
             })
             .catch(e => {
