@@ -175,14 +175,15 @@ module.exports = {
         return true;
         }
     },
-    //초기 설정 저장
-    createSetting: async(settingData) => {
-        const {user_id, isAgree, theme, language} = settingData;
-        const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
-
-        await db.query(query, [user_id, isAgree, theme, language])
-            .catch(e => {
-                console.error(e.stack);
-            });
-    }
 }
+    //초기 설정 저장
+//     createSetting: async(settingData) => {
+//         const {user_id, isAgree, theme, language} = settingData;
+//         const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
+
+//         await db.query(query, [user_id, isAgree, theme, language])
+//             .catch(e => {
+//                 console.error(e.stack);
+//             });
+//     }
+

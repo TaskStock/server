@@ -11,7 +11,7 @@ router.post('/register', accountController.register);
 router.post('/login/email', passport.authenticate('local', { session: false }), accountController.login);
 router.delete('/logout', passport.authenticate('jwt', { session: false }), accountController.logout);
 router.post('/refresh', accountController.refresh); 
-router.post('/createSetting', accountController.createSetting);
+// router.post('/createSetting', accountController.createSetting);
 router.get('/getUserInfo', passport.authenticate('jwt', { session: false }), accountController.getUserInfo);
 
 //구글 로그인 관련
