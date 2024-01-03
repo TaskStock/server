@@ -28,7 +28,7 @@ module.exports = {
     },
     checkCode: async(inputData) => {
         const query = 'SELECT auth_code FROM "Code" WHERE code_id = $1';
-        const codeId = inputData.codeId;
+        const codeId = inputData.codeId;    
         const {rows} = await db.query(query, [codeId]);
 
         const authCode = rows[0].auth_code; // 인증코드(string)

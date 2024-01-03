@@ -5,21 +5,8 @@ const jwt = require('jsonwebtoken');
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
     const expiresIn = "1h";
-    const accessToken = jwt.sign(
-        {
-            user_id: userData.user_id,
-            email: userData.email,
-            strategy: userData.strategy,
-            user_name: userData.user_name,
-            introduce: userData.introduce,
-            user_image: userData.user_image,
-            hide: userData.hide,
-            follower_cnt: userData.follower_cnt,
-            following_cnt: userData.following_cnt,
-            premium: userData.premium,
-            cumulative_value: userData.cumulative_value,
-            value_month_ago: userData.value_month_ago,
-        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+    const user_id = userData.user_id;
+    const accessToken = jwt.sign({user_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
 
     return accessToken;
 }
