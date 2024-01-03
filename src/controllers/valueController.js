@@ -2,12 +2,11 @@ const valueModel = require('../models/valueModel.js');
 
 module.exports = {
     createByNewUser: async(req, res, next) =>{
-        const {user_id, region, date} = req.body;
-        // date : 유저가 살고 있는 지역 기준의 날짜 (2023-12-27)
-        // region에 따른 date 변환 필요
+        const {user_id} = req.body;
+        // 생성할 때는 db 기준(utc) 현재 시간을 저장시키면 됨
         
         try{
-            await valueModel.createByNewUser(user_id, date);
+            await valueModel.createByNewUser(user_id);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
@@ -18,12 +17,10 @@ module.exports = {
         }
     },
     createByExistUser: async(req, res, next) =>{
-        const {user_id, region, date} = req.body;
-        // date : 유저가 살고 있는 지역 기준의 날짜 (2023-12-27)
-        // region에 따른 date 변환 필요
+        const {user_id} = req.body;
         
         try{
-            const recentValue = await valueModel.getRecentValue(user_id, date);
+            const recentValue = await valueModel.getRecentValue(user_id);
             const start = recentValue.end;
             const end = start;
             const low = start;
@@ -31,7 +28,7 @@ module.exports = {
             const percentage = null;    // 계산 로직 필요
             const combo = 0;    // 계산 로직 필요
 
-            await valueModel.createByExistUser(user_id, date, percentage, start, end, low, high, combo);
+            await valueModel.createByExistUser(user_id, percentage, start, end, low, high, combo);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
