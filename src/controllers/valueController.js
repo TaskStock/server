@@ -1,4 +1,5 @@
 const valueModel = require('../models/valueModel.js');
+const { zonedTimeToUtc } = require('date-fns-tz');
 
 module.exports = {
     createByNewUser: async(req, res, next) =>{
@@ -42,11 +43,18 @@ module.exports = {
         const {user_id, region, start_date, end_date} = req.body;
         // start_date : 가져올 시작 날짜
         // end_date : 가져올 끝 날짜
-        // ex. start_date="2023-12-26", end_date="2023-12-28" => 26일~28일 전부 가져옴
-        // region에 따른 date 변환 필요
+        // ex. start_date="2023-12-26", end_date="2023-12-28" => 26일~27일 전부 가져옴
+        // region : Asia/Seoul 과 같은 타임존 형식이어야함
+        
+        const trans_start_date = zonedTimeToUtc(new Date(`${start_date}T00:00:00`), region);
+        const trans_end_date = zonedTimeToUtc(new Date(`${end_date}T00:00:00`), region);
+
+        if (isNaN(trans_start_date.getTime()) || isNaN(trans_end_date.getTime())) {
+            return res.status(400).json({result: "fail", message: "잘못된 타임존입니다."});
+        }
         
         try{
-            const values = await valueModel.getValues(user_id, start_date, end_date);
+            const values = await valueModel.getValues(user_id, trans_start_date, trans_end_date);
             res.json({values: values});
         }catch(error){
             next(error);

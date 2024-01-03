@@ -46,7 +46,7 @@ module.exports = {
             });
     },
     getValues: async(user_id, start_date, end_date)=>{
-        const query = "select * from \"Value\" where user_id=$1 and date>=$2 and date<=$3 order by date";
+        const query = "select * from \"Value\" where user_id=$1 and date>=$2 and date<$3 order by date";
         const q_values = [user_id, start_date, end_date];
 
         const values = await db.query(query, q_values)
