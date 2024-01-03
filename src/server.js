@@ -20,6 +20,7 @@ const corsConfig = {
         'http://localhost:19000', // Expo 서버
         'http://localhost:19001', // Expo Metro Bundler 서버
         'http://localhost:19002', // Expo 개발자 도구
+        'http://192.168.0.5:8081' // Merto Bundler 서버
     ],
     credentials: true
 };
@@ -42,6 +43,10 @@ app.get('/', (req, res) => {
 });
 
 app.use("/account", accountRouter);
+
+// acount 라우터를 제외한 모든 라우터에 JWT 인증 전역적 적용
+passport.authenticate('jwt', { session: false })
+
 app.use("/todo", todoRouter);
 app.use("/follow", followRouter);
 app.use("/group", groupRouter);
