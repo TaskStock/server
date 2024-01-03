@@ -10,14 +10,14 @@ module.exports = {
         try{
             const u_group_id = await groupModel.getUserGroupId(user_id);
             if(u_group_id!==null){
-                res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
+                res.status(400).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
             }else{
                 await groupModel.insertGroup(user_id, name, ispublic);
                 res.json({result: "success"});
             }
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
-                res.status(409).json({result: "fail", message: "그룹은 여러개 생성할 수 없습니다."});
+                res.status(403).json({result: "fail", message: "그룹은 여러개 생성할 수 없습니다."});
             }else{
                 next(error);
             }
@@ -57,7 +57,7 @@ module.exports = {
         // to_id : 새로 그룹장이 될 유저
 
         if(user_id === to_id){
-            return res.status(403).json({result: "fail", message: "서로 다른 유저를 지정해주세요."});
+            return res.status(400).json({result: "fail", message: "서로 다른 유저를 지정해주세요."});
         }
         
         try{
