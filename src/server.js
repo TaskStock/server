@@ -43,16 +43,12 @@ app.get('/', (req, res) => {
 });
 
 app.use("/account", accountRouter);
-
-// acount 라우터를 제외한 모든 라우터에 JWT 인증 전역적 적용
-passport.authenticate('jwt', { session: false })
-
-app.use("/todo", todoRouter);
-app.use("/follow", followRouter);
-app.use("/group", groupRouter);
-app.use("/value", valueRouter);
-app.use("/project", projectRouter);
-app.use("/alarm", alarmRouter);
+app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
+app.use("/follow", passport.authenticate('jwt', { session: false }), followRouter);
+app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
+app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
+app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
+app.use("/alarm", passport.authenticate('jwt', { session: false }), alarmRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {
