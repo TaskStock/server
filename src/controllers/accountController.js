@@ -174,22 +174,23 @@ module.exports = {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
+            console.log(user_id)
             const deleteResult = await accountModel.deleteRefreshToken(user_id);
             
             if (deleteResult) {
-                res.status(200).json({ 
+                return res.status(200).json({ 
                     result: "success", 
                     message: "로그아웃 성공" 
                 });
             } else {
-                res.status(200).json({ 
+                return res.status(200).json({ 
                     result: "fail", 
                     message: "로그아웃 실패" 
                 });
             }
         } catch (error) {
             console.log(error);
-            res.status(500).json({ 
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
@@ -226,7 +227,6 @@ module.exports = {
                         await accountModel.getUserById(user_id)
                             .then(res => {
                                 userData = res[0];
-                                console.log(userData);
                                 accessToken = generateAccessToken(userData)
                             })
                         return res.status(200).json({
