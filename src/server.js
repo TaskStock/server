@@ -37,6 +37,7 @@ const groupRouter = require("./routers/groupRouter.js");
 const valueRouter = require("./routers/valueRouter.js");
 const projectRouter = require("./routers/projectRouter.js");
 const alarmRouter = require("./routers/alarmRouter.js");
+const settingRouter = require("./routers/settingRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -49,6 +50,7 @@ app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter)
 app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
 app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
 app.use("/alarm", passport.authenticate('jwt', { session: false }), alarmRouter);
+app.use('/setting', passport.authenticate('jwt', { session: false }), settingRouter);
 
 // 오류 처리 미들웨어
 app.use((err, req, res, next) => {
