@@ -31,9 +31,23 @@ module.exports = {
             });
         return todos;
     },
+    updateContentAndProject: async(todo_id, content, user_id, project_id)=>{
+        const query = "update \"Todo\" set content=$1, project_id=$2 where user_id=$3 and todo_id=$4";
+        const values = [content, project_id, user_id, todo_id];
+
+        await db.query(query, values)
+            .then(res => {
+                console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
     updateTodo: async(todo_id, content, level, user_id, project_id)=>{
-        const query = "update \"Todo\" set content=$1, level=$2, user_id=$3, project_id=$4 where todo_id=$5";
-        const values = [content, level, user_id, project_id, todo_id];
+        const query = "update \"Todo\" set content=$1, level=$2, project_id=$3 where user_id=$4 and todo_id=$5 and date > CURRENT_TIMESTAMP - INTERVAL '1 day'";
+        const values = [content, level, project_id, user_id, todo_id];
 
         await db.query(query, values)
             .then(res => {
