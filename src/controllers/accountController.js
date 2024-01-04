@@ -18,9 +18,17 @@ function generateRefreshToken(userData) {
     return refreshToken;
 }
 
+function generateAuthCode() {
+    let authCode = '';
+    for (let i = 0; i < 6; i++) {
+        authCode += Math.floor(Math.random() * 10);
+    } //여섯자리 숫자로 이루어진 인증코드 생성(string)
+    return authCode;
+}
+
 module.exports = {
     //이메일 인증
-    sendMail: async (req, res) => {
+    sendMailForRegister: async (req, res) => {
         try {
             const email = req.body.email;
             const userData = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
@@ -33,11 +41,8 @@ module.exports = {
                     strategy: userData.strategy 
                 });
             } else {
-                let authCode = '';
-                for (let i = 0; i < 6; i++) {
-                    authCode += Math.floor(Math.random() * 10);
-                } //여섯자리 숫자로 이루어진 인증코드 생성(string)
-                const mailResult = await mailer(email, authCode);
+                const authCode = generateAuthCode();
+                const mailResult = await mailer(email, authCode, 'register');
                 if (mailResult) {
                     const codeId = await accountModel.saveCode(authCode);
                     
@@ -261,5 +266,50 @@ module.exports = {
             });
         }
     },
+    sendMailForFindPassword: async (req, res) => {
+        try {
+            const email = req.body.email;
+            const authCode = generateAuthCode();
+            const mailResult = await mailer(email, authCode, 'changePW');
 
+            if (mailResult) {
+                const codeId = await accountModel.saveCode(authCode);
+                
+                res.status(200).json({ 
+                    result: "success", 
+                    codeId: codeId
+                });
+            } 
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    },
+    //비밀번호 변경
+    changePassowrd: async (req, res) => {
+        try {
+            const inputData = req.body
+            const changeResult = await accountModel.changePasword(inputData);
+            if (changeResult) {
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "비밀번호 변경 성공"
+                });
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "0개 또는 두개 이상의 비밀번호가 변경됨"
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }    
+    }
 };
