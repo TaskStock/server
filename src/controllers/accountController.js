@@ -20,7 +20,7 @@ function generateRefreshToken(userData) {
 
 module.exports = {
     //이메일 인증
-    sendMail: async (req, res) => {
+    sendMailForRegister: async (req, res) => {
         try {
             const email = req.body.email;
             const userData = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
@@ -37,7 +37,7 @@ module.exports = {
                 for (let i = 0; i < 6; i++) {
                     authCode += Math.floor(Math.random() * 10);
                 } //여섯자리 숫자로 이루어진 인증코드 생성(string)
-                const mailResult = await mailer(email, authCode);
+                const mailResult = await mailer(email, authCode, 'register');
                 if (mailResult) {
                     const codeId = await accountModel.saveCode(authCode);
                     
