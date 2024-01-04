@@ -32,7 +32,7 @@ module.exports = {
         const {rows} = await db.query(query, [codeId]);
 
         const authCode = rows[0].auth_code; // 인증코드(string)
-        const inputCode = inputData.inputCode; // 사용자가 입력한 코드(string)
+        const inputCode = inputData.inputCode; // 사용자가 입력한 코드(string) 
 
         if (authCode == inputCode) {
             return true;

@@ -23,7 +23,7 @@ router.get('/login/kakao', passport.authenticate('kakao'));
 router.get('/login/kakao/callback', passport.authenticate('kakao', { session: false }), accountController.login);
 
 //비밀번호 찾기
-// router.get('/password/mail', passport.authenticate('jwt', {session: false}), accountController.sendMailForfindPassword);
+router.post('/sendMail/password', accountController.sendMailForFindPassword);
 // router.post('/password/change', accountController.changePassword);
 
 module.exports = router;

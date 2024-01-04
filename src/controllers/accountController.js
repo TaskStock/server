@@ -18,6 +18,14 @@ function generateRefreshToken(userData) {
     return refreshToken;
 }
 
+function generateAuthCode() {
+    let authCode = '';
+    for (let i = 0; i < 6; i++) {
+        authCode += Math.floor(Math.random() * 10);
+    } //여섯자리 숫자로 이루어진 인증코드 생성(string)
+    return authCode;
+}
+
 module.exports = {
     //이메일 인증
     sendMailForRegister: async (req, res) => {
@@ -33,10 +41,7 @@ module.exports = {
                     strategy: userData.strategy 
                 });
             } else {
-                let authCode = '';
-                for (let i = 0; i < 6; i++) {
-                    authCode += Math.floor(Math.random() * 10);
-                } //여섯자리 숫자로 이루어진 인증코드 생성(string)
+                const authCode = generateAuthCode();
                 const mailResult = await mailer(email, authCode, 'register');
                 if (mailResult) {
                     const codeId = await accountModel.saveCode(authCode);
@@ -253,6 +258,28 @@ module.exports = {
                 message: "유저 정보 가져오기 성공",
                 userData: userData
             });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    },
+    sendMailForFindPassword: async (req, res) => {
+        try {
+            const email = req.body.email;
+            const authCode = generateAuthCode();
+            const mailResult = await mailer(email, authCode, 'changePW');
+
+            if (mailResult) {
+                const codeId = await accountModel.saveCode(authCode);
+                
+                res.status(200).json({ 
+                    result: "success", 
+                    codeId: codeId
+                });
+            } 
         } catch (error) {
             console.log(error);
             res.status(500).json({ 
