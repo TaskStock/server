@@ -23,7 +23,10 @@ router.get('/login/google/callback', passport.authenticate('google', { session: 
 //카카오 로그인 관련
 router.get('/login/kakao', passport.authenticate('kakao'));
 router.get('/login/kakao/callback', passport.authenticate('kakao', { session: false }), accountController.login);
+
+//비밀번호 찾기 관련
 router.post('/sendMail/password', accountController.sendMailForFindPassword);
+router.post('/change/password', accountController.changePassowrd);
 
 
 module.exports = router;

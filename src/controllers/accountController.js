@@ -288,5 +288,28 @@ module.exports = {
             });
         }
     },
-
+    //비밀번호 변경
+    changePassowrd: async (req, res) => {
+        try {
+            const inputData = req.body
+            const changeResult = await accountModel.changePasword(inputData);
+            if (changeResult) {
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "비밀번호 변경 성공"
+                });
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "0개 또는 두개 이상의 비밀번호가 변경됨"
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }    
+    }
 };

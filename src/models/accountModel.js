@@ -176,6 +176,21 @@ module.exports = {
         return true;
         }
     },
+    changePasword: async(inputData) => {
+        const query = 'UPDATE "User" SET password = $1 WHERE email = $2';
+        const {email, password} = inputData;
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const {rowCount} = await db.query(query, [hashedPassword, email])
+                            .catch(e => {
+                                console.error(e.stack);
+                            });
+        if (rowCount === 1) {
+            return true;
+        } else {
+            return false;
+        }
+    },
 }
     //초기 설정 저장
 //     createSetting: async(settingData) => {
