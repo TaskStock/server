@@ -2,12 +2,12 @@ const todoModel = require('../models/todoModel.js');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
-        const {title, content, level, project_id} = req.body;
+        const {content, level, project_id} = req.body;
         // 현재는 오늘 날짜만 todo를 생성할 수 있음
         
         user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
         try{
-            await todoModel.insertTodo(title, content, level, user_id, project_id);
+            await todoModel.insertTodo(content, level, user_id, project_id);
             // 순서 관련 로직 필요
         }catch(error){
             next(error);
@@ -30,10 +30,10 @@ module.exports = {
         res.json({todos: todos});
     },
     updateTodo: async(req, res, next) =>{
-        const {todo_id, title, content, level, user_id, project_id} = req.body;
+        const {todo_id, content, level, user_id, project_id} = req.body;
         
         try{
-            await todoModel.updateTodo(todo_id, title, content, level, user_id, project_id);
+            await todoModel.updateTodo(todo_id, content, level, user_id, project_id);
         }catch(error){
             next(error);
         }
