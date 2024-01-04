@@ -62,7 +62,8 @@ module.exports = {
     },
     // 유저 id와 todo id를 받아 해당 todo 삭제
     deleteTodo: async(req, res, next) =>{
-        const {todo_id, user_id} = req.body;
+        const {todo_id} = req.body;
+        const user_id = req.user.user_id;
         
         try{
             await todoModel.deleteTodo(todo_id, user_id);
