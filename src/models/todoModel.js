@@ -2,18 +2,20 @@ const db = require('../config/db.js');
 
 module.exports = {
     insertTodo: async(content, level, user_id, project_id)=>{
-        const query = "insert into \"Todo\" (content, date, level, user_id, project_id) VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4)";
+        const query = "insert into \"Todo\" (content, date, level, user_id, project_id) VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4) RETURNING todo_id";
         const values = [content, level, user_id, project_id];
 
-        await db.query(query, values)
+        const todo_id = await db.query(query, values)
             .then(res => {
-                console.log(res.rows[0]);
+                // console.log(res.rows[0]);
+                return res.rows[0].todo_id;
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
+        return todo_id;
     },
     readTodo: async(user_id, start_date, end_date)=>{
         const query = "select * from \"Todo\" where user_id=$1 and date>=$2 and date<$3";

@@ -1,15 +1,37 @@
 const todoModel = require('../models/todoModel.js');
+const repeatModel = require('../models/repeatModel.js');
 const { zonedTimeToUtc } = require('date-fns-tz');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
-        const {content, level, project_id} = req.body;
+        const {content, level, project_id, repeat_day, repeat_end_date} = req.body;
         // 현재는 오늘 날짜만 todo를 생성할 수 있음
-        
         const user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
+        const region = req.user.region;
+
+        // repeat_day 검증(이 필요한가?)
+        if (repeat_day.length !== 7){
+            return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
+        }else{
+            for(let i=0;i<7;i++){
+                if(repeat_day[i]!=='0' && repeat_day[i]!=='1'){
+                    return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
+                }
+            }
+        }
+
         try{
-            await todoModel.insertTodo(content, level, user_id, project_id);
+            const todo_id = await todoModel.insertTodo(content, level, user_id, project_id);
             // 순서 관련 로직 필요
+            
+            if(repeat_day!=="0000000"){
+                let trans_date=null;
+                if(repeat_end_date!==null){
+                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date}T00:00:00`), region);
+                }
+
+                await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
+            }
         }catch(error){
             next(error);
         }
