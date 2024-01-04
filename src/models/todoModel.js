@@ -15,9 +15,9 @@ module.exports = {
                 throw e;
             });
     },
-    readTodo: async(user_id, date)=>{
-        const query = "select * from \"Todo\" where user_id=$1 and DATE(date)=$2";
-        const values = [user_id, date];
+    readTodo: async(user_id, start_date, end_date)=>{
+        const query = "select * from \"Todo\" where user_id=$1 and date>=$2 and date<$3";
+        const values = [user_id, start_date, end_date];
 
         const todos = await db.query(query, values)
             .then(res => {
