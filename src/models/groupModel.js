@@ -19,6 +19,8 @@ module.exports = {
     },
     // 그룹 생성
     insertGroup: async(user_id, name, ispublic)=>{
+        // 트랜잭션 생각, 두 쿼리 합칠 수 있는지 찾아보기
+
         const query = "insert into \"Group\" (user_id, name, ispublic) VALUES ($1, $2, $3) RETURNING group_id";
         const values = [user_id, name, ispublic];
 
