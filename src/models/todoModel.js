@@ -91,4 +91,20 @@ module.exports = {
             });
         return todos;
     },
+    updateCheck: async(todo_id, user_id, check)=>{
+        const query = "update \"Todo\" set \"check\"=$1 where user_id=$2 and todo_id=$3 returning *";
+        const values = [check, user_id, todo_id];
+
+        const todo_date = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return todo_date;
+    },
 }
