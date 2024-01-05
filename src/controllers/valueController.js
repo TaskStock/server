@@ -3,8 +3,8 @@ const { zonedTimeToUtc } = require('date-fns-tz');
 
 module.exports = {
     createByNewUser: async(req, res, next) =>{
-        const {user_id} = req.body;
-        // 생성할 때는 db 기준(utc) 현재 시간을 저장시키면 됨
+        const user_id = req.user.user_id;
+        // 생성할 때는 db 기준(utc) 현재 시간을 저장
         
         try{
             await valueModel.createByNewUser(user_id);
@@ -18,7 +18,7 @@ module.exports = {
         }
     },
     createByExistUser: async(req, res, next) =>{
-        const {user_id} = req.body;
+        const user_id = req.user.user_id;
         
         try{
             const recentValue = await valueModel.getRecentValue(user_id);
@@ -40,11 +40,13 @@ module.exports = {
         }
     },
     getValues: async(req, res, next) =>{
-        const {user_id, region, start_date, end_date} = req.body;
+        const start_date = req.query.start_date;
+        const end_date = req.query.end_date;
         // start_date : 가져올 시작 날짜
         // end_date : 가져올 끝 날짜
         // ex. start_date="2023-12-26", end_date="2023-12-28" => 26일~27일 전부 가져옴
-        // region : Asia/Seoul 과 같은 타임존 형식이어야함
+        const user_id = req.user.user_id;
+        const region = req.user.region;
         
         const trans_start_date = zonedTimeToUtc(new Date(`${start_date}T00:00:00`), region);
         const trans_end_date = zonedTimeToUtc(new Date(`${end_date}T00:00:00`), region);
