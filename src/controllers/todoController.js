@@ -20,8 +20,9 @@ module.exports = {
             }
         }
 
+        let todo_id;
         try{
-            const todo_id = await todoModel.insertTodo(content, level, user_id, project_id);
+            todo_id = await todoModel.insertTodo(content, level, user_id, project_id);
             // 순서 관련 로직 필요
             
             if(repeat_day!=="0000000"){
@@ -35,7 +36,7 @@ module.exports = {
         }catch(error){
             next(error);
         }
-        res.json({result: "success"});
+        res.json({result: "success", todo_id: todo_id});
     },
     // 유저아이디와 날짜를 받아서 해당하는 todo들을 반환
     // 날짜 받을 때 지역정보?도 같이 받아야 utc 기준으로 계산 가능
