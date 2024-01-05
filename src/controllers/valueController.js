@@ -40,7 +40,8 @@ module.exports = {
         }
     },
     getValues: async(req, res, next) =>{
-        const {start_date, end_date} = req.body;
+        const start_date = req.query.start_date;
+        const end_date = req.query.end_date;
         // start_date : 가져올 시작 날짜
         // end_date : 가져올 끝 날짜
         // ex. start_date="2023-12-26", end_date="2023-12-28" => 26일~27일 전부 가져옴
