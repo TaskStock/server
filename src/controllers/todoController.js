@@ -1,6 +1,8 @@
 const todoModel = require('../models/todoModel.js');
 const repeatModel = require('../models/repeatModel.js');
-const { zonedTimeToUtc } = require('date-fns-tz');
+const valueModel = require('../models/valueModel.js');
+const { utcToZonedTime, zonedTimeToUtc } = require('date-fns-tz');
+const { startOfDay, addHours, addSeconds } = require('date-fns');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
@@ -106,6 +108,48 @@ module.exports = {
                     await repeatModel.deleatRepeat(todo_id);
                 }
             }
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
+    updateCheck: async(req, res, next) =>{
+        const {todo_id, check} = req.body;
+        // check : true or false
+        const user_id = req.user.user_id;
+        const region = req.user.region;
+        
+        try{
+            const todo = await todoModel.updateCheck(todo_id, user_id, check);
+
+            // 해당 todo가 정산시간을 지났는지 확인
+            const nowUtc = addSeconds(new Date(), -1);   // 계산시간을 생각하여 1초뺏음
+            const nowInTimeZone = utcToZonedTime(nowUtc, region);   // 지역에 맞는 시간으로 변환
+
+            // 해당 지역의 정산시간 구하기
+            const startOfToday = startOfDay(nowInTimeZone);
+            const sixAMToday = addHours(startOfToday, 6);   // 정산시간(6시)
+            let result;
+            if (nowInTimeZone >= sixAMToday) {
+                result = sixAMToday;
+            } else {
+                result = addHours(sixAMToday, -24);
+            }
+            // 결과를 UTC로 변환
+            const resultUtc = zonedTimeToUtc(result, region);
+
+            if(todo.date > resultUtc){  // 아직 정산안됐음
+                let changeAmount;
+                const endDate = addHours(resultUtc, 24);
+                if(check===true){
+                    changeAmount = todo.level * 1000;
+                }else if(check===false){
+                    changeAmount = todo.level * -1000;
+                }
+                await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc, endDate);
+            }
+
         }catch(error){
             next(error);
         }

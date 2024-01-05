@@ -7,6 +7,7 @@ router.post('/new', todoController.newTodo);
 router.get('/read', todoController.readTodo);
 router.put('/simpleupdate', todoController.updateContentAndProject);
 router.put('/update', todoController.updateTodo);
+router.post('/checktoggle', todoController.updateCheck);
 router.delete('/delete', todoController.deleteTodo);
 
 module.exports = router;
