@@ -150,22 +150,6 @@ module.exports = {
             });
         return user;
     },
-    getUserData: async(user_id) => {
-        const query = 'SELECT * FROM "User" WHERE user_id = $1';
-        const values = [user_id];
-
-        const user = await db.query(query, values)
-            .then(res => {
-                // console.log(res.rows);
-                return res.rows;
-            })
-            .catch(e => {
-                console.error(e.stack);
-
-                throw e;
-            });
-        return user;
-    },
     checkRefreshToken: async(refreshToken) => {
         const query = 'SELECT refresh_token FROM "Token" WHERE refresh_token = $1';
         const {rows} = await db.query(query, [refreshToken]);

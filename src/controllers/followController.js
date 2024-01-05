@@ -36,7 +36,7 @@ module.exports = {
 
         let user;
         try{
-            user = await accountModel.getUserData(user_id);
+            user = await accountModel.getUserById(user_id);
         }catch(error){
             next(error);
         }
