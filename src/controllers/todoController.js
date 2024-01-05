@@ -114,12 +114,14 @@ module.exports = {
         res.json({result: "success"});
     },
     // 유저 id와 todo id를 받아 해당 todo 삭제
+    // 해당 todo와 관련된 반복설정도 삭제됨
     deleteTodo: async(req, res, next) =>{
         const {todo_id} = req.body;
         const user_id = req.user.user_id;
         
         try{
             await todoModel.deleteTodo(todo_id, user_id);
+            await repeatModel.deleatRepeat(todo_id);
         }catch(error){
             next(error);
         }
