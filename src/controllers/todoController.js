@@ -71,11 +71,42 @@ module.exports = {
         res.json({result: "success"});
     },
     updateTodo: async(req, res, next) =>{
-        const {todo_id, content, level, project_id} = req.body;
+        const {todo_id, content, level, project_id, repeat_day, repeat_end_date} = req.body;
         const user_id = req.user.user_id;
+        const region = req.user.region;
+
+        // repeat_day 검증(이 필요한가?)
+        if (repeat_day.length !== 7){
+            return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
+        }else{
+            for(let i=0;i<7;i++){
+                if(repeat_day[i]!=='0' && repeat_day[i]!=='1'){
+                    return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
+                }
+            }
+        }
         
         try{
             await todoModel.updateTodo(todo_id, content, level, user_id, project_id);
+
+            const repeat_id = await repeatModel.getRepeat(todo_id);
+            if(repeat_day!=="0000000"){
+                let trans_date=null;
+                if(repeat_end_date!==null){
+                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date}T00:00:00`), region);
+                }
+        
+                if(repeat_id === undefined){    // todo 업데이트할때 없었던 반복설정을 새로 생성
+                    await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
+                }else{  // 있던 반복설정을 수정
+                    // 유저의 region은 변하지 않으므로 업데이트 대상에서 제외
+                    await repeatModel.updateRepeat(trans_date, repeat_day, todo_id);
+                }
+            }else{  // 있던 반복설정을 삭제
+                if(repeat_id !== undefined){
+                    await repeatModel.deleatRepeat(todo_id);
+                }
+            }
         }catch(error){
             next(error);
         }
