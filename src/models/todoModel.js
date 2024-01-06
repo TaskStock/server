@@ -18,7 +18,14 @@ module.exports = {
         return todo_id;
     },
     readTodo: async(user_id, start_date, end_date)=>{
-        const query = "select * from \"Todo\" where user_id=$1 and date>=$2 and date<$3";
+        const query = `
+        select * 
+        from \"Todo\" 
+        left join \"Todo_Repeat\" 
+            on \"Todo\".todo_id = \"Todo_Repeat\".todo_id
+        where user_id=$1 and date>=$2 and date<$3
+        `;
+
         const values = [user_id, start_date, end_date];
 
         const todos = await db.query(query, values)
