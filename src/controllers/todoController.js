@@ -30,11 +30,9 @@ module.exports = {
             if(repeat_day!=="0000000"){
                 let trans_date=null;
                 if(repeat_end_date!==null){
-                    trans_date = zonedTimeToUtc(new Date(repeat_end_date), "America/New_York");
+                    trans_date = new Date(`${repeat_end_date} 06:00:00`);
+                    // repeat_end_date : 2024-01-06 -> trans_date : 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
                 }
-
-                console.log(trans_date);
-
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
             }
         }catch(error){
@@ -57,7 +55,7 @@ module.exports = {
             todos = await todoModel.readTodo(user_id, trans_start_date, end_date);
 
             // "end_time": "2024-01-15T15:00:00.000Z",
-            //   "repeat_pattern": "0101100"
+            // "repeat_pattern": "0101100"
             for(let i=0;i<todos.length;i++){
                 // console.log("------------");
                 // console.log(todos[i].end_time);
@@ -192,12 +190,21 @@ module.exports = {
     },
     test: async(req, res, next) =>{
         const {todo_id, date} = req.body;
+        const region = req.user.region;
         
         try{
             const t_date = new Date(date);
             console.log(t_date);
             const t = await todoModel.test(todo_id, t_date);
-            return res.json({test: t});
+            // const tmp = t.toLocaleDateString('en-CA');
+
+            console.log("!!!!");
+            const tmp = new Date("2024-01-06");
+            console.log(tmp);
+            const trans_date = zonedTimeToUtc(tmp, region);
+            console.log(trans_date);
+
+            return res.json({test: tmp});
         }catch(error){
             next(error);
         }
