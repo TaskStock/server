@@ -68,6 +68,10 @@ module.exports = {
                     todos[i].end_time=trans_end_time.toLocaleDateString('en-CA');
                 }
                 // console.log(todos[i].end_time);
+
+                // 프론트 요구로 임시로 동일한 내용의 추가 필드 생성
+                todos[i].repeat_end_date = todos[i].end_time;
+                todos[i].repeat_day = todos[i].repeat_pattern;
             }
             
         }catch(error){
