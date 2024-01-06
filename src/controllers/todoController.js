@@ -188,4 +188,18 @@ module.exports = {
         
         res.json({result: "success"});
     },
+    test: async(req, res, next) =>{
+        const {todo_id, date} = req.body;
+        
+        try{
+            const t_date = new Date(date);
+            console.log(t_date);
+            const t = await todoModel.test(todo_id, t_date);
+            return res.json({test: t});
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
 }
