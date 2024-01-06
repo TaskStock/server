@@ -30,8 +30,10 @@ module.exports = {
             if(repeat_day!=="0000000"){
                 let trans_date=null;
                 if(repeat_end_date!==null){
-                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date} 00:00:00`), region);
+                    trans_date = zonedTimeToUtc(new Date(repeat_end_date), "America/New_York");
                 }
+
+                console.log(trans_date);
 
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
             }
