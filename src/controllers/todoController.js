@@ -62,6 +62,10 @@ module.exports = {
                     todos[i].end_time=trans_end_time.toLocaleDateString('en-CA');
                     // toLocaleDateString 가 로컬시간대의 날짜를 뽑아내는데 배포서버에도 제대로 작동할지 모르겠음
                 }
+
+                // 프론트 요구로 임시로 동일한 내용의 추가 필드 생성
+                todos[i].repeat_end_date = todos[i].end_time;
+                todos[i].repeat_day = todos[i].repeat_pattern;
             }
             
         }catch(error){
