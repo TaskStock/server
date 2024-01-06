@@ -30,7 +30,7 @@ module.exports = {
             if(repeat_day!=="0000000"){
                 let trans_date=null;
                 if(repeat_end_date!==null){
-                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date}T00:00:00`), region);
+                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date} 00:00:00`), region);
                 }
 
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
@@ -46,13 +46,30 @@ module.exports = {
         const user_id = req.user.user_id;
         const region = req.user.region;
 
-        const trans_start_date = zonedTimeToUtc(new Date(`${date}T00:00:00`), region);
+        const trans_start_date = zonedTimeToUtc(new Date(`${date} 00:00:00`), region);
         const end_date = new Date(trans_start_date);
         end_date.setDate(end_date.getDate() + 1);
         
         let todos;
         try{
             todos = await todoModel.readTodo(user_id, trans_start_date, end_date);
+
+            // "end_time": "2024-01-15T15:00:00.000Z",
+            //   "repeat_pattern": "0101100"
+            for(let i=0;i<todos.length;i++){
+                // console.log("------------");
+                // console.log(todos[i].end_time);
+                if(todos[i].end_time !== null){
+                    // const time_without_localtimezone = 
+                    const utcdate = new Date(todos[i].end_time);
+                    // console.log(utcdate);
+                    const trans_end_time = utcToZonedTime(utcdate, region);
+                    // console.log(trans_end_time);
+                    todos[i].end_time=trans_end_time.toLocaleDateString('en-CA');
+                }
+                // console.log(todos[i].end_time);
+            }
+            
         }catch(error){
             next(error);
         }
@@ -94,7 +111,7 @@ module.exports = {
             if(repeat_day!=="0000000"){
                 let trans_date=null;
                 if(repeat_end_date!==null){
-                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date}T00:00:00`), region);
+                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date} 00:00:00`), region);
                 }
         
                 if(repeat_id === undefined){    // todo 업데이트할때 없었던 반복설정을 새로 생성
