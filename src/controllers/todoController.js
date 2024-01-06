@@ -31,7 +31,7 @@ module.exports = {
                 let trans_date=null;
                 if(repeat_end_date!==null){
                     trans_date = new Date(`${repeat_end_date} 06:00:00`);
-                    // repeat_end_date : 2024-01-06 -> trans_date : 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
+                    // repeat_end_date : 2024-01-16 -> trans_date : 2024-01-16T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
                 }
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
             }
@@ -46,9 +46,8 @@ module.exports = {
         const user_id = req.user.user_id;
         const region = req.user.region;
 
-        const trans_start_date = zonedTimeToUtc(new Date(`${date} 00:00:00`), region);
-        const end_date = new Date(trans_start_date);
-        end_date.setDate(end_date.getDate() + 1);
+        const trans_start_date = new Date(`${date} 00:00:00`);
+        const end_date = addHours(trans_start_date, 24);
         
         let todos;
         try{
@@ -57,17 +56,12 @@ module.exports = {
             // "end_time": "2024-01-15T15:00:00.000Z",
             // "repeat_pattern": "0101100"
             for(let i=0;i<todos.length;i++){
-                // console.log("------------");
-                // console.log(todos[i].end_time);
                 if(todos[i].end_time !== null){
-                    // const time_without_localtimezone = 
-                    const utcdate = new Date(todos[i].end_time);
-                    // console.log(utcdate);
-                    const trans_end_time = utcToZonedTime(utcdate, region);
-                    // console.log(trans_end_time);
+                    const utcdate = new Date(todos[i].end_time);    // 이미 로컬 시간대가 적용됨?
+                    const trans_end_time = utcToZonedTime(utcdate, region); // 이 코드가 필요한지 모르겠음
                     todos[i].end_time=trans_end_time.toLocaleDateString('en-CA');
+                    // toLocaleDateString 가 로컬시간대의 날짜를 뽑아내는데 배포서버에도 제대로 작동할지 모르겠음
                 }
-                // console.log(todos[i].end_time);
             }
             
         }catch(error){
@@ -111,7 +105,7 @@ module.exports = {
             if(repeat_day!=="0000000"){
                 let trans_date=null;
                 if(repeat_end_date!==null){
-                    trans_date = zonedTimeToUtc(new Date(`${repeat_end_date} 00:00:00`), region);
+                    trans_date = new Date(`${repeat_end_date} 06:00:00`);
                 }
         
                 if(repeat_id === undefined){    // todo 업데이트할때 없었던 반복설정을 새로 생성
@@ -141,11 +135,11 @@ module.exports = {
             const todo = await todoModel.updateCheck(todo_id, user_id, check);
 
             // 해당 todo가 정산시간을 지났는지 확인
-            const nowUtc = addSeconds(new Date(), -1);   // 계산시간을 생각하여 1초뺏음
-            const nowInTimeZone = utcToZonedTime(nowUtc, region);   // 지역에 맞는 시간으로 변환
+            const nowUtc = addSeconds(new Date(), 1);   // 계산시간을 생각하여 1초더함
+            const nowInTimeZone = utcToZonedTime(nowUtc, region);   // 이미 로컬 시간대에 대한 정보를 포함한 utc임. 즉, 로컬 시간대로 안변함 - 이 로직이 필요한가?
 
             // 해당 지역의 정산시간 구하기
-            const startOfToday = startOfDay(nowInTimeZone);
+            const startOfToday = startOfDay(nowInTimeZone); // utc이지만 로컬 시간대에 맞는 시작일을 제대로 구하고 있음
             const sixAMToday = addHours(startOfToday, 6);   // 정산시간(6시)
             let result;
             if (nowInTimeZone >= sixAMToday) {
@@ -153,10 +147,10 @@ module.exports = {
             } else {
                 result = addHours(sixAMToday, -24);
             }
-            // 결과를 UTC로 변환
+            // 결과를 UTC로 변환 - 이미 UTC인데? 필요한가?
             const resultUtc = zonedTimeToUtc(result, region);
 
-            if(todo.date > resultUtc){  // 아직 정산안됐음
+            if(todo.date > resultUtc){  // 아직 정산안됐음                
                 let changeAmount;
                 const endDate = addHours(resultUtc, 24);
                 if(check===true){
