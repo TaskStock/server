@@ -67,7 +67,7 @@ module.exports = {
                     console.error(e.stack);
                 });
             rows = _rows;
-
+        
         } else {    //로컬 로그인의 경우
             // 비밀번호 암호화
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -83,6 +83,10 @@ module.exports = {
 
         // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
         const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
+        if (theme != null) {
+            theme = 'DARK';
+            language = 'korean';
+        }
         const defaultSet = [userData.user_id, isAgree, theme, language];
 
         await db.query(settingQuery, defaultSet)

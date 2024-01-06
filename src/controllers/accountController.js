@@ -123,6 +123,8 @@ module.exports = {
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
             });
+            const settingData = req.body;
+            await accountModel.createSetting(settingData);
 
         } catch (error) {
             console.log(error);
@@ -131,25 +133,27 @@ module.exports = {
                 message: "서버 오류"
             });
         }
+    
+
     },
     //초기 설정 저장
-    createSetting: async (req, res) => {
-        try {
-            const settingData = req.body;
-            await accountModel.createSetting(settingData);
-            res.status(200).json({ 
-                result: "success", 
-                message: "초기 설정 저장 성공"
-            }); 
+    // createSetting: async (req, res) => {
+    //     try {
+    //         const settingData = req.body;
+    //         await accountModel.createSetting(settingData);
+    //         res.status(200).json({ 
+    //             result: "success", 
+    //             message: "초기 설정 저장 성공"
+    //         }); 
             
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
-        }
-    },
+    //     } catch (error) {
+    //         console.log(error);
+    //         res.status(500).json({ 
+    //             result: "error", 
+    //             message: "서버 오류"
+    //         });
+    //     }
+    // },
     //로그인
     login: async (req, res) => {
         try {
