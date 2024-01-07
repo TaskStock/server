@@ -3,10 +3,10 @@ const router = express.Router();
 
 const projectController = require('../controllers/projectController.js');
 
-router.post('/new', projectController.newProject);
-router.put('/update', projectController.updateProject);
+router.post('', projectController.newProject);
+router.put('', projectController.updateProject);
 router.put('/retrospect', projectController.writeRetrospect);
-router.get('/readProject', projectController.readProjectWithTodos);
-router.get('/readAllProjects', projectController.readAllProjects);
+router.get('/withTodos/:project_id', projectController.readProjectWithTodos);
+router.get('/all', projectController.readAllProjects);
 
 module.exports = router;
