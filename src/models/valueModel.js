@@ -1,9 +1,9 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    createByNewUser: async(user_id)=>{
-        const query = "insert into \"Value\" (user_id, date) VALUES ($1, CURRENT_TIMESTAMP)";
-        const values = [user_id];
+    createByNewUser: async(user_id, date)=>{
+        const query = "insert into \"Value\" (user_id, date) VALUES ($1, $2)";
+        const values = [user_id, date];
 
         await db.query(query, values)
             .then(res => {

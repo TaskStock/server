@@ -1,5 +1,6 @@
 const valueModel = require('../models/valueModel.js');
 const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
+const { startOfDay, addHours } = require('date-fns');
 
 module.exports = {
     createByNewUser: async(req, res, next) =>{
@@ -7,7 +8,17 @@ module.exports = {
         // 생성할 때는 db 기준(utc) 현재 시간을 저장
         
         try{
-            await valueModel.createByNewUser(user_id);
+            const nowUtc = new Date();  // 로컬 시간대를 반영한 utc 생성
+            const startOfToday = startOfDay(nowUtc); // utc이지만 로컬 시간대에 맞는 시작일을 제대로 구하고 있음
+            const sixAMToday = addHours(startOfToday, 6);   // 정산시간(6시)
+            let result;
+            if (nowUtc >= sixAMToday) {
+                result = sixAMToday;
+            } else {
+                result = addHours(sixAMToday, -24);
+            }
+
+            await valueModel.createByNewUser(user_id, result);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
