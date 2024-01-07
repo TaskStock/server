@@ -1,5 +1,5 @@
 const valueModel = require('../models/valueModel.js');
-const { zonedTimeToUtc } = require('date-fns-tz');
+const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
 
 module.exports = {
     createByNewUser: async(req, res, next) =>{
@@ -48,8 +48,8 @@ module.exports = {
         const user_id = req.user.user_id;
         const region = req.user.region;
         
-        const trans_start_date = zonedTimeToUtc(new Date(`${start_date}T00:00:00`), region);
-        const trans_end_date = zonedTimeToUtc(new Date(`${end_date}T00:00:00`), region);
+        const trans_start_date = new Date(`${start_date} 06:00:00`);
+        const trans_end_date = new Date(`${end_date} 06:00:00`);
 
         if (isNaN(trans_start_date.getTime()) || isNaN(trans_end_date.getTime())) {
             return res.status(400).json({result: "fail", message: "잘못된 타임존입니다."});
@@ -57,6 +57,13 @@ module.exports = {
         
         try{
             const values = await valueModel.getValues(user_id, trans_start_date, trans_end_date);
+
+            for(let i=0;i<values.length;i++){
+                const utcdate = new Date(values[i].date);    // 이미 로컬 시간대가 적용됨?
+                const trans_date = utcToZonedTime(utcdate, region); // 이 코드가 필요한지 모르겠음
+                values[i].date=trans_date.toLocaleDateString('en-CA');
+            }
+
             res.json({values: values});
         }catch(error){
             next(error);
