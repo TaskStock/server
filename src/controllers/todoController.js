@@ -63,6 +63,11 @@ module.exports = {
                     // toLocaleDateString 가 로컬시간대의 날짜를 뽑아내는데 배포서버에도 제대로 작동할지 모르겠음
                 }
 
+                // 프론트 요구로 null이 아닌 "0000000" 으로 반환
+                if(todos[i].repeat_pattern === null){
+                    todos[i].repeat_pattern = "0000000";
+                }
+
                 // 프론트 요구로 임시로 동일한 내용의 추가 필드 생성
                 todos[i].repeat_end_date = todos[i].end_time;
                 todos[i].repeat_day = todos[i].repeat_pattern;
