@@ -18,8 +18,7 @@ router.get('/getUserInfo', passport.authenticate('jwt', { session: false }), acc
 
 //구글 로그인 관련
 router.get('/login/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/login/google/callback', accountController.login);
-
+router.get('/login/google/callback', passport.authenticate('google', { session: false }), accountController.login);
 
 //카카오 로그인 관련
 router.get('/login/kakao', passport.authenticate('kakao'));

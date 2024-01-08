@@ -218,14 +218,14 @@ module.exports = {
             const found = await accountModel.checkRefreshToken(refreshToken);
 
             if (!found) {
-                return res.status(403).json({
+                return res.status(401).json({
                     result: "fail",
                     message: "refreshToken이 유효하지 않습니다."
                 });
             } else {
                 jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
-                        return res.status(403).json({
+                        return res.status(401).json({
                             result: "fail",
                             message: "refreshToken이 유효하지 않습니다."
                         });
