@@ -6,7 +6,7 @@ module.exports = {
     createByNewUser: async(req, res, next) =>{
         const user_id = req.user.user_id;
         const region = req.user.region;
-        // 생성할 때는 db 기준(utc) 현재 시간을 저장
+        // 생성할 때는 로컬 기준 정산시간(06시) 를 utc로 변환하여 저장
         
         try{
             const settlementTime = transdate.getSettlementTimeInUTC(region);
@@ -23,6 +23,7 @@ module.exports = {
     },
     createByExistUser: async(req, res, next) =>{
         const user_id = req.user.user_id;
+        const region = req.user.region;
         
         try{
             const recentValue = await valueModel.getRecentValue(user_id);
@@ -33,7 +34,9 @@ module.exports = {
             const percentage = null;    // 계산 로직 필요
             const combo = 0;    // 계산 로직 필요
 
-            await valueModel.createByExistUser(user_id, percentage, start, end, low, high, combo);
+            const settlementTime = transdate.getSettlementTimeInUTC(region);
+
+            await valueModel.createByExistUser(user_id, settlementTime, percentage, start, end, low, high, combo);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
