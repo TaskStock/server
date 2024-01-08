@@ -315,5 +315,21 @@ module.exports = {
                 message: "서버 오류"
             });
         }    
+    },
+    //비밀번호 입력 받기 -> 같은지 확인(strategy가 local인 경우만) - staratgy도 프론트 전역에 저장? 
+    confirmCurrentPassword: async (req, res) => {
+        const inputData = req.body;
+        const confirmResult = await accountModel.confirmCurrentPassword(inputData);
+        if (confirmResult) {
+            res.stauts(200).json({
+                result: "success",
+                message: "비밀번호 확인 통과"
+            })
+        } else {
+            res.status(200).json({
+                result: "fail",
+                message: "비밀번호 틀림"
+            })
+        }
     }
 };

@@ -24,7 +24,7 @@ router.get('/login/google/callback', passport.authenticate('google', { session: 
 router.get('/login/kakao', passport.authenticate('kakao'));
 router.get('/login/kakao/callback', passport.authenticate('kakao', { session: false }), accountController.login);
 
-//비밀번호 찾기 관련
+//계정 정보 관련
 router.post('/sendMail/password', accountController.sendMailForFindPassword);
 router.post('/change/password', accountController.changePassowrd);
 

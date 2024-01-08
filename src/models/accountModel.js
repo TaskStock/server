@@ -179,6 +179,18 @@ module.exports = {
             return false;
         }
     },
+    confirmCurrentPassword: async(inputData) => {
+        const {email, inputPW} = inputData;
+        const query = 'SELECT password FROM "User" WHERE email = $1';
+        const {rows} = db.query(query, [email])
+            .catch(e => {
+                console.error(e.stack);
+            });
+        const savedPW = rows[0];
+
+        const confirmResult = await bcrypt.compare(inputPW, savedPW)
+        return confirmResult
+    }
 }
     //초기 설정 저장
 //     createSetting: async(settingData) => {
