@@ -181,27 +181,4 @@ module.exports = {
         
         res.json({result: "success"});
     },
-    test: async(req, res, next) =>{
-        const {todo_id, date} = req.body;
-        const region = req.user.region;
-        
-        try{
-            const t_date = new Date(date);
-            console.log(t_date);
-            const t = await todoModel.test(todo_id, t_date);
-            // const tmp = t.toLocaleDateString('en-CA');
-
-            console.log("!!!!");
-            const tmp = new Date("2024-01-06");
-            console.log(tmp);
-            const trans_date = zonedTimeToUtc(tmp, region);
-            console.log(trans_date);
-
-            return res.json({test: tmp});
-        }catch(error){
-            next(error);
-        }
-        
-        res.json({result: "success"});
-    },
 }

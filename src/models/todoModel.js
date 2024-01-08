@@ -114,20 +114,4 @@ module.exports = {
             });
         return todo_date;
     },
-    test: async(todo_id, date)=>{
-        const query = "update \"Todo\" set \"test\"=$1 where todo_id=$2 returning test";
-        const values = [date, todo_id];
-
-        const t = await db.query(query, values)
-            .then(res => {
-                // console.log(res.rows[0]);
-                return res.rows[0].test;
-            })
-            .catch(e => {
-                console.error(e.stack);
-
-                throw e;
-            });
-        return t;
-    },
 }
