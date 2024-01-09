@@ -1,6 +1,7 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
@@ -317,11 +318,12 @@ module.exports = {
         }    
     },
     //비밀번호 입력 받기 -> 같은지 확인(strategy가 local인 경우만) - staratgy도 프론트 전역에 저장? 
-    confirmCurrentPassword: async (req, res) => {
-        const inputData = req.body;
-        const confirmResult = await accountModel.confirmCurrentPassword(inputData);
-        if (confirmResult) {
-            res.stauts(200).json({
+    confirmPassword: async (req, res) => {
+        const inputPW = req.body.inputPW;
+        const savedPW = req.user.password;
+        
+        if (await bcrypt.compare(inputPW, savedPW)) {
+            res.status(200).json({
                 result: "success",
                 message: "비밀번호 확인 통과"
             })
