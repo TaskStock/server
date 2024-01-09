@@ -1,6 +1,7 @@
 const accountModel = require('../models/accountModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
@@ -123,6 +124,8 @@ module.exports = {
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
             });
+            const settingData = req.body;
+            await accountModel.createSetting(settingData);
 
         } catch (error) {
             console.log(error);
@@ -131,25 +134,27 @@ module.exports = {
                 message: "서버 오류"
             });
         }
+    
+
     },
     //초기 설정 저장
-    createSetting: async (req, res) => {
-        try {
-            const settingData = req.body;
-            await accountModel.createSetting(settingData);
-            res.status(200).json({ 
-                result: "success", 
-                message: "초기 설정 저장 성공"
-            }); 
+    // createSetting: async (req, res) => {
+    //     try {
+    //         const settingData = req.body;
+    //         await accountModel.createSetting(settingData);
+    //         res.status(200).json({ 
+    //             result: "success", 
+    //             message: "초기 설정 저장 성공"
+    //         }); 
             
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
-        }
-    },
+    //     } catch (error) {
+    //         console.log(error);
+    //         res.status(500).json({ 
+    //             result: "error", 
+    //             message: "서버 오류"
+    //         });
+    //     }
+    // },
     //로그인
     login: async (req, res) => {
         try {
@@ -214,14 +219,14 @@ module.exports = {
             const found = await accountModel.checkRefreshToken(refreshToken);
 
             if (!found) {
-                return res.status(403).json({
+                return res.status(401).json({
                     result: "fail",
                     message: "refreshToken이 유효하지 않습니다."
                 });
             } else {
                 jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
-                        return res.status(403).json({
+                        return res.status(401).json({
                             result: "fail",
                             message: "refreshToken이 유효하지 않습니다."
                         });
@@ -311,5 +316,55 @@ module.exports = {
                 message: "서버 오류"
             });
         }    
+    },
+    //비밀번호 입력 받기 -> 같은지 확인(strategy가 local인 경우만) - staratgy도 프론트 전역에 저장? 
+    confirmPassword: async (req, res) => {
+        try {
+            const inputPW = req.body.inputPW;
+            const savedPW = req.user.password;
+            
+            if (await bcrypt.compare(inputPW, savedPW)) {
+                res.status(200).json({
+                    result: "success",
+                    message: "비밀번호 확인 통과"
+                })
+            } else {
+                res.status(200).json({
+                    result: "fail",
+                    message: "비밀번호 틀림"
+                })
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    },
+    //회원탈퇴
+    unregister: async (req, res) => {
+        try {
+            const user_id = req.user.user_id;
+            const deleteResult = await accountModel.deleteUser(user_id);
+
+            if (deleteResult) {
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "회원탈퇴 성공" 
+                });
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨" 
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
     }
 };

@@ -67,7 +67,7 @@ module.exports = {
                     console.error(e.stack);
                 });
             rows = _rows;
-
+        
         } else {    //로컬 로그인의 경우
             // 비밀번호 암호화
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -83,6 +83,10 @@ module.exports = {
 
         // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
         const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
+        if (theme != null) {
+            theme = 'DARK';
+            language = 'korean';
+        }
         const defaultSet = [userData.user_id, isAgree, theme, language];
 
         await db.query(settingQuery, defaultSet)
@@ -175,15 +179,17 @@ module.exports = {
             return false;
         }
     },
+    deleteUser: async(user_id) => {
+        const query = 'DELETE FROM "User" WHERE user_id = $1';
+        const {rowCount} = await db.query(query, [user_id])
+                            .catch(e => {
+                                console.error(e.stack);
+                            });
+        if (rowCount === 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
-    //초기 설정 저장
-//     createSetting: async(settingData) => {
-//         const {user_id, isAgree, theme, language} = settingData;
-//         const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
-
-//         await db.query(query, [user_id, isAgree, theme, language])
-//             .catch(e => {
-//                 console.error(e.stack);
-//             });
-//     }
 
