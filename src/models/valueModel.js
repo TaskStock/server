@@ -76,4 +76,18 @@ module.exports = {
                 throw e;
             });
     },
+    updateValue: async(user_id, value_id, start, end, low, high)=>{
+        const query = "update \"Value\" set start=$1, \"end\"=$2, low=$3, high=$4 where user_id=$5 and value_id=$6";
+        const values = [start, end, low, high, user_id, value_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }

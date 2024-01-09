@@ -38,6 +38,23 @@ module.exports = {
                 }
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
             }
+
+            const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+            const value = await valueModel.getRecentValue(user_id);
+            
+            if(value === undefined){
+                return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+            }else if(value.date.toISOString() !== sttime){
+                return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 존재하지 않습니다."});
+            }else{
+                const value_id = value.value_id;
+                const start = value.start;
+                const end = value.end;
+                const updateLow = value.low + calculate.failedTodo(level);
+                const updateHigh = value.high + calculate.plusLevel(level);
+
+                await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+            }
         }catch(error){
             next(error);
         }
