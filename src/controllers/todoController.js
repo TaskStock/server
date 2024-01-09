@@ -125,6 +125,7 @@ module.exports = {
         }
         
         try{
+            const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
             await todoModel.updateTodo(todo_id, content, level, user_id, project_id);
 
             const repeat_id = await repeatModel.getRepeat(todo_id);
@@ -143,6 +144,29 @@ module.exports = {
             }else{  // 있던 반복설정을 삭제
                 if(repeat_id !== undefined){
                     await repeatModel.deleatRepeat(todo_id);
+                }
+            }
+
+            if(todo.level !== level){
+                const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+                const value = await valueModel.getRecentValue(user_id);
+                
+                if(value === undefined){
+                    return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                }else if(value.date.toISOString() !== sttime){
+                    return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 존재하지 않습니다."});
+                }else{
+                    const value_id = value.value_id;
+                    const start = value.start;
+                    let end = value.end;
+                    const updateLow = value.low - calculate.changeLevelForLow(todo.level, level);
+                    const updateHigh = value.high + calculate.changeLevelForHighEnd(todo.level, level);
+
+                    if(todo.check === true){
+                        end = value.end + calculate.changeLevelForHighEnd(todo.level, level);
+                    }
+    
+                    await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
                 }
             }
         }catch(error){
