@@ -3,9 +3,9 @@ const repeatModel = require('../models/repeatModel.js');
 const valueModel = require('../models/valueModel.js');
 
 const transdate = require('../service/transdateService.js');
+const calculate = require('../service/calculateService.js');
 
-const { utcToZonedTime, zonedTimeToUtc } = require('date-fns-tz');
-const { startOfDay, addHours, addSeconds } = require('date-fns');
+const { addHours } = require('date-fns');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
@@ -153,9 +153,9 @@ module.exports = {
                 let changeAmount;
                 const endDate = addHours(resultUtc, 24);
                 if(check===true){
-                    changeAmount = todo.level * 1000;
+                    changeAmount = calculate.plusLevel(todo.level);
                 }else if(check===false){
-                    changeAmount = todo.level * -1000;
+                    changeAmount = calculate.minusLevel(todo.level);
                 }
                 await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc, endDate);
             }
