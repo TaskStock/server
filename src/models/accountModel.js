@@ -179,27 +179,17 @@ module.exports = {
             return false;
         }
     },
-    confirmCurrentPassword: async(inputData) => {
-        const {email, inputPW} = inputData;
-        const query = 'SELECT password FROM "User" WHERE email = $1';
-        const {rows} = db.query(query, [email])
-            .catch(e => {
-                console.error(e.stack);
-            });
-        const savedPW = rows[0];
-
-        const confirmResult = await bcrypt.compare(inputPW, savedPW)
-        return confirmResult
+    deleteUser: async(user_id) => {
+        const query = 'DELETE FROM "User" WHERE user_id = $1';
+        const {rowCount} = await db.query(query, [user_id])
+                            .catch(e => {
+                                console.error(e.stack);
+                            });
+        if (rowCount === 1) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
-    //초기 설정 저장
-//     createSetting: async(settingData) => {
-//         const {user_id, isAgree, theme, language} = settingData;
-//         const query = 'UPDATE "UserSetting" SET is_agree = $2, theme = $3, language = $4 WHERE user_id = $1';
-
-//         await db.query(query, [user_id, isAgree, theme, language])
-//             .catch(e => {
-//                 console.error(e.stack);
-//             });
-//     }
 

@@ -319,19 +319,52 @@ module.exports = {
     },
     //비밀번호 입력 받기 -> 같은지 확인(strategy가 local인 경우만) - staratgy도 프론트 전역에 저장? 
     confirmPassword: async (req, res) => {
-        const inputPW = req.body.inputPW;
-        const savedPW = req.user.password;
-        
-        if (await bcrypt.compare(inputPW, savedPW)) {
-            res.status(200).json({
-                result: "success",
-                message: "비밀번호 확인 통과"
-            })
-        } else {
-            res.status(200).json({
-                result: "fail",
-                message: "비밀번호 틀림"
-            })
+        try {
+            const inputPW = req.body.inputPW;
+            const savedPW = req.user.password;
+            
+            if (await bcrypt.compare(inputPW, savedPW)) {
+                res.status(200).json({
+                    result: "success",
+                    message: "비밀번호 확인 통과"
+                })
+            } else {
+                res.status(200).json({
+                    result: "fail",
+                    message: "비밀번호 틀림"
+                })
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
+        }
+    },
+    //회원탈퇴
+    unregister: async (req, res) => {
+        try {
+            const user_id = req.user.user_id;
+            const deleteResult = await accountModel.deleteUser(user_id);
+
+            if (deleteResult) {
+                res.status(200).json({ 
+                    result: "success", 
+                    message: "회원탈퇴 성공" 
+                });
+            } else {
+                res.status(200).json({ 
+                    result: "fail", 
+                    message: "회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨" 
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ 
+                result: "error", 
+                message: "서버 오류"
+            });
         }
     }
 };

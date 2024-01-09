@@ -28,6 +28,7 @@ router.get('/login/kakao/callback', passport.authenticate('kakao', { session: fa
 router.post('/sendMail/password', accountController.sendMailForFindPassword);
 router.post('/change/password', accountController.changePassowrd);
 router.post('/confirm/password', passport.authenticate('jwt', { session: false }), accountController.confirmPassword);
+router.delete('/unregister', passport.authenticate('jwt', { session: false }), accountController.unregister);
 
 
 module.exports = router;
