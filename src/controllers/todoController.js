@@ -9,7 +9,7 @@ const { addHours } = require('date-fns');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
-        const {content, level, project_id, repeat_day, repeat_end_date} = req.body;
+        const {content, level, project_id, repeat_day, repeat_end_date, nowUTC} = req.body;
         // 현재는 오늘 날짜만 todo를 생성할 수 있음
         const user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
         const region = req.user.region;
@@ -27,7 +27,7 @@ module.exports = {
 
         let todo_id;
         try{
-            todo_id = await todoModel.insertTodo(content, level, user_id, project_id);
+            todo_id = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC);
             // 순서 관련 로직 필요
             
             if(repeat_day!=="0000000"){
@@ -39,14 +39,12 @@ module.exports = {
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
             }
 
-            const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+            const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
             const value = await valueModel.getRecentValue(user_id);
             
             if(value === undefined){
                 return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
-            }else if(value.date.toISOString() !== sttime){
-                return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
-            }else{
+            }else if(value.date.toISOString() === sttime){
                 const value_id = value.value_id;
                 const start = value.start;
                 const end = value.end;
