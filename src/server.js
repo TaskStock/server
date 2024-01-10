@@ -43,11 +43,12 @@ app.get('/', (req, res) => {
 });
 
 // 클라이언트로부터 받은 req.body를 출력하는 미들웨어
-const printReqBody = (req, res, next) => {
+const printReq = (req, res, next) => {
+    console.log('Received headers authorization:', req.headers.authorization);
     console.log('Received body:', req.body);
     next(); 
 };
-app.use(printReqBody);
+app.use(printReq);
 
 app.use("/account", accountRouter);
 app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
