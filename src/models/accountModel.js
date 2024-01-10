@@ -83,12 +83,8 @@ module.exports = {
 
         // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
         const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
-        if (theme != null) {
-            theme = 'DARK';
-            language = 'korean';
-        }
         const defaultSet = [userData.user_id, isAgree, theme, language];
-
+        
         await db.query(settingQuery, defaultSet)
             .catch(e => {
                 console.error(e.stack);
