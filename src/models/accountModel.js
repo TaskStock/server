@@ -137,7 +137,7 @@ module.exports = {
         return user;
     },
     checkRefreshToken: async(user_id, refreshToken) => {
-        const query = 'SELECT refresh_token FROM "Token" WHERE refresh_token = $1';
+        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
         const {rows} = await db.query(query, [user_id]);
 
         const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
