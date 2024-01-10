@@ -208,7 +208,7 @@ module.exports = {
             const certified = await accountModel.checkRefreshToken(user_id, refreshToken);
 
             if (!certified) {
-                console.log("refreshToken 재발급 실패.")
+                console.log("access token 재발급 실패. refreshToken이 일치하지 않습니다.")
                 return res.status(401).json({
                     result: "fail",
                     message: "refreshToken이 일치하지 않습니다."
@@ -216,7 +216,7 @@ module.exports = {
             } else {
                 jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
-                        console.log("refreshToken 재발급 실패.")
+                        console.log("access token 재발급 실패. refrehToken이 유효하지 않습니다. ")
                         return res.status(401).json({
                             result: "fail",
                             message: "refreshToken이 유효하지 않습니다."
