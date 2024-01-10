@@ -111,7 +111,6 @@ module.exports = {
         const query = 'DELETE FROM "Token" WHERE user_id = $1';
         try {
             const {rowCount} = await db.query(query, [user_id])
-            console.log(rowCount)
             if (rowCount === 1) {
                 return true;
             } else {

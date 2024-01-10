@@ -127,7 +127,8 @@ module.exports = {
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
                 accessExp: accessExp,
-                refreshExp: refreshExp
+                refreshExp: refreshExp,
+                strategy: userData.strategy
             });
 
         } catch (error) {
@@ -178,7 +179,7 @@ module.exports = {
                     message: "로그아웃 성공" 
                 });
             } else {
-                console.log("로그아웃 실패")
+                console.log("로그아웃 실패 - 0개 혹은 2개 이상의 refreshToken이 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
                     message: "로그아웃 실패" 
