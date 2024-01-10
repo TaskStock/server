@@ -28,7 +28,12 @@ module.exports = {
             const start_date = transdate.getStartOfDayTime(nowUTC, region);
             const end_date = transdate.plusOneDay(start_date, region);
 
-            const nextIndex = await todoModel.getHighestIndex(user_id, start_date, end_date) + 1;
+            const index = await todoModel.getHighestIndex(user_id, start_date, end_date);
+
+            let nextIndex = 1;
+            if(index !== undefined){
+                nextIndex = index.index + 1;
+            }
 
             todo_id = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
             // 순서 관련 로직 필요

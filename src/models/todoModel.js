@@ -146,13 +146,13 @@ module.exports = {
             });
     },
     getHighestIndex: async(user_id, start_date, end_date)=>{
-        const query = "select index from \"Todo\" where user_id=$1 and date>=$2 and date<$3 order by index desc limit 1";
+        const query = "select \"index\" from \"Todo\" where user_id=$1 and date>=$2 and date<$3 order by index desc limit 1";
         const values = [user_id, start_date, end_date];
 
         const index = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows[0]);
-                return res.rows[0].index;
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
