@@ -65,10 +65,6 @@ module.exports = {
         try{
             const values = await valueModel.getValues(user_id, trans_start_date, trans_end_date);
 
-            for(let i=0;i<values.length;i++){
-                values[i].date=transdate.UTCToLocalDate(values[i].date, region);
-            }
-
             res.json({values: values});
         }catch(error){
             next(error);
