@@ -191,11 +191,8 @@ module.exports = {
             if(todo === undefined){
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
             }
-            
-            console.log(todo.date);
-            console.log(resultUtc);
 
-            if(todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐음, 오늘 날짜인 경우만
+            if(todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐고 오늘 날짜인 경우만
                 let changeAmount;
                 const endDate = addHours(resultUtc, 24);
                 if(check===true){
