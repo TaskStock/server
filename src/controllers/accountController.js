@@ -198,8 +198,7 @@ module.exports = {
         try {
             const refreshToken = req.body.refreshToken;
             const user_id = jwt.decode(refreshToken).user_id;
-            // console.log("jwt에 담긴 :", user_id)
-
+            
             if (refreshToken === null) {
                 console.log("refreshToken 재발급 실패.")
                 return res.status(401).json({ 
@@ -229,13 +228,7 @@ module.exports = {
                             .then(users => {
                                 console.log(users)
                                 const userData = users[0]
-                                console.log("res[0]:", users[0])
-                                console.log("userData:", userData)
-                                // const result = generateAccessToken(userData)
-                                // console.log("result:", result)
                                 const [accessToken, accessExp] = generateAccessToken(userData)
-                                // accessToken = result[0]
-                                // accessExp = result[1]
                                 console.log("access token 재발급 성공.")
                                 return res.status(200).json({
                                     result: "success",
