@@ -3,9 +3,9 @@ const repeatModel = require('../models/repeatModel.js');
 const valueModel = require('../models/valueModel.js');
 
 const transdate = require('../service/transdateService.js');
+const calculate = require('../service/calculateService.js');
 
-const { utcToZonedTime, zonedTimeToUtc } = require('date-fns-tz');
-const { startOfDay, addHours, addSeconds } = require('date-fns');
+const { addHours } = require('date-fns');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
@@ -37,6 +37,23 @@ module.exports = {
                     // repeat_end_date : 2024-01-16 -> trans_date : 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
                 }
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
+            }
+
+            const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+            const value = await valueModel.getRecentValue(user_id);
+            
+            if(value === undefined){
+                return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+            }else if(value.date.toISOString() !== sttime){
+                return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
+            }else{
+                const value_id = value.value_id;
+                const start = value.start;
+                const end = value.end;
+                const updateLow = value.low + calculate.failedTodo(level);
+                const updateHigh = value.high + calculate.plusLevel(level);
+
+                await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
             }
         }catch(error){
             next(error);
@@ -108,6 +125,7 @@ module.exports = {
         }
         
         try{
+            const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
             await todoModel.updateTodo(todo_id, content, level, user_id, project_id);
 
             const repeat_id = await repeatModel.getRepeat(todo_id);
@@ -128,6 +146,29 @@ module.exports = {
                     await repeatModel.deleatRepeat(todo_id);
                 }
             }
+
+            if(todo.level !== level){
+                const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+                const value = await valueModel.getRecentValue(user_id);
+                
+                if(value === undefined){
+                    return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                }else if(value.date.toISOString() !== sttime){
+                    return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 존재하지 않습니다."});
+                }else{
+                    const value_id = value.value_id;
+                    const start = value.start;
+                    let end = value.end;
+                    const updateLow = value.low - calculate.changeLevelForLow(todo.level, level);
+                    const updateHigh = value.high + calculate.changeLevelForHighEnd(todo.level, level);
+
+                    if(todo.check === true){
+                        end = value.end + calculate.changeLevelForHighEnd(todo.level, level);
+                    }
+    
+                    await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+                }
+            }
         }catch(error){
             next(error);
         }
@@ -135,6 +176,7 @@ module.exports = {
         res.json({result: "success"});
     },
     updateCheck: async(req, res, next) =>{
+        // check가 true -> true 인 경우는 검사하지 않으므로 true -> false, false -> true 인 경우만 보낼 것
         const {todo_id, check} = req.body;
         // check : true or false
         const user_id = req.user.user_id;
@@ -144,18 +186,22 @@ module.exports = {
             const todo = await todoModel.updateCheck(todo_id, user_id, check);
 
             const resultUtc = transdate.getSettlementTimeInUTC(region);
+            const nextDayUtc = addHours(resultUtc, 24);
 
             if(todo === undefined){
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
             }
+            
+            console.log(todo.date);
+            console.log(resultUtc);
 
-            if(todo.date > resultUtc){  // 아직 정산안됐음
+            if(todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐음, 오늘 날짜인 경우만
                 let changeAmount;
                 const endDate = addHours(resultUtc, 24);
                 if(check===true){
-                    changeAmount = todo.level * 1000;
+                    changeAmount = calculate.plusLevel(todo.level);
                 }else if(check===false){
-                    changeAmount = todo.level * -1000;
+                    changeAmount = calculate.minusLevel(todo.level);
                 }
                 await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc, endDate);
             }
@@ -171,10 +217,36 @@ module.exports = {
     deleteTodo: async(req, res, next) =>{
         const {todo_id} = req.body;
         const user_id = req.user.user_id;
+        const region = req.user.region;
         
         try{
+            const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
+
             await todoModel.deleteTodo(todo_id, user_id);
             await repeatModel.deleatRepeat(todo_id);
+
+            if(todo !== undefined && todo.level !== 0){
+                const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+                const value = await valueModel.getRecentValue(user_id);
+                
+                if(value === undefined){
+                    return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                }else if(value.date.toISOString() !== sttime){
+                    return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
+                }else{
+                    const value_id = value.value_id;
+                    const start = value.start;
+                    let end = value.end;
+                    const updateLow = value.low - calculate.changeLevelForLow(todo.level, 0);
+                    const updateHigh = value.high + calculate.changeLevelForHighEnd(todo.level, 0);
+
+                    if(todo.check === true){
+                        end = value.end + calculate.changeLevelForHighEnd(todo.level, 0);
+                    }
+    
+                    await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+                }
+            }
         }catch(error){
             next(error);
         }

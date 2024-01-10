@@ -10,6 +10,7 @@ const db = new pg.Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+  connectionTimeoutMillis: process.env.DB_CONNECTIONTIMEOUT,
   max: process.env.DB_POOL_NUM,
 });
 

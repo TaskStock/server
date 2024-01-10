@@ -114,4 +114,20 @@ module.exports = {
             });
         return todo_date;
     },
+    readTodoUsingTodoId: async(todo_id, user_id)=>{
+        const query = "select * from \"Todo\" where user_id=$1 and todo_id=$2";
+        const values = [user_id, todo_id];
+
+        const todo = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return todo;
+    },
 }
