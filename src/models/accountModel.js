@@ -154,14 +154,17 @@ module.exports = {
             });
         return user;
     },
-    checkRefreshToken: async(refreshToken) => {
+    checkRefreshToken: async(user_id, refreshToken) => {
         const query = 'SELECT refresh_token FROM "Token" WHERE refresh_token = $1';
-        const {rows} = await db.query(query, [refreshToken]);
+        const {rows} = await db.query(query, [user_id]);
 
-        if (rows.length === 0) { //토큰이 DB에 없는 경우
+        const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
+        const inputRefreshToken = refreshToken; // 사용자가 입력한 refreshToken
+
+        if (dbRefreshToken === inputRefreshToken) {
+            return true;
+        } else {
             return false;
-        } else {    //토큰이 DB에 있는 경우
-        return true;
         }
     },
     changePasword: async(inputData) => {
