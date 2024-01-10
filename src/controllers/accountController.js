@@ -251,6 +251,7 @@ module.exports = {
     getUserInfo: async (req, res) => {
         try {
             const { password, ...userData } = req.user;
+            
             res.status(200).json({
                 result: "success",
                 message: "유저 정보 가져오기 성공",

@@ -122,7 +122,13 @@ module.exports = {
         }
     },
     getUserById: async(user_id) => { //user_id로 유저 정보 가져오기
-        const query = 'SELECT * FROM "User" WHERE user_id = $1';
+        const query = 
+        `
+        SELECT "User".*, "UserSetting".theme, "UserSetting".language
+        FROM "User"
+        JOIN "UserSetting" ON "User".user_id = "UserSetting".user_id
+        WHERE "User".user_id = $1
+        `
 
         const user = await db.query(query, [user_id])
             .then(res => {
@@ -131,7 +137,6 @@ module.exports = {
             })
             .catch(e => {
                 console.error(e.stack);
-
                 throw e;
             });
         return user;
@@ -173,8 +178,8 @@ module.exports = {
         if (rowCount === 1) {
             return true;
         } else {
-            return false;
-        }
-    }
+            return false;        
+        } 
+    }, 
 }
 
