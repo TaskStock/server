@@ -198,7 +198,7 @@ module.exports = {
         try {
             const refreshToken = req.body.refreshToken;
             const user_id = jwt.decode(refreshToken).user_id;
-
+            
             if (refreshToken === null) {
                 console.log("refreshToken 재발급 실패.")
                 return res.status(401).json({ 
@@ -223,20 +223,25 @@ module.exports = {
                             message: "refreshToken이 유효하지 않습니다."
                         });
                     } else {
-                        const user_id = payload.user_id;
-                        let accessToken;
-                        await accountModel.getUserById(user_id)
-                            .then(res => {
-                                userData = res[0];
-                                [accessToken, accessExp] = generateAccessToken(userData)
+                        console.log("payload에 담긴 user_id:", payload.user_id)
+                        await accountModel.getUserById(payload.user_id)
+                            .then(users => {
+                                console.log(users)
+                                const userData = users[0]
+                                const [accessToken, accessExp] = generateAccessToken(userData)
+                                console.log("access token 재발급 성공.")
+                                return res.status(200).json({
+                                    result: "success",
+                                    message: "accessToken 재발급 성공",
+                                    accessToken: accessToken,
+                                    accessExp: accessExp
+                                });
+        
                             })
-                        console.log("access token 재발급 성공.")
-                        return res.status(200).json({
-                            result: "success",
-                            message: "accessToken 재발급 성공",
-                            accessToken: accessToken,
-                            accessExp: accessExp
-                        });
+                            .catch(e => {
+                                console.error(e.stack);
+                            })
+                        
                     }
                 });
             }
