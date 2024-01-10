@@ -45,7 +45,7 @@ module.exports = {
             if(value === undefined){
                 return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
             }else if(value.date.toISOString() !== sttime){
-                return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 존재하지 않습니다."});
+                return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
             }else{
                 const value_id = value.value_id;
                 const start = value.start;
@@ -212,10 +212,36 @@ module.exports = {
     deleteTodo: async(req, res, next) =>{
         const {todo_id} = req.body;
         const user_id = req.user.user_id;
+        const region = req.user.region;
         
         try{
+            const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
+
             await todoModel.deleteTodo(todo_id, user_id);
             await repeatModel.deleatRepeat(todo_id);
+
+            if(todo !== undefined && todo.level !== 0){
+                const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+                const value = await valueModel.getRecentValue(user_id);
+                
+                if(value === undefined){
+                    return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                }else if(value.date.toISOString() !== sttime){
+                    return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
+                }else{
+                    const value_id = value.value_id;
+                    const start = value.start;
+                    let end = value.end;
+                    const updateLow = value.low - calculate.changeLevelForLow(todo.level, 0);
+                    const updateHigh = value.high + calculate.changeLevelForHighEnd(todo.level, 0);
+
+                    if(todo.check === true){
+                        end = value.end + calculate.changeLevelForHighEnd(todo.level, 0);
+                    }
+    
+                    await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+                }
+            }
         }catch(error){
             next(error);
         }
