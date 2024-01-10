@@ -9,7 +9,7 @@ const { addHours } = require('date-fns');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
-        const {content, level, project_id, repeat_day, repeat_end_date} = req.body;
+        const {content, level, project_id, repeat_day, repeat_end_date, nowUTC} = req.body;
         // 현재는 오늘 날짜만 todo를 생성할 수 있음
         const user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
         const region = req.user.region;
@@ -27,7 +27,7 @@ module.exports = {
 
         let todo_id;
         try{
-            todo_id = await todoModel.insertTodo(content, level, user_id, project_id);
+            todo_id = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC);
             // 순서 관련 로직 필요
             
             if(repeat_day!=="0000000"){
@@ -39,14 +39,12 @@ module.exports = {
                 await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
             }
 
-            const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
+            const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
             const value = await valueModel.getRecentValue(user_id);
             
             if(value === undefined){
                 return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
-            }else if(value.date.toISOString() !== sttime){
-                return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
-            }else{
+            }else if(value.date.toISOString() === sttime){
                 const value_id = value.value_id;
                 const start = value.start;
                 const end = value.end;
@@ -61,17 +59,18 @@ module.exports = {
         res.json({result: "success", todo_id: todo_id});
     },
     readTodo: async(req, res, next) =>{
+        // 같은 날짜의 todo들이더라도 정산시간이 6시이므로 수정불가능한(?) todo가 불러와질 수 있음에 주의
         const date = req.query.date;
         // date : 클라이언트로부터 받은 시간 정보를 UTC 기준 timestamp로 변환
         const user_id = req.user.user_id;
         const region = req.user.region;
 
-        const trans_start_date = transdate.localDateToUTCWithStartOfDay(date, region);
-        const end_date = addHours(trans_start_date, 24);
+        const start_date = transdate.getStartOfDayTime(date, region);
+        const end_date = addHours(start_date, 24);
         
         let todos;
         try{
-            todos = await todoModel.readTodo(user_id, trans_start_date, end_date);
+            todos = await todoModel.readTodo(user_id, start_date, end_date);
 
             // "end_time": "2024-01-15T15:00:00.000Z",
             // "repeat_pattern": "0101100"

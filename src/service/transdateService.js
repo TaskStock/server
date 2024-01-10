@@ -38,4 +38,29 @@ module.exports = {
 
         return resultUtc;
     },
+    // string인 utc를 받아서 timezone에 따라 해당 지역 정산시간으로 변환
+    getSettlementTime: (utc, timezone) =>{
+        const nowZoneTime = utcToZonedTime(utc, timezone);
+
+        const startOfToday = startOfDay(nowZoneTime);
+        const sixAM = addHours(startOfToday, 6);
+        let result;
+        if (nowZoneTime >= sixAM) {
+            result = sixAM;
+        } else {
+            result = addHours(sixAM, -24);
+        }
+        // 결과를 UTC로 변환 - 이미 UTC인데? 필요한가?
+        const resultUtc = zonedTimeToUtc(result, timezone);
+
+        return resultUtc;
+    },
+    // string인 utc를 받아서 timezone에 따라 해당 지역 시작시간으로 변환
+    getStartOfDayTime: (utc, timezone) =>{
+        const nowZoneTime = utcToZonedTime(utc, timezone);
+
+        const startOfToday = startOfDay(nowZoneTime);
+
+        return startOfToday;
+    },
 }
