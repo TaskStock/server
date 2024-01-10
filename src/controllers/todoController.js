@@ -5,8 +5,6 @@ const valueModel = require('../models/valueModel.js');
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
 
-const { addHours } = require('date-fns');
-
 module.exports = {
     newTodo: async(req, res, next) =>{
         const {content, level, project_id, repeat_day, repeat_end_date, nowUTC} = req.body;
@@ -27,7 +25,12 @@ module.exports = {
 
         let todo_id;
         try{
-            todo_id = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC);
+            const start_date = transdate.getStartOfDayTime(nowUTC, region);
+            const end_date = transdate.plusOneDay(start_date, region);
+
+            const nextIndex = await todoModel.getHighestIndex(user_id, start_date, end_date) + 1;
+
+            todo_id = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
             // 순서 관련 로직 필요
             
             if(repeat_day!=="0000000"){
@@ -66,7 +69,7 @@ module.exports = {
         const region = req.user.region;
 
         const start_date = transdate.getStartOfDayTime(date, region);
-        const end_date = addHours(start_date, 24);
+        const end_date = transdate.plusOneDay(start_date, region);
         
         let todos;
         try{
@@ -221,7 +224,7 @@ module.exports = {
             const todo = await todoModel.updateCheck(todo_id, user_id, check);
 
             const resultUtc = transdate.getSettlementTimeInUTC(region);
-            const nextDayUtc = addHours(resultUtc, 24);
+            const nextDayUtc = transdate.plusOneDay(resultUtc);
 
             if(todo === undefined){
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
@@ -229,7 +232,7 @@ module.exports = {
 
             if(todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐고 오늘 날짜인 경우만
                 let changeAmount;
-                const endDate = addHours(resultUtc, 24);
+                const endDate = transdate.plusOneDay(resultUtc);
                 if(check===true){
                     changeAmount = calculate.plusLevel(todo.level);
                 }else if(check===false){
@@ -300,6 +303,27 @@ module.exports = {
                 const tomorrow = transdate.plusOneDay(todo.date, region);
                 await todoModel.updateTodoDate(todo_id, user_id, tomorrow);
             }
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
+    updateIndex: async(req, res, next) =>{
+        const {changed_todos} = req.body;
+        const user_id = req.user.user_id;
+        
+        try{
+            // for(let i=0;i<changed_todos.length;i++){
+            //     await todoModel.updateIndex(changed_todos[i].todo_id, user_id, changed_todos[i].changed_index);
+            // }
+
+            // 각 업데이트는 비동기적으로 실행하고 모든 작업이 끝날때까지 대기
+            await Promise.all(
+                changed_todos.map(todo =>
+                    todoModel.updateIndex(todo.todo_id, user_id, todo.changed_index)
+                )
+            );
         }catch(error){
             next(error);
         }
