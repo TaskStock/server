@@ -20,10 +20,11 @@ module.exports = {
     readTodo: async(user_id, start_date, end_date)=>{
         const query = `
         select * 
-        from \"Todo\" 
-        left join \"Todo_Repeat\" 
-            on \"Todo\".todo_id = \"Todo_Repeat\".todo_id
+        from \"Todo\" T
+        left join \"Todo_Repeat\" R
+            on T.todo_id = R.todo_id
         where user_id=$1 and date>=$2 and date<$3
+        order by date(T.date), index
         `;
 
         const values = [user_id, start_date, end_date];
