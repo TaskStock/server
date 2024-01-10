@@ -47,7 +47,7 @@ const printReqBody = (req, res, next) => {
     console.log('Received body:', req.body);
     next(); 
 };
-app.use(printRequestBodyMiddleware);
+app.use(printReqBody);
 
 app.use("/account", accountRouter);
 app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);

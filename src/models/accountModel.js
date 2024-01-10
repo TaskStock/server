@@ -1,19 +1,3 @@
-/*
-{
-    command: 'SELECT',
-    rowCount: 3, // 반환된 행의 수
-    oid: null,   // 대부분의 경우 사용하지 않음
-    rows: [      // 실제 데이터를 포함하는 배열
-        { id: 1, username: 'user1', email: 'user1@example.com' },
-        { id: 2, username: 'user2', email: 'user2@example.com' },
-        { id: 3, username: 'user3', email: 'user3@example.com' }
-    ],
-    fields: [    // 반환된 각 열에 대한 정보를 포함하는 객체의 배열
-        { name: 'id', tableID: 12345, columnID: 1, dataTypeID: 23, ... },
-        { name: 'username', tableID: 12345, columnID: 2, dataTypeID: 1043, ... },
-        { name: 'email', tableID: 12345, columnID: 3, dataTypeID: 1043, ... }
-}
-*/
 const db = require('../config/db.js');
 const bcrypt = require('bcrypt');
 
@@ -30,6 +14,9 @@ module.exports = {
         const query = 'SELECT auth_code FROM "Code" WHERE code_id = $1';
         const codeId = inputData.codeId;    
         const {rows} = await db.query(query, [codeId]);
+        if (rows.length === 0) {
+            return false;
+        }
 
         const authCode = rows[0].auth_code; // 인증코드(string)
         const inputCode = inputData.inputCode; // 사용자가 입력한 코드(string) 
@@ -84,7 +71,7 @@ module.exports = {
         // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
         const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
         const defaultSet = [userData.user_id, isAgree, theme, language];
-        
+
         await db.query(settingQuery, defaultSet)
             .catch(e => {
                 console.error(e.stack);
