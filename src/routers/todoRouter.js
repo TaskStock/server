@@ -10,5 +10,6 @@ router.put('/simpleupdate', todoController.updateContentAndProject);
 router.put('/update', todoController.updateTodo);
 router.post('/checktoggle', todoController.updateCheck);
 router.delete('/delete', todoController.deleteTodo);
+router.post('/tomorrow', todoController.tomorrowTodo);
 
 module.exports = router;
