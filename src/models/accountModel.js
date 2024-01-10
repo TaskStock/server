@@ -1,19 +1,3 @@
-/*
-{
-    command: 'SELECT',
-    rowCount: 3, // 반환된 행의 수
-    oid: null,   // 대부분의 경우 사용하지 않음
-    rows: [      // 실제 데이터를 포함하는 배열
-        { id: 1, username: 'user1', email: 'user1@example.com' },
-        { id: 2, username: 'user2', email: 'user2@example.com' },
-        { id: 3, username: 'user3', email: 'user3@example.com' }
-    ],
-    fields: [    // 반환된 각 열에 대한 정보를 포함하는 객체의 배열
-        { name: 'id', tableID: 12345, columnID: 1, dataTypeID: 23, ... },
-        { name: 'username', tableID: 12345, columnID: 2, dataTypeID: 1043, ... },
-        { name: 'email', tableID: 12345, columnID: 3, dataTypeID: 1043, ... }
-}
-*/
 const db = require('../config/db.js');
 const bcrypt = require('bcrypt');
 
@@ -30,6 +14,9 @@ module.exports = {
         const query = 'SELECT auth_code FROM "Code" WHERE code_id = $1';
         const codeId = inputData.codeId;    
         const {rows} = await db.query(query, [codeId]);
+        if (rows.length === 0) {
+            return false;
+        }
 
         const authCode = rows[0].auth_code; // 인증코드(string)
         const inputCode = inputData.inputCode; // 사용자가 입력한 코드(string) 
@@ -83,10 +70,6 @@ module.exports = {
 
         // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
         const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
-        if (theme != null) {
-            theme = 'DARK';
-            language = 'korean';
-        }
         const defaultSet = [userData.user_id, isAgree, theme, language];
 
         await db.query(settingQuery, defaultSet)
@@ -128,7 +111,6 @@ module.exports = {
         const query = 'DELETE FROM "Token" WHERE user_id = $1';
         try {
             const {rowCount} = await db.query(query, [user_id])
-            console.log(rowCount)
             if (rowCount === 1) {
                 return true;
             } else {
@@ -140,7 +122,13 @@ module.exports = {
         }
     },
     getUserById: async(user_id) => { //user_id로 유저 정보 가져오기
-        const query = 'SELECT * FROM "User" WHERE user_id = $1';
+        const query = 
+        `
+        SELECT "User".*, "UserSetting".theme, "UserSetting".language
+        FROM "User"
+        JOIN "UserSetting" ON "User".user_id = "UserSetting".user_id
+        WHERE "User".user_id = $1
+        `
 
         const user = await db.query(query, [user_id])
             .then(res => {
@@ -149,19 +137,21 @@ module.exports = {
             })
             .catch(e => {
                 console.error(e.stack);
-
                 throw e;
             });
         return user;
     },
-    checkRefreshToken: async(refreshToken) => {
-        const query = 'SELECT refresh_token FROM "Token" WHERE refresh_token = $1';
-        const {rows} = await db.query(query, [refreshToken]);
+    checkRefreshToken: async(user_id, refreshToken) => {
+        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
+        const {rows} = await db.query(query, [user_id]);
 
-        if (rows.length === 0) { //토큰이 DB에 없는 경우
+        const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
+        const inputRefreshToken = refreshToken; // 사용자가 입력한 refreshToken
+
+        if (dbRefreshToken === inputRefreshToken) {
+            return true;
+        } else {
             return false;
-        } else {    //토큰이 DB에 있는 경우
-        return true;
         }
     },
     changePasword: async(inputData) => {
@@ -188,8 +178,8 @@ module.exports = {
         if (rowCount === 1) {
             return true;
         } else {
-            return false;
-        }
-    }
+            return false;        
+        } 
+    }, 
 }
 

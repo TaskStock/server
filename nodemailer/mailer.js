@@ -78,7 +78,7 @@ module.exports = async (email, code, type) => {
             html: htmlBody,
             attachments: attachedfile
         });
-        console.log("Message sent: %s", info.messageId);
+        console.log("이메일 전송 성공", info.messageId);
         return {result: true};
     } catch (error) {
         console.log(error);

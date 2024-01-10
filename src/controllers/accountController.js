@@ -8,15 +8,18 @@ function generateAccessToken(userData) {
     const expiresIn = "1h";
     const user_id = userData.user_id;
     const accessToken = jwt.sign({user_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+    const accessExp = jwt.decode(accessToken).exp;
 
-    return accessToken;
+    return [accessToken, accessExp];
 }
 
 function generateRefreshToken(userData) {
+    const expiresIn = "30d";
     const user_id = userData.user_id;
-    const refreshToken = jwt.sign({user_id}, process.env.REFRESH_TOKEN_SECRET);
+    const refreshToken = jwt.sign({user_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
+    const refreshExp = jwt.decode(refreshToken).exp;
     
-    return refreshToken;
+    return [refreshToken, refreshExp];
 }
 
 function generateAuthCode() {
@@ -112,10 +115,10 @@ module.exports = {
             const userData = await accountModel.register(registerData);
 
             //accessToken 처리
-            const accessToken = generateAccessToken(userData);
+            const [accessToken, accessExp] = generateAccessToken(userData);
 
             // refreshToken 처리
-            const refreshToken = generateRefreshToken(userData);
+            const [refreshToken, refreshExp] = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(userData.user_id, refreshToken); // refreshToken DB에 저장(user_id가 PK)
 
             console.log("회원가입 성공");
@@ -123,13 +126,14 @@ module.exports = {
                 result: "success",
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
+                accessExp: accessExp,
+                refreshExp: refreshExp,
+                strategy: userData.strategy
             });
-            const settingData = req.body;
-            await accountModel.createSetting(settingData);
 
         } catch (error) {
             console.log(error);
-            res.status(500).json({ 
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
@@ -137,43 +141,25 @@ module.exports = {
     
 
     },
-    //초기 설정 저장
-    // createSetting: async (req, res) => {
-    //     try {
-    //         const settingData = req.body;
-    //         await accountModel.createSetting(settingData);
-    //         res.status(200).json({ 
-    //             result: "success", 
-    //             message: "초기 설정 저장 성공"
-    //         }); 
-            
-    //     } catch (error) {
-    //         console.log(error);
-    //         res.status(500).json({ 
-    //             result: "error", 
-    //             message: "서버 오류"
-    //         });
-    //     }
-    // },
     //로그인
     login: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const accessToken = generateAccessToken(userData);
-            const refreshToken = generateRefreshToken(userData);
+            const [accessToken, accessExp] = generateAccessToken(userData);
+            const [refreshToken, refreshExp] = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(userData.user_id, refreshToken);
 
             console.log("로그인 성공");
-            res.status(200).json({ 
+            return res.status(200).json({ 
                 result: "success", 
-                message: `${userData.email} 로그인 성공`, 
-                user_id: userData.user_id,
                 accessToken: accessToken, 
                 refreshToken: refreshToken,
+                accessExp, accessExp,
+                refreshExp: refreshExp
             });
         } catch (error) {
             console.log(error);
-            res.status(500).json({ 
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
@@ -187,11 +173,13 @@ module.exports = {
             const deleteResult = await accountModel.deleteRefreshToken(user_id);
             
             if (deleteResult) {
+                console.log("로그아웃 성공");
                 return res.status(200).json({ 
                     result: "success", 
                     message: "로그아웃 성공" 
                 });
             } else {
+                console.log("로그아웃 실패 - 0개 혹은 2개 이상의 refreshToken이 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
                     message: "로그아웃 실패" 
@@ -209,23 +197,27 @@ module.exports = {
     refresh: async (req, res) => {
         try {
             const refreshToken = req.body.refreshToken;
+            const user_id = jwt.decode(refreshToken).user_id;
 
             if (refreshToken === null) {
+                console.log("refreshToken 재발급 실패.")
                 return res.status(401).json({ 
                     result: "fail", 
                     message: "refreshToken이 없습니다." 
                 });
             }
-            const found = await accountModel.checkRefreshToken(refreshToken);
+            const certified = await accountModel.checkRefreshToken(user_id, refreshToken);
 
-            if (!found) {
+            if (!certified) {
+                console.log("access token 재발급 실패. refreshToken이 일치하지 않습니다.")
                 return res.status(401).json({
                     result: "fail",
-                    message: "refreshToken이 유효하지 않습니다."
+                    message: "refreshToken이 일치하지 않습니다."
                 });
             } else {
                 jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
+                        console.log("access token 재발급 실패. refrehToken이 유효하지 않습니다. ")
                         return res.status(401).json({
                             result: "fail",
                             message: "refreshToken이 유효하지 않습니다."
@@ -236,12 +228,14 @@ module.exports = {
                         await accountModel.getUserById(user_id)
                             .then(res => {
                                 userData = res[0];
-                                accessToken = generateAccessToken(userData)
+                                [accessToken, accessExp] = generateAccessToken(userData)
                             })
+                        console.log("access token 재발급 성공.")
                         return res.status(200).json({
                             result: "success",
                             message: "accessToken 재발급 성공",
                             accessToken: accessToken,
+                            accessExp: accessExp
                         });
                     }
                 });
@@ -257,7 +251,7 @@ module.exports = {
     getUserInfo: async (req, res) => {
         try {
             const { password, ...userData } = req.user;
-
+            
             res.status(200).json({
                 result: "success",
                 message: "유저 정보 가져오기 성공",
@@ -299,12 +293,14 @@ module.exports = {
             const inputData = req.body
             const changeResult = await accountModel.changePasword(inputData);
             if (changeResult) {
-                res.status(200).json({ 
+                console.log("비밀번호 변경 성공")
+                return res.status(200).json({ 
                     result: "success", 
                     message: "비밀번호 변경 성공"
                 });
             } else {
-                res.status(200).json({ 
+                console.log('비밀번호 변경 오류')
+                return res.status(200).json({ 
                     result: "fail", 
                     message: "0개 또는 두개 이상의 비밀번호가 변경됨"
                 });
@@ -317,19 +313,21 @@ module.exports = {
             });
         }    
     },
-    //비밀번호 입력 받기 -> 같은지 확인(strategy가 local인 경우만) - staratgy도 프론트 전역에 저장? 
+    // 비밀번호 확인
     confirmPassword: async (req, res) => {
         try {
             const inputPW = req.body.inputPW;
             const savedPW = req.user.password;
             
             if (await bcrypt.compare(inputPW, savedPW)) {
-                res.status(200).json({
+                console.log("비밀번호 확인 통과")
+                return res.status(200).json({
                     result: "success",
                     message: "비밀번호 확인 통과"
                 })
             } else {
-                res.status(200).json({
+                console.log("비밀번호 틀림")
+                return res.status(200).json({
                     result: "fail",
                     message: "비밀번호 틀림"
                 })
@@ -349,19 +347,21 @@ module.exports = {
             const deleteResult = await accountModel.deleteUser(user_id);
 
             if (deleteResult) {
-                res.status(200).json({ 
+                console.log("회원탈퇴 성공")
+                return res.status(200).json({ 
                     result: "success", 
                     message: "회원탈퇴 성공" 
                 });
             } else {
-                res.status(200).json({ 
+                console.log("회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨")
+                return res.status(200).json({ 
                     result: "fail", 
                     message: "회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨" 
                 });
             }
         } catch (error) {
             console.log(error);
-            return res.status(500).json({ 
+            res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
