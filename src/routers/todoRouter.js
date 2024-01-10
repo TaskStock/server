@@ -11,5 +11,6 @@ router.put('/update', todoController.updateTodo);
 router.post('/checktoggle', todoController.updateCheck);
 router.delete('/delete', todoController.deleteTodo);
 router.post('/tomorrow', todoController.tomorrowTodo);
+router.put('/index', todoController.updateIndex);
 
 module.exports = router;

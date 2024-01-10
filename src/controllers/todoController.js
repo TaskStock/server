@@ -309,4 +309,25 @@ module.exports = {
         
         res.json({result: "success"});
     },
+    updateIndex: async(req, res, next) =>{
+        const {changed_todos} = req.body;
+        const user_id = req.user.user_id;
+        
+        try{
+            // for(let i=0;i<changed_todos.length;i++){
+            //     await todoModel.updateIndex(changed_todos[i].todo_id, user_id, changed_todos[i].changed_index);
+            // }
+
+            // 각 업데이트는 비동기적으로 실행하고 모든 작업이 끝날때까지 대기
+            await Promise.all(
+                changed_todos.map(todo =>
+                    todoModel.updateIndex(todo.todo_id, user_id, todo.changed_index)
+                )
+            );
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
 }

@@ -161,4 +161,18 @@ module.exports = {
             });
         return index;
     },
+    updateIndex: async(todo_id, user_id, index)=>{
+        const query = "update \"Todo\" set index=$1 where user_id=$2 and todo_id=$3";
+        const values = [index, user_id, todo_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }
