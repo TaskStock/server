@@ -100,7 +100,6 @@ module.exports = {
     //이메일 회원가입
     register: async (req, res) => {
         try {
-            console.log(req);
             const email = req.body.email;
             const queryResult = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
 

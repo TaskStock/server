@@ -42,6 +42,13 @@ app.get('/', (req, res) => {
     res.send('Hello, Express')
 });
 
+// 클라이언트로부터 받은 req.body를 출력하는 미들웨어
+const printReqBody = (req, res, next) => {
+    console.log('Received body:', req.body);
+    next(); 
+};
+app.use(printRequestBodyMiddleware);
+
 app.use("/account", accountRouter);
 app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
 app.use("/follow", passport.authenticate('jwt', { session: false }), followRouter);
