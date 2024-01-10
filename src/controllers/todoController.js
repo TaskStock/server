@@ -59,17 +59,18 @@ module.exports = {
         res.json({result: "success", todo_id: todo_id});
     },
     readTodo: async(req, res, next) =>{
+        // 같은 날짜의 todo들이더라도 정산시간이 6시이므로 수정불가능한(?) todo가 불러와질 수 있음에 주의
         const date = req.query.date;
         // date : 클라이언트로부터 받은 시간 정보를 UTC 기준 timestamp로 변환
         const user_id = req.user.user_id;
         const region = req.user.region;
 
-        const trans_start_date = transdate.localDateToUTCWithStartOfDay(date, region);
-        const end_date = addHours(trans_start_date, 24);
+        const start_date = transdate.getStartOfDayTime(date, region);
+        const end_date = addHours(start_date, 24);
         
         let todos;
         try{
-            todos = await todoModel.readTodo(user_id, trans_start_date, end_date);
+            todos = await todoModel.readTodo(user_id, start_date, end_date);
 
             // "end_time": "2024-01-15T15:00:00.000Z",
             // "repeat_pattern": "0101100"
