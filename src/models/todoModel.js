@@ -1,9 +1,9 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    insertTodo: async(content, level, user_id, project_id, date)=>{
-        const query = "insert into \"Todo\" (content, date, level, user_id, project_id) VALUES ($1, $2, $3, $4, $5) RETURNING todo_id";
-        const values = [content, date, level, user_id, project_id];
+    insertTodo: async(content, level, user_id, project_id, date, index)=>{
+        const query = "insert into \"Todo\" (content, date, level, user_id, project_id, index) VALUES ($1, $2, $3, $4, $5, $6) RETURNING todo_id";
+        const values = [content, date, level, user_id, project_id, index];
 
         const todo_id = await db.query(query, values)
             .then(res => {
@@ -144,5 +144,21 @@ module.exports = {
 
                 throw e;
             });
+    },
+    getHighestIndex: async(user_id, start_date, end_date)=>{
+        const query = "select index from \"Todo\" where user_id=$1 and date>=$2 and date<$3 order by index desc limit 1";
+        const values = [user_id, start_date, end_date];
+
+        const index = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0].index;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return index;
     },
 }
