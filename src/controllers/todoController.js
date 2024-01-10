@@ -176,6 +176,7 @@ module.exports = {
         res.json({result: "success"});
     },
     updateCheck: async(req, res, next) =>{
+        // check가 true -> true 인 경우는 검사하지 않으므로 true -> false, false -> true 인 경우만 보낼 것
         const {todo_id, check} = req.body;
         // check : true or false
         const user_id = req.user.user_id;
@@ -185,12 +186,16 @@ module.exports = {
             const todo = await todoModel.updateCheck(todo_id, user_id, check);
 
             const resultUtc = transdate.getSettlementTimeInUTC(region);
+            const nextDayUtc = addHours(resultUtc, 24);
 
             if(todo === undefined){
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
             }
+            
+            console.log(todo.date);
+            console.log(resultUtc);
 
-            if(todo.date > resultUtc){  // 아직 정산안됐음
+            if(todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐음, 오늘 날짜인 경우만
                 let changeAmount;
                 const endDate = addHours(resultUtc, 24);
                 if(check===true){

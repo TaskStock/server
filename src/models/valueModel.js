@@ -63,7 +63,7 @@ module.exports = {
     },
     updateValueBecauseTodoComplete: async(user_id, change_amount, start_date, end_date)=>{
         // 정산기준으로 value 는 하루에 하나만 있어야한다.
-        const query = "update \"Value\" set start=start+$1 where user_id=$2 and date>=$3 and date<$4";
+        const query = "update \"Value\" set \"end\"=\"end\"+$1 where user_id=$2 and date>=$3 and date<$4";
         const values = [change_amount, user_id, start_date, end_date];
 
         await db.query(query, values)
