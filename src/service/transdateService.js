@@ -1,5 +1,5 @@
 const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
-const { startOfDay, startOfMonth, addHours, addMonths } = require('date-fns');
+const { startOfDay, startOfMonth, addHours, addMonths, addDays } = require('date-fns');
 
 module.exports = {
     // 2024-01-16 -> 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
@@ -58,8 +58,8 @@ module.exports = {
     // string인 utc를 받아서 timezone에 따라 해당 지역 시작시간으로 변환
     getStartOfDayTime: (utc, timezone) =>{
         const nowZoneTime = utcToZonedTime(utc, timezone);
-
         const startOfToday = startOfDay(nowZoneTime);
+        const startOfTodayUTC = zonedTimeToUtc(startOfToday, timezone);
 
         return startOfToday;
     },
@@ -73,7 +73,15 @@ module.exports = {
     getNextMonthTime: (date, timezone) =>{
         const monthstart = utcToZonedTime(date, timezone);
         const nextMonth = addMonths(monthstart, 1);  // 무조건 30일을 더하는게 아니라 1월 31일 -> 2월 29일처럼 자동으로 맞춰준다.
+        const nextMonthUTC = zonedTimeToUtc(nextMonth, timezone);
 
         return nextMonth;
     },
+    plusOneDay: (date, timezone) =>{
+        const zonedDate = utcToZonedTime(date, timezone);
+        const nextDay = addDays(zonedDate, 1);
+        const nextDayUTC = zonedTimeToUtc(nextDay, timezone);
+
+        return nextDayUTC;
+    }
 }

@@ -285,4 +285,25 @@ module.exports = {
         
         res.json({result: "success"});
     },
+    tomorrowTodo: async(req, res, next) =>{
+        const {todo_id} = req.body;
+        const user_id = req.user.user_id;
+        const region = req.user.region;
+        
+        try{
+            const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
+            if(todo === undefined){
+                return res.status(400).json({result: "fail", message: "todo가 존재하지 않습니다."});
+            }else if(todo.check === true){
+                return res.status(400).json({result: "fail", message: "완료되지 않은 todo만 미룰 수 있습니다."});
+            }else{
+                const tomorrow = transdate.plusOneDay(todo.date, region);
+                await todoModel.updateTodoDate(todo_id, user_id, tomorrow);
+            }
+        }catch(error){
+            next(error);
+        }
+        
+        res.json({result: "success"});
+    },
 }

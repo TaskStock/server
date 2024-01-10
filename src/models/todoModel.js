@@ -131,4 +131,18 @@ module.exports = {
             });
         return todo;
     },
+    updateTodoDate: async(todo_id, user_id, date)=>{
+        const query = "update \"Todo\" set date=$1 where user_id=$2 and todo_id=$3";
+        const values = [date, user_id, todo_id];
+
+        await db.query(query, values)
+            .then(res => {
+                console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }
