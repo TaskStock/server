@@ -61,7 +61,7 @@ module.exports = {
         const startOfToday = startOfDay(nowZoneTime);
         const startOfTodayUTC = zonedTimeToUtc(startOfToday, timezone);
 
-        return startOfToday;
+        return startOfTodayUTC;
     },
     // "2024-06"과 같은 문자열을 받아 해당 달의 시작 utc를 반환
     getStartOfMonthTime: (date, timezone) =>{
@@ -75,7 +75,7 @@ module.exports = {
         const nextMonth = addMonths(monthstart, 1);  // 무조건 30일을 더하는게 아니라 1월 31일 -> 2월 29일처럼 자동으로 맞춰준다.
         const nextMonthUTC = zonedTimeToUtc(nextMonth, timezone);
 
-        return nextMonth;
+        return nextMonthUTC;
     },
     plusOneDay: (date, timezone) =>{
         const zonedDate = utcToZonedTime(date, timezone);
