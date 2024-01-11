@@ -35,7 +35,7 @@ module.exports = {
                 nextIndex = index.index + 1;
             }
 
-            todo_id = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
+            inserted_todo = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
             // 순서 관련 로직 필요
             
             if(repeat_day!=="0000000"){
@@ -44,7 +44,7 @@ module.exports = {
                     trans_date = transdate.localDateToUTCWith6AM(repeat_end_date, region);
                     // repeat_end_date : 2024-01-16 -> trans_date : 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
                 }
-                await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
+                await repeatModel.newRepeat(region, trans_date, repeat_day, inserted_todo.todo_id);
             }
 
             const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
@@ -64,7 +64,7 @@ module.exports = {
         }catch(error){
             next(error);
         }
-        res.json({result: "success", todo_id: todo_id});
+        res.json({result: "success", todo_id: inserted_todo.todo_id, index: inserted_todo.index});
     },
     readTodo: async(req, res, next) =>{
         // 같은 날짜의 todo들이더라도 정산시간이 6시이므로 수정불가능한(?) todo가 불러와질 수 있음에 주의
@@ -262,10 +262,14 @@ module.exports = {
         try{
             const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
 
+            if(todo === undefined){
+                return res.status(400).json({result: "fail", message: "todo가 존재하지 않습니다."});
+            }
+
             await todoModel.deleteTodo(todo_id, user_id);
             await repeatModel.deleatRepeat(todo_id);
 
-            if(todo !== undefined && todo.level !== 0){
+            if(todo.level !== 0){
                 const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
                 const value = await valueModel.getRecentValue(user_id);
                 
