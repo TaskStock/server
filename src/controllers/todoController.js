@@ -262,10 +262,14 @@ module.exports = {
         try{
             const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
 
+            if(todo === undefined){
+                return res.status(400).json({result: "fail", message: "todo가 존재하지 않습니다."});
+            }
+
             await todoModel.deleteTodo(todo_id, user_id);
             await repeatModel.deleatRepeat(todo_id);
 
-            if(todo !== undefined && todo.level !== 0){
+            if(todo.level !== 0){
                 const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
                 const value = await valueModel.getRecentValue(user_id);
                 
