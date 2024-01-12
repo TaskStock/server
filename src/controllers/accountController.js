@@ -229,24 +229,15 @@ module.exports = {
                         });
                     } else {
                         console.log("payload에 담긴 user_id:", payload.user_id)
-                        await accountModel.getUserById(payload.user_id)
-                            .then(users => {
-                                console.log(users)
-                                const userData = users[0]
-                                const [accessToken, accessExp] = generateAccessToken(userData)
-                                console.log("access token 재발급 성공.")
-                                return res.status(200).json({
-                                    result: "success",
-                                    message: "accessToken 재발급 성공",
-                                    accessToken: accessToken,
-                                    accessExp: accessExp
-                                });
-        
-                            })
-                            .catch(e => {
-                                console.error(e.stack);
-                            })
-                        
+                        const userData = {user_id: payload.user_id}
+                        const [accessToken, accessExp] = generateAccessToken(userData)
+                        console.log("access token 재발급 성공.")
+                        return res.status(200).json({
+                            result: "success",
+                            message: "accessToken 재발급 성공",
+                            accessToken: accessToken,
+                            accessExp: accessExp
+                        });
                     }
                 });
             }
