@@ -11,10 +11,10 @@ module.exports = {
         try{
             const group_id = await groupModel.insertGroup(user_id, name, ispublic);
             await groupModel.joinGroup(user_id, group_id);
-            res.json({result: "success"});
+            return res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
-                res.status(409).json({result: "fail", message: "이미 똑같은 이름의 그룹이 존재합니다."});
+                return res.status(409).json({result: "fail", message: "이미 똑같은 이름의 그룹이 존재합니다."});
             }else{
                 next(error);
             }
@@ -27,13 +27,16 @@ module.exports = {
         try{
             const isHaveGroup = await groupModel.getUserGroupId(user_id, group_id);
             const status = await groupModel.statusPeopleNum(group_id);
-            if(isHaveGroup !== null){
-                res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
+            
+            if(status === undefined){
+                return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+            }else if(isHaveGroup.group_id !== null){
+                return res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
             }else if(status.people_maxnum <= status.people_count){
-                res.status(409).json({result: "fail", message: "해당 그룹의 인원이 가득 찼습니다."});
+                return res.status(409).json({result: "fail", message: "해당 그룹의 인원이 가득 찼습니다."});
             }else{
                 await groupModel.joinGroup(user_id, group_id);
-                res.json({result: "success"});
+                return res.json({result: "success"});
             }
         }catch(error){
             next(error);

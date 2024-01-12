@@ -15,7 +15,7 @@ module.exports = {
 
                 throw e;
             });
-        return group.group_id;   // group이 없으면 null, 있으면 group_id를 반환
+        return group;   // group이 없으면 null, 있으면 group_id를 반환
     },
     // 그룹 생성
     insertGroup: async(user_id, name, ispublic)=>{
@@ -44,14 +44,14 @@ module.exports = {
         const group_people = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows);
-                return res.rows;
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
-        return group_people[0];
+        return group_people;
     },
     joinGroup: async(user_id, group_id)=>{
         const query = "update \"User\" set group_id=array_append(group_id, $1) where user_id=$2";
