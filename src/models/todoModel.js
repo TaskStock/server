@@ -18,14 +18,7 @@ module.exports = {
         return insert_result;
     },
     readTodo: async(user_id, start_date, end_date)=>{
-        const query = `
-        select * 
-        from \"Todo\" T
-        left join \"Todo_Repeat\" R
-            on T.todo_id = R.todo_id
-        where user_id=$1 and date>=$2 and date<$3
-        order by date(T.date), index
-        `;
+        const query = "select * from \"Todo\" where user_id=$1 and date>=$2 and date<$3 order by date(date), index";
 
         const values = [user_id, start_date, end_date];
 

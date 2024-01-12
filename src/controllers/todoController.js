@@ -1,5 +1,4 @@
 const todoModel = require('../models/todoModel.js');
-const repeatModel = require('../models/repeatModel.js');
 const valueModel = require('../models/valueModel.js');
 
 const transdate = require('../service/transdateService.js');
@@ -7,21 +6,10 @@ const calculate = require('../service/calculateService.js');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
-        const {content, level, project_id, repeat_day, repeat_end_date, nowUTC} = req.body;
+        const {content, level, project_id, nowUTC} = req.body;
         // 현재는 오늘 날짜만 todo를 생성할 수 있음
         const user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
         const region = req.user.region;
-
-        // repeat_day 검증(이 필요한가?)
-        if (repeat_day.length !== 7){
-            return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
-        }else{
-            for(let i=0;i<7;i++){
-                if(repeat_day[i]!=='0' && repeat_day[i]!=='1'){
-                    return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
-                }
-            }
-        }
 
         let inserted_todo;
         try{
@@ -36,15 +24,6 @@ module.exports = {
             }
 
             inserted_todo = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
-            
-            if(repeat_day!=="0000000"){
-                let trans_date=null;
-                if(repeat_end_date!==null){
-                    trans_date = transdate.localDateToUTCWith6AM(repeat_end_date, region);
-                    // repeat_end_date : 2024-01-16 -> trans_date : 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
-                }
-                await repeatModel.newRepeat(region, trans_date, repeat_day, inserted_todo.todo_id);
-            }
 
             if(level !== 0){
                 const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
@@ -79,25 +58,7 @@ module.exports = {
         
         let todos;
         try{
-            todos = await todoModel.readTodo(user_id, start_date, end_date);
-
-            // "end_time": "2024-01-15T15:00:00.000Z",
-            // "repeat_pattern": "0101100"
-            for(let i=0;i<todos.length;i++){
-                if(todos[i].end_time !== null){
-                    todos[i].end_time=transdate.UTCToLocalDate(todos[i].end_time, region);
-                }
-
-                // 프론트 요구로 null이 아닌 "0000000" 으로 반환
-                if(todos[i].repeat_pattern === null){
-                    todos[i].repeat_pattern = "0000000";
-                }
-
-                // 프론트 요구로 임시로 동일한 내용의 추가 필드 생성
-                todos[i].repeat_end_date = todos[i].end_time;
-                todos[i].repeat_day = todos[i].repeat_pattern;
-            }
-            
+            todos = await todoModel.readTodo(user_id, start_date, end_date);            
         }catch(error){
             next(error);
         }
@@ -116,24 +77,6 @@ module.exports = {
         let todos;
         try{
             todos = await todoModel.readTodo(user_id, start_date, end_date);
-
-            // "end_time": "2024-01-15T15:00:00.000Z",
-            // "repeat_pattern": "0101100"
-            for(let i=0;i<todos.length;i++){
-                if(todos[i].end_time !== null){
-                    todos[i].end_time=transdate.UTCToLocalDate(todos[i].end_time, region);
-                }
-
-                // 프론트 요구로 null이 아닌 "0000000" 으로 반환
-                if(todos[i].repeat_pattern === null){
-                    todos[i].repeat_pattern = "0000000";
-                }
-
-                // 프론트 요구로 임시로 동일한 내용의 추가 필드 생성
-                todos[i].repeat_end_date = todos[i].end_time;
-                todos[i].repeat_day = todos[i].repeat_pattern;
-            }
-            
         }catch(error){
             next(error);
         }
@@ -153,43 +96,13 @@ module.exports = {
         res.json({result: "success"});
     },
     updateTodo: async(req, res, next) =>{
-        const {todo_id, content, level, project_id, repeat_day, repeat_end_date} = req.body;
+        const {todo_id, content, level, project_id} = req.body;
         const user_id = req.user.user_id;
         const region = req.user.region;
 
-        // repeat_day 검증(이 필요한가?)
-        if (repeat_day.length !== 7){
-            return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
-        }else{
-            for(let i=0;i<7;i++){
-                if(repeat_day[i]!=='0' && repeat_day[i]!=='1'){
-                    return res.status(400).json({result: "fail", message: "잘못된 repeat_day 형식입니다."});
-                }
-            }
-        }
-        
         try{
             const todo = await todoModel.readTodoUsingTodoId(todo_id, user_id);
             await todoModel.updateTodo(todo_id, content, level, user_id, project_id);
-
-            const repeat_id = await repeatModel.getRepeat(todo_id);
-            if(repeat_day!=="0000000"){
-                let trans_date=null;
-                if(repeat_end_date!==null){
-                    trans_date = transdate.localDateToUTCWith6AM(repeat_end_date, region);
-                }
-        
-                if(repeat_id === undefined){    // todo 업데이트할때 없었던 반복설정을 새로 생성
-                    await repeatModel.newRepeat(region, trans_date, repeat_day, todo_id);
-                }else{  // 있던 반복설정을 수정
-                    // 유저의 region은 변하지 않으므로 업데이트 대상에서 제외
-                    await repeatModel.updateRepeat(trans_date, repeat_day, todo_id);
-                }
-            }else{  // 있던 반복설정을 삭제
-                if(repeat_id !== undefined){
-                    await repeatModel.deleatRepeat(todo_id);
-                }
-            }
 
             if(todo.level !== level){
                 const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
@@ -268,7 +181,6 @@ module.exports = {
             }
 
             await todoModel.deleteTodo(todo_id, user_id);
-            await repeatModel.deleatRepeat(todo_id);
 
             if(todo.level !== 0){
                 const sttime = transdate.getSettlementTimeInUTC(region).toISOString();
