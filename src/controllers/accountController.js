@@ -3,6 +3,10 @@ const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
+// 회원가입 controller에서 value 생성하는 곳에만 사용
+const valueModel = require('../models/valueModel.js');
+const transdate = require('../service/transdateService.js');
+
 // 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
 function generateAccessToken(userData) {
     const expiresIn = "1h";
@@ -122,6 +126,11 @@ module.exports = {
             await accountModel.saveRefreshToken(userData.user_id, refreshToken); // refreshToken DB에 저장(user_id가 PK)
 
             console.log("회원가입 성공");
+
+            // 회원가입 후 자동으로 value 생성
+            const settlementTime = transdate.getSettlementTimeInUTC(userData.region);
+            await valueModel.createByNewUser(userData.user_id, settlementTime);
+
             return res.status(200).json({ 
                 result: "success",
                 accessToken: accessToken, 
