@@ -30,8 +30,8 @@ module.exports = {
             
             if(status === undefined){
                 return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
-            }else if(isHaveGroup.group_id !== null){
-                return res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
+            }else if(isHaveGroup !== undefined){
+                return res.status(403).json({result: "fail", message: "그룹에 이미 있는 유저입니다."});
             }else if(status.people_maxnum <= status.people_count){
                 return res.status(409).json({result: "fail", message: "해당 그룹의 인원이 가득 찼습니다."});
             }else{
@@ -50,7 +50,7 @@ module.exports = {
             if(groupHead === undefined){
                 return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
             }
-            
+
             const ranking = await groupModel.groupRanking(group_id);
             return res.json({rank: ranking});
         }catch(error){
@@ -68,10 +68,13 @@ module.exports = {
         
         try{
             const now_head_id = await groupModel.getHeadId(group_id);
-            const u_group_id = await groupModel.getUserGroupId(to_id);
-            if(now_head_id !== user_id){    // 그룹장이 아닌 경우
+            if(now_head_id === undefined){
+                return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+            }
+            const isHaveGroup = await groupModel.getUserGroupId(to_id, group_id);
+            if(now_head_id.user_id !== user_id){    // 그룹장이 아닌 경우
                 res.status(403).json({result: "fail", message: "그룹장만 그룹장을 바꿀 수 있습니다."});
-            }else if(u_group_id !== group_id){  // 새로운 그룹장이 그룹원이 아닌 경우
+            }else if(isHaveGroup === undefined){  // 새로운 그룹장이 그룹원이 아닌 경우
                 res.status(403).json({result: "fail", message: "그룹원만 그룹장으로 임명할 수 있습니다."});
             }else{
                 await groupModel.updateHead(group_id, to_id);

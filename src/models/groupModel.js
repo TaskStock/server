@@ -15,7 +15,7 @@ module.exports = {
 
                 throw e;
             });
-        return group;   // group이 없으면 null, 있으면 group_id를 반환
+        return group;   // group이 없으면 null, 있으면 group_id 배열을 반환
     },
     // 그룹 생성
     insertGroup: async(user_id, name, ispublic)=>{
