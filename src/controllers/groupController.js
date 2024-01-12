@@ -46,8 +46,13 @@ module.exports = {
         const {group_id} = req.body;
         
         try{
+            const groupHead = await groupModel.getHeadId(group_id);
+            if(groupHead === undefined){
+                return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+            }
+            
             const ranking = await groupModel.groupRanking(group_id);
-            res.json({rank: ranking});
+            return res.json({rank: ranking});
         }catch(error){
             next(error);
         }

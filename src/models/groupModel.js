@@ -101,7 +101,7 @@ module.exports = {
 
         const head_id = await db.query(query, values)
             .then(res => {
-                return res.rows[0].user_id;
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
