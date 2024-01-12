@@ -21,12 +21,13 @@ module.exports = {
         }
     },
     joinGroup: async(req, res, next) =>{
-        const {user_id, group_id} = req.body;
+        const {group_id} = req.body;
+        const user_id = req.user.user_id;
         
         try{
-            const u_group_id = await groupModel.getUserGroupId(user_id);
+            const isHaveGroup = await groupModel.getUserGroupId(user_id, group_id);
             const status = await groupModel.statusPeopleNum(group_id);
-            if(u_group_id !== null){
+            if(isHaveGroup !== null){
                 res.status(403).json({result: "fail", message: "그룹이 이미 있는 유저입니다."});
             }else if(status.people_maxnum <= status.people_count){
                 res.status(409).json({result: "fail", message: "해당 그룹의 인원이 가득 찼습니다."});
