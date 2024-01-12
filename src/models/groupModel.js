@@ -1,21 +1,21 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    getUserGroupId: async(user_id)=>{
-        const query = "select group_id from \"User\" where user_id=$1";
-        const values = [user_id];
+    getUserGroupId: async(user_id, group_id)=>{
+        const query = "select group_id from \"User\" where user_id=$1 and $2=any(group_id)";
+        const values = [user_id, group_id];
 
         const group = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows);
-                return res.rows;
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
-        return group[0].group_id;   // group이 없으면 null, 있으면 group_id를 반환
+        return group;   // group이 없으면 null, 있으면 group_id 배열을 반환
     },
     // 그룹 생성
     insertGroup: async(user_id, name, ispublic)=>{
@@ -35,18 +35,7 @@ module.exports = {
                 throw e;
             });
 
-        const query2 = "update \"User\" set group_id=$1 where user_id=$2";
-        const values2 = [group_id, user_id];
-
-        await db.query(query2, values2)
-            .then(res => {
-                // console.log(res.rows[0]);
-            })
-            .catch(e => {
-                console.error(e.stack);
-
-                throw e;
-            });
+        return group_id;
     },
     statusPeopleNum: async(group_id)=>{
         const query = "select people_count, people_maxnum from \"Group\" where group_id=$1";
@@ -55,17 +44,17 @@ module.exports = {
         const group_people = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows);
-                return res.rows;
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
-        return group_people[0];
+        return group_people;
     },
     joinGroup: async(user_id, group_id)=>{
-        const query = "update \"User\" set group_id=$1 where user_id=$2";
+        const query = "update \"User\" set group_id=array_append(group_id, $1) where user_id=$2";
         const values = [group_id, user_id];
 
         const query2 = "update \"Group\" set people_count=people_count+1 where group_id=$1";
@@ -112,7 +101,7 @@ module.exports = {
 
         const head_id = await db.query(query, values)
             .then(res => {
-                return res.rows[0].user_id;
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
@@ -149,9 +138,9 @@ module.exports = {
                 throw e;
             });
     },
-    deleteUserGroupId: async(group_id)=>{
-        const query = "update \"User\" set group_id=null where group_id=$1";
-        const values = [group_id];
+    deleteUserGroupId: async(group_id, user_id)=>{
+        const query = "update \"User\" set group_id=array_remove(group_id, $1) where user_id=$2";
+        const values = [group_id, user_id];
 
         await db.query(query, values)
             .then(res => {
