@@ -3,5 +3,7 @@ const router = express.Router();
 
 const snsController = require('../controllers/snsController.js');
 
-router.post('/sns/private', snsController.changePrivate);
+router.patch('/private', snsController.changePrivate);
+
+module.exports = router;
 

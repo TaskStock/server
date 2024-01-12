@@ -44,8 +44,8 @@ app.get('/', (req, res) => {
 
 // 클라이언트로부터 받은 req.body를 출력하는 미들웨어
 const printReq = (req, res, next) => {
-    console.log('Received headers authorization:', req.headers.authorization);
-    console.log('Received body:', req.body);
+    console.log('==header==:\n', req.headers.authorization);
+    console.log('==body==:\n', req.body);
     next(); 
 };
 app.use(printReq);
