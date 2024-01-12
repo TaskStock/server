@@ -32,7 +32,7 @@ app.use(passport.initialize());
 //Router
 const accountRouter = require("./routers/accountRouter.js");
 const todoRouter = require("./routers/todoRouter.js");
-const followRouter = require("./routers/followRouter.js");
+const snsRouter = require("./routers/snsRouter.js");
 const groupRouter = require("./routers/groupRouter.js");
 const valueRouter = require("./routers/valueRouter.js");
 const projectRouter = require("./routers/projectRouter.js");
@@ -44,15 +44,15 @@ app.get('/', (req, res) => {
 
 // 클라이언트로부터 받은 req.body를 출력하는 미들웨어
 const printReq = (req, res, next) => {
-    console.log('Received headers authorization:', req.headers.authorization);
-    console.log('Received body:', req.body);
+    console.log('==header==:\n', req.headers.authorization);
+    console.log('==body==:\n', req.body);
     next(); 
 };
 app.use(printReq);
 
 app.use("/account", accountRouter);
 app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
-app.use("/follow", passport.authenticate('jwt', { session: false }), followRouter);
+app.use("/sns", passport.authenticate('jwt', { session: false }), snsRouter);
 app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
 app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
 app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);

@@ -278,20 +278,28 @@ module.exports = {
     sendMailForFindPassword: async (req, res) => {
         try {
             const email = req.body.email;
+            const userData = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
+            if (userData === null) {
+                return res.status(200).json({ 
+                    result: "fail" ,
+                    message: "가입되지 않은 이메일입니다."
+                });
+            }
+
             const authCode = generateAuthCode();
             const mailResult = await mailer(email, authCode, 'changePW');
 
             if (mailResult) {
                 const codeId = await accountModel.saveCode(authCode);
                 
-                res.status(200).json({ 
+                return res.status(200).json({ 
                     result: "success", 
                     codeId: codeId
                 });
             } 
         } catch (error) {
             console.log(error);
-            res.status(500).json({ 
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
@@ -328,7 +336,7 @@ module.exports = {
         try {
             const inputPW = req.body.inputPW;
             const savedPW = req.user.password;
-            
+
             if (await bcrypt.compare(inputPW, savedPW)) {
                 console.log("비밀번호 확인 통과")
                 return res.status(200).json({
