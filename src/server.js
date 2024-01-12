@@ -32,7 +32,7 @@ app.use(passport.initialize());
 //Router
 const accountRouter = require("./routers/accountRouter.js");
 const todoRouter = require("./routers/todoRouter.js");
-const followRouter = require("./routers/followRouter.js");
+const snsRouter = require("./routers/snsRouter.js");
 const groupRouter = require("./routers/groupRouter.js");
 const valueRouter = require("./routers/valueRouter.js");
 const projectRouter = require("./routers/projectRouter.js");
@@ -52,7 +52,7 @@ app.use(printReq);
 
 app.use("/account", accountRouter);
 app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
-app.use("/follow", passport.authenticate('jwt', { session: false }), followRouter);
+app.use("/sns", passport.authenticate('jwt', { session: false }), snsRouter);
 app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
 app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
 app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
