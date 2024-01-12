@@ -23,7 +23,7 @@ module.exports = {
             }
         }
 
-        let todo_id;
+        let inserted_todo;
         try{
             const start_date = transdate.getStartOfDayTime(nowUTC, region);
             const end_date = transdate.plusOneDay(start_date, region);
@@ -36,7 +36,6 @@ module.exports = {
             }
 
             inserted_todo = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
-            // 순서 관련 로직 필요
             
             if(repeat_day!=="0000000"){
                 let trans_date=null;
@@ -47,19 +46,21 @@ module.exports = {
                 await repeatModel.newRepeat(region, trans_date, repeat_day, inserted_todo.todo_id);
             }
 
-            const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
-            const value = await valueModel.getRecentValue(user_id);
-            
-            if(value === undefined){
-                return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
-            }else if(value.date.toISOString() === sttime){
-                const value_id = value.value_id;
-                const start = value.start;
-                const end = value.end;
-                const updateLow = value.low + calculate.failedTodo(level);
-                const updateHigh = value.high + calculate.plusLevel(level);
-
-                await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+            if(level !== 0){
+                const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
+                const value = await valueModel.getRecentValue(user_id);
+                
+                if(value === undefined){
+                    return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                }else if(value.date.toISOString() === sttime){
+                    const value_id = value.value_id;
+                    const start = value.start;
+                    const end = value.end;
+                    const updateLow = value.low + calculate.failedTodo(level);
+                    const updateHigh = value.high + calculate.plusLevel(level);
+    
+                    await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+                }
             }
         }catch(error){
             next(error);
@@ -235,7 +236,7 @@ module.exports = {
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
             }
 
-            if(todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐고 오늘 날짜인 경우만
+            if(todo.level !== 0 && todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐고 오늘 날짜인 경우만
                 let changeAmount;
                 const endDate = transdate.plusOneDay(resultUtc);
                 if(check===true){
@@ -309,6 +310,25 @@ module.exports = {
             }else if(todo.check === true){
                 return res.status(400).json({result: "fail", message: "완료되지 않은 todo만 미룰 수 있습니다."});
             }else{
+                if(todo.level !== 0){
+                    const sttime = transdate.getSettlementTime(todo.date, region).toISOString();
+                    const value = await valueModel.getRecentValue(user_id);
+                    
+                    if(value === undefined){
+                        return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                    }else if(value.date.toISOString() === sttime){
+                        const value_id = value.value_id;
+                        const start = value.start;
+                        const end = value.end;
+                        const updateLow = value.low + calculate.cancelfailedTodo(todo.level);
+                        const updateHigh = value.high + calculate.minusLevel(todo.level);
+        
+                        await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
+                    }else if(value.date.toISOString() > sttime){
+                        return res.status(400).json({result: "fail", message: "아직 정산되지 않은 todo만 미룰 수 있습니다."});
+                    }
+                }
+
                 const tomorrow = transdate.plusOneDay(todo.date, region);
                 await todoModel.updateTodoDate(todo_id, user_id, tomorrow);
             }
