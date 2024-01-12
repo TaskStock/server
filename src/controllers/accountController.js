@@ -207,14 +207,19 @@ module.exports = {
                 });
             }
             const certified = await accountModel.checkRefreshToken(user_id, refreshToken);
-
-            if (!certified) {
+            if (certified === 'noToken') {
+                console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
+                return res.status(401).json({
+                    result: "fail",
+                    message: "refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태)"   
+                });
+            } else if (certified == false) {
                 console.log("access token 재발급 실패. refreshToken이 일치하지 않습니다.")
                 return res.status(401).json({
                     result: "fail",
                     message: "refreshToken이 일치하지 않습니다."
                 });
-            } else {
+            } else if (certified == true) {
                 jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
                         console.log("access token 재발급 실패. refrehToken이 유효하지 않습니다. ")

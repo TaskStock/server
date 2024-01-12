@@ -133,7 +133,9 @@ module.exports = {
     checkRefreshToken: async(user_id, refreshToken) => {
         const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
         const {rows} = await db.query(query, [user_id]);
-
+        if (rows.length === 0) {
+            return 'noToken';
+        }
         const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
         const inputRefreshToken = refreshToken; // 사용자가 입력한 refreshToken
 
