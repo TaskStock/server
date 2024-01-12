@@ -138,9 +138,9 @@ module.exports = {
                 throw e;
             });
     },
-    deleteUserGroupId: async(group_id)=>{
-        const query = "update \"User\" set group_id=null where group_id=$1";
-        const values = [group_id];
+    deleteUserGroupId: async(group_id, user_id)=>{
+        const query = "update \"User\" set group_id=array_remove(group_id, $1) where user_id=$2";
+        const values = [group_id, user_id];
 
         await db.query(query, values)
             .then(res => {

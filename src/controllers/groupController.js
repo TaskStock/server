@@ -29,7 +29,7 @@ module.exports = {
             const status = await groupModel.statusPeopleNum(group_id);
             
             if(status === undefined){
-                return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+                return res.status(400).json({result: "fail", message: "존재하지 않는 그룹입니다."});
             }else if(isHaveGroup !== undefined){
                 return res.status(403).json({result: "fail", message: "그룹에 이미 있는 유저입니다."});
             }else if(status.people_maxnum <= status.people_count){
@@ -48,7 +48,7 @@ module.exports = {
         try{
             const groupHead = await groupModel.getHeadId(group_id);
             if(groupHead === undefined){
-                return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+                return res.status(400).json({result: "fail", message: "존재하지 않는 그룹입니다."});
             }
 
             const ranking = await groupModel.groupRanking(group_id);
@@ -70,32 +70,35 @@ module.exports = {
         try{
             const now_head_id = await groupModel.getHeadId(group_id);
             if(now_head_id === undefined){
-                return res.status(403).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+                return res.status(400).json({result: "fail", message: "존재하지 않는 그룹입니다."});
             }
             const isHaveGroup = await groupModel.getUserGroupId(to_id, group_id);
             if(now_head_id.user_id !== user_id){    // 그룹장이 아닌 경우
-                res.status(403).json({result: "fail", message: "그룹장만 그룹장을 바꿀 수 있습니다."});
+                return res.status(400).json({result: "fail", message: "그룹장만 그룹장을 바꿀 수 있습니다."});
             }else if(isHaveGroup === undefined){  // 새로운 그룹장이 그룹원이 아닌 경우
-                res.status(403).json({result: "fail", message: "그룹원만 그룹장으로 임명할 수 있습니다."});
+                return res.status(400).json({result: "fail", message: "그룹원만 그룹장으로 임명할 수 있습니다."});
             }else{
                 await groupModel.updateHead(group_id, to_id);
-                res.json({result: "success"});
+                return res.json({result: "success"});
             }
         }catch(error){
             next(error);
         }
     },
     deleteGroup: async(req, res, next) =>{
-        const {group_id, user_id} = req.body;
+        const {group_id} = req.body;
+        const user_id = req.user.user_id;
         
         try{
             const now_head_id = await groupModel.getHeadId(group_id);
-            if(now_head_id !== user_id){    // 그룹장이 아닌 경우
-                res.status(403).json({result: "fail", message: "그룹장만 그룹을 삭제할 수 있습니다."});
+            if(now_head_id === undefined){
+                return res.status(400).json({result: "fail", message: "존재하지 않는 그룹입니다."});
+            }else if(now_head_id.user_id !== user_id){    // 그룹장이 아닌 경우
+                return res.status(400).json({result: "fail", message: "그룹장만 그룹을 삭제할 수 있습니다."});
             }else{
                 await groupModel.deleteGroup(group_id, user_id);
-                await groupModel.deleteUserGroupId(group_id);
-                res.json({result: "success"});
+                await groupModel.deleteUserGroupId(group_id, user_id);
+                return res.json({result: "success"});
             }
         }catch(error){
             next(error);
