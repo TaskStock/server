@@ -122,7 +122,12 @@ module.exports = {
         }
     },
     getUserById: async(user_id) => { //user_id로 유저 정보 가져오기
-        const query = 'SELECT * FROM "User" WHERE user_id = $1';
+        const query = `
+        SELECT "User".*, "UserSetting".theme, "UserSetting".language 
+        FROM "User" 
+        INNER JOIN "UserSetting" 
+        ON "User".user_id = "UserSetting".user_id 
+        WHERE "User".user_id = $1`;
         try {
         const {rows} = await db.query(query, [user_id])
         return rows;
