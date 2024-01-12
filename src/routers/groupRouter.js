@@ -3,7 +3,7 @@ const router = express.Router();
 
 const groupController = require('../controllers/groupController.js');
 
-router.post('/create', groupController.createGroup);
+router.post('', groupController.createGroup);
 router.post('/join', groupController.joinGroup);
 router.get('/rank', groupController.getRank);
 router.post('/change', groupController.changeHead);

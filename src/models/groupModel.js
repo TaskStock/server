@@ -35,18 +35,7 @@ module.exports = {
                 throw e;
             });
 
-        const query2 = "update \"User\" set group_id=$1 where user_id=$2";
-        const values2 = [group_id, user_id];
-
-        await db.query(query2, values2)
-            .then(res => {
-                // console.log(res.rows[0]);
-            })
-            .catch(e => {
-                console.error(e.stack);
-
-                throw e;
-            });
+        return group_id;
     },
     statusPeopleNum: async(group_id)=>{
         const query = "select people_count, people_maxnum from \"Group\" where group_id=$1";
@@ -65,7 +54,7 @@ module.exports = {
         return group_people[0];
     },
     joinGroup: async(user_id, group_id)=>{
-        const query = "update \"User\" set group_id=$1 where user_id=$2";
+        const query = "update \"User\" set group_id=array_append(group_id, $1) where user_id=$2";
         const values = [group_id, user_id];
 
         const query2 = "update \"Group\" set people_count=people_count+1 where group_id=$1";
