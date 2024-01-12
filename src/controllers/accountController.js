@@ -260,7 +260,7 @@ module.exports = {
     },
     getUserInfo: async (req, res) => {
         try {
-            const { password, ...userData } = await accountModel.getUserInfoWithSetting(req.user.user_id)
+            const { password, ...userData } = req.user;
             
             res.status(200).json({
                 result: "success",
