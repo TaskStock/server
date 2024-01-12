@@ -43,10 +43,10 @@ passport.use(new JWTStrategy({
 },
     async (jwtPayload, done) => {
         try {
-            const userData = await accountModel.getUserById(jwtPayload.user_id);
+            const userData = await accountModel.getUserById(jwtPayload.user_id); //반드시 검사해야함
             // console.log('userData:', userData)
             if (userData === null) {
-                return done(null, false, { message: '가입 정보가 없습니다.' });
+                return done(null, false, { message: '권한 없음' });
             } else {
                 return done(null, userData[0]);
             }

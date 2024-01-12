@@ -144,9 +144,6 @@ module.exports = {
             console.log(e.stack);
         }
     },
-
-
-
     checkRefreshToken: async(user_id, refreshToken) => {
         const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
         const {rows} = await db.query(query, [user_id]);
