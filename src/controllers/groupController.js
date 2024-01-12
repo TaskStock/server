@@ -58,9 +58,10 @@ module.exports = {
         }
     },
     changeHead: async(req, res, next) =>{
-        const {group_id, user_id, to_id} = req.body;
+        const {group_id, to_id} = req.body;
         // user_id : 원래 그룹장인 유저
         // to_id : 새로 그룹장이 될 유저
+        const user_id = req.user.user_id;
 
         if(user_id === to_id){
             return res.status(400).json({result: "fail", message: "서로 다른 유저를 지정해주세요."});
