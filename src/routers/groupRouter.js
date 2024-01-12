@@ -6,7 +6,7 @@ const groupController = require('../controllers/groupController.js');
 router.post('', groupController.createGroup);
 router.post('/join', groupController.joinGroup);
 router.get('/rank', groupController.getRank);
-router.post('/change', groupController.changeHead);
+router.post('/changeHead', groupController.changeHead);
 router.delete('/delete', groupController.deleteGroup);
 
 module.exports = router;
