@@ -16,10 +16,18 @@ module.exports = {
             });
         }
     },
-    hello: (req, res) =>  {
-        res.status(200).json({
-            message: "hello"
-        });
-    }
+    showRanking: async(req, res) => {
+        const rankingResult = await snsModel.showRanking();
+        if (rankingResult) {
+            res.status(200).json({
+                result: "success",
+                rankingResult: rankingResult
+            });
+        } else {
+            res.status(400).json({
+                result: "fail"
+            });
+        }
+    }   
 }
 ;
