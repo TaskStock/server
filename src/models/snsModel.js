@@ -10,5 +10,16 @@ module.exports = {
             console.log(error.stack);
             return false;
         }
-    }
+    },
+    showRanking: async() => {
+        const query = 'SELECT user_id, user_name, cumulative_value FROM "User" ORDER BY cumulative_value DESC LIMIT 50';
+        try {
+            const {rows} = await db.query(query);       
+            return rows;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
+        
+    },
 }
