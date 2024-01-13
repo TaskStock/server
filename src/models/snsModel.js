@@ -12,7 +12,11 @@ module.exports = {
         }
     },
     showRanking: async() => {
-        const query = 'SELECT user_id, user_name, cumulative_value FROM "User" ORDER BY cumulative_value DESC LIMIT 50';
+        const query = `
+        SELECT user_id, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+        FROM "User"
+        ORDER BY rank;
+        `;
         try {
             const {rows} = await db.query(query);       
             return rows;
