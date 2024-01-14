@@ -68,6 +68,14 @@ module.exports = {
             result: "success",
             searchResult: searchResult
         });
+    },
+    showFollowList: async(req, res) => {
+        const user_id = req.user.user_id;
+        const followList = await snsModel.showFollowList(user_id);
+        res.status(200).json({
+            result: "success",
+            followList: followList
+        });
     }
 }
 ;

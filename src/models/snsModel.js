@@ -47,16 +47,15 @@ module.exports = {
         }
     },
     searchUser: async(searchTarget, searchScope) => {
+        const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
             const query = `
                 SELECT  user_id, image, user_name, cumulative_value
                 FROM "User"
                 WHERE user_name LIKE $1 OR email LIKE $1
                 `
-            const queryTarget = '%' + searchTarget + '%'
             try {
                 const {rows} = await db.query(query, [queryTarget]);
-                console.log(rows);
                 return rows;
             } catch (e) {
                 console.log(e.stack);
@@ -73,7 +72,7 @@ module.exports = {
                 )            
             `
             try {
-                await db.query(query, [searchTarget]);
+                await db.query(query, [queryTarget]);
                 return true;
             } catch (e) {
                 console.log(e.stack);
@@ -96,6 +95,32 @@ module.exports = {
                 console.log(e.stack);
                 return false;
             }
+        }
+    },
+    showFollowList: async(user_id) => {
+        const query = `
+            SELECT user_id, image, user_name, cumulative_value, 'follower' AS follow_type
+            FROM "User"
+            WHERE user_id IN (
+                SELECT follower_id
+                FROM "FollowMap"
+                WHERE following_id = $1
+            )            
+            UNION ALL
+            SELECT user_id, image, user_name, cumulative_value, 'following' AS follow_type
+            FROM "User"
+            WHERE user_id IN (
+                SELECT following_id
+                FROM "FollowMap"
+                WHERE follower_id = $1
+            )
+        `
+        try {
+            const {rows} = await db.query(query, [user_id]);
+            return rows;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
         }
     }
 }
