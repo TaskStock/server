@@ -94,6 +94,9 @@ module.exports = {
                 result: "fail"
             });
         }
+    },
+    editUserImage: async(req, res) => {
+        
     }
 
 }
