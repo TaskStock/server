@@ -43,6 +43,21 @@ module.exports = {
                 result: "fail"
             });
         }
+    },
+    unfollowUser: async(req, res) => {
+        const follower_id = req.user.user_id;
+        const unfollowing_id = req.body.unfollowing_id;
+        const unfollowResult = await snsModel.unfollowUser(follower_id, unfollowing_id);
+
+        if (unfollowResult) {
+            res.status(200).json({
+                result: "success"
+            });
+        } else {
+            res.status(400).json({
+                result: "fail"
+            });
+        }
     }
 
 }

@@ -35,5 +35,15 @@ module.exports = {
             console.log(e.stack);
             return false;
         }
+    },
+    unfollowUser: async(follower_id, unfollowing_id) => {
+        const query = 'DELETE FROM "FollowMap" WHERE Follower_id = $1 AND Following_id = $2';
+        try {
+            await db.query(query, [follower_id, unfollowing_id]);
+            return true;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
     }
 }
