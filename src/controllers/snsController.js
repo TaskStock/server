@@ -96,7 +96,21 @@ module.exports = {
         }
     },
     editUserImage: async(req, res) => {
-        
+        const user_id = req.user.user_id;
+        const image_path = req.file.path
+
+        const uploadResult = await snsModel.editUserImage(user_id, image_path);
+        if (uploadResult) {
+            console.log("이미지 변경 완료");
+            return res.status(200).json({
+                result: "success"
+            });
+        } else {
+            console.log("이미지 변경 실패");
+            return res.status(500).json({
+                result: "fail"
+            });
+        }
     }
 
 }

@@ -135,5 +135,15 @@ module.exports = {
             console.log(e.stack);
             return false;
         }
+    },
+    editUserImage: async(user_id, image_path) => {
+        const query = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, [image_path, user_id]);
+            return true;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
     }
 }
