@@ -28,6 +28,22 @@ module.exports = {
                 result: "fail"
             });
         }
-    }   
+    },
+    followUser: async(req, res) => {
+        const follower_id = req.user.user_id;
+        const following_id = req.body.following_id;
+        const followResult = await snsModel.followUser(follower_id, following_id);
+
+        if (followResult) {
+            res.status(200).json({
+                result: "success"
+            });
+        } else {
+            res.status(400).json({
+                result: "fail"
+            });
+        }
+    }
+
 }
 ;

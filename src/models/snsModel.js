@@ -26,4 +26,14 @@ module.exports = {
         }
         
     },
+    followUser: async(follower_id, following_id) => {
+        const query = 'INSERT INTO "FollowMap" (Follower_id, Following_id) VALUES ($1, $2)';
+        try {
+            await db.query(query, [follower_id, following_id]);
+            return true;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
+    }
 }
