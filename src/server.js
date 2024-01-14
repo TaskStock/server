@@ -29,6 +29,9 @@ app.use(cors(corsConfig));
 // passport 초기화
 app.use(passport.initialize());
 
+///static 설정
+app.use('/uploads', express.static('uploads'));
+
 //Router
 const accountRouter = require("./routers/accountRouter.js");
 const todoRouter = require("./routers/todoRouter.js");

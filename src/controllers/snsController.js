@@ -94,6 +94,32 @@ module.exports = {
                 result: "fail"
             });
         }
+    },
+    editUserImage: async(req, res) => {
+        const user_id = req.user.user_id;
+        const image_file = req.file
+        if (image_file == undefined) {
+            console.log('이미지 파일이 없습니다.');
+            return res.status(400).json({
+                message: "이미지 파일이 없습니다.",
+                result: "fail"
+            });
+        } else { 
+            image_path = image_file.path;
+        }
+
+        const uploadResult = await snsModel.editUserImage(user_id, image_path);
+        if (uploadResult) {
+            console.log("이미지 변경 완료");
+            return res.status(200).json({
+                result: "success"
+            });
+        } else {
+            console.log("이미지 변경 실패");
+            return res.status(500).json({
+                result: "fail"
+            });
+        }
     }
 
 }

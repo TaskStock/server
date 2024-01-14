@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const uploader = require('../config/multerConfig.js');
 
 const snsController = require('../controllers/snsController.js');
 
@@ -10,6 +11,7 @@ router.delete('/unfollow', snsController.unfollowUser);
 router.get('/users/search', snsController.searchUser);
 router.get('/list', snsController.showFollowList);
 router.patch('/edit/info', snsController.editUserInfo);
+router.patch('/edit/image', uploader.single('image'), snsController.editUserImage);
 
 module.exports = router;
 
