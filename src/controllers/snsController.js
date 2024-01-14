@@ -97,7 +97,17 @@ module.exports = {
     },
     editUserImage: async(req, res) => {
         const user_id = req.user.user_id;
-        const image_path = req.file.path
+        const image_file = req.file
+        console.log(image_file)
+        if (image_file == undefined) {
+            console.log('이미지 파일이 없습니다.');
+            return res.status(400).json({
+                message: "이미지 파일이 없습니다.",
+                result: "fail"
+            });
+        } else { 
+            image_path = image_file.path;
+        }
 
         const uploadResult = await snsModel.editUserImage(user_id, image_path);
         if (uploadResult) {
