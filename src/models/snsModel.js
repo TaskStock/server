@@ -52,10 +52,11 @@ module.exports = {
             const query = `
                 SELECT  user_id, image, user_name, cumulative_value
                 FROM "User"
-                WHERE user_name LIKE $1 OR email LIKE $1
+                WHERE (user_name LIKE $1 OR email LIKE $1) AND user_id != $2
                 `
             try {
-                const {rows} = await db.query(query, [queryTarget]);
+                const excludedId = user_id;
+                const {rows} = await db.query(query, [queryTarget, excludedId]);
                 return rows;
             } catch (e) {
                 console.log(e.stack);
