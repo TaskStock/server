@@ -79,6 +79,22 @@ module.exports = {
             followList: followList
         });
     },
+    editUserInfo: async(req, res) => {
+        const user_id = req.user.user_id;
+        const user_name = req.body.user_name;
+        const introduce = req.body.introduce;
+
+        const editResult = await snsModel.editUserInfo(user_id, user_name, introduce);
+        if (editResult) {
+            res.status(200).json({
+                result: "success"
+            });
+        } else {
+            res.status(400).json({
+                result: "fail"
+            });
+        }
+    }
 
 }
 ;

@@ -125,5 +125,15 @@ module.exports = {
             console.log(e.stack);
             return false;
         }
+    },
+    editUserInfo: async(user_id, user_name, introduce) => {
+        const query = 'UPDATE "User" SET user_name = $1, introduce = $2 WHERE user_id = $3';
+        try {
+            await db.query(query, [user_name, introduce, user_id]);
+            return true;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
     }
 }
