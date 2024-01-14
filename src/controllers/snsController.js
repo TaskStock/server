@@ -17,11 +17,14 @@ module.exports = {
         }
     },
     showRanking: async(req, res) => {
-        const rankingResult = await snsModel.showRanking();
+        const user_id = req.user.user_id;
+        const rankingResult = await snsModel.showRanking(user_id);
         if (rankingResult) {
             res.status(200).json({
                 result: "success",
-                rankingResult: rankingResult
+                rankingAll: rankingResult[0],
+                rankingFollower: rankingResult[1],
+                rankingFollowing: rankingResult[2]
             });
         } else {
             res.status(400).json({
