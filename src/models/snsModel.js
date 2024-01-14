@@ -177,5 +177,15 @@ module.exports = {
             console.log(e.stack);
             return false;
         }
+    },
+    acceptPending: async(follower_id, following_id) => {
+        const query = 'UPDATE "FollowMap" SET isPending = false WHERE follower_id = $1 AND following_id = $2';
+        try {
+            await db.query(query, [follower_id, following_id]);
+            return true;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
     }
 }
