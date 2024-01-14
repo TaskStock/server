@@ -12,18 +12,41 @@ module.exports = {
             return false;
         }
     },
-    showRanking: async() => {
-        const query = `
-        SELECT user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+    showRanking: async(user_id) => {
+        const entireQuery = `
+        SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
         FROM "User"
-        ORDER BY rank;
+        ORDER BY rank
+        LIMIT 100
+        `;
+        const followerQuery = `
+        SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+        FROM "User" U
+        JOIN "FollowMap" F
+        ON U.user_id = F.follower_id
+        WHERE F.following_id = $1
+        `
+        const followingQuery = `
+        SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+        FROM "User" U
+        JOIN "FollowMap" F
+        ON U.user_id = F.following_id
+        WHERE F.follower_id = $1
         `;
         try {
-            const {rows} = await db.query(query);       
-            return rows;
+            const entireRes = await db.query(entireQuery)
+            const followerRes = await db.query(followerQuery, [user_id])
+            const followingRes = await db.query(followingQuery, [user_id])
+
+            const rankingAll = entireRes.rows
+            const rankingFollower = followerRes.rows
+            const rankingFollowing = followingRes.rows
+
+            return [rankingAll, rankingFollower, rankingFollowing];
+
         } catch (e) {
             console.log(e.stack);
-            return false;
+            return
         }
         
     },
@@ -103,21 +126,17 @@ module.exports = {
     },
     showFollowList: async(user_id) => {
         const query = `
-            SELECT user_id, image, user_name, cumulative_value, 'follower' AS follow_type
-            FROM "User"
-            WHERE user_id IN (
-                SELECT follower_id
-                FROM "FollowMap"
-                WHERE following_id = $1
-            )            
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type
+            FROM "User" U
+            JOIN "FollowMap" F
+            ON U.user_id = F.follower_id
+            WHERE F.following_id = $1
             UNION ALL
-            SELECT user_id, image, user_name, cumulative_value, 'following' AS follow_type
-            FROM "User"
-            WHERE user_id IN (
-                SELECT following_id
-                FROM "FollowMap"
-                WHERE follower_id = $1
-            )
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type
+            FROM "User" U
+            JOIN "FollowMap" F
+            ON U.user_id = F.following_id
+            WHERE F.follower_id = $1
         `
         try {
             const {rows} = await db.query(query, [user_id]);
