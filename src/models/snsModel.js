@@ -1,4 +1,5 @@
 const db = require('../config/db.js');
+const fs = require('fs');
 
 module.exports = {
     changePrivate: async(user_id, private) => {
@@ -137,9 +138,21 @@ module.exports = {
         }
     },
     editUserImage: async(user_id, image_path) => {
-        const query = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
+        const updateQuery = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
+        const checkQuery = 'SELECT image FROM "User" WHERE user_id = $1';
         try {
-            await db.query(query, [image_path, user_id]);
+            const {rows} = await db.query(checkQuery, [user_id]);
+            const oldImagePath = rows[0].image;
+            fs.unlink(oldImagePath, (err) => {
+                if (err) {
+                    console.log('기존 이미지 삭제 실패')
+                    console.error(err);
+                    return
+                }
+                console.log('기존 이미지 삭제 성공');
+            });
+
+            await db.query(updateQuery, [image_path, user_id]);
             return true;
         } catch (e) {
             console.log(e.stack);
