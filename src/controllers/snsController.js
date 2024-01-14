@@ -58,7 +58,16 @@ module.exports = {
                 result: "fail"
             });
         }
-    }
+    },
+    searchUser: async(req, res) => {
+        const searchTarget = req.body.searchTarget; //이메일 또는 닉네임
+        const searchScope = req.body.searchScope; //검색 범위
 
+        const searchResult = await snsModel.searchUser(searchTarget, searchScope);
+        res.status(200).json({
+            result: "success",
+            searchResult: searchResult
+        });
+    }
 }
 ;

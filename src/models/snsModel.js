@@ -13,7 +13,7 @@ module.exports = {
     },
     showRanking: async() => {
         const query = `
-        SELECT user_id, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+        SELECT user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
         FROM "User"
         ORDER BY rank;
         `;
@@ -44,6 +44,58 @@ module.exports = {
         } catch (e) {
             console.log(e.stack);
             return false;
+        }
+    },
+    searchUser: async(searchTarget, searchScope) => {
+        if (searchScope == 'global') { //전체
+            const query = `
+                SELECT  user_id, image, user_name, cumulative_value
+                FROM "User"
+                WHERE user_name LIKE $1 OR email LIKE $1
+                `
+            const queryTarget = '%' + searchTarget + '%'
+            try {
+                const {rows} = await db.query(query, [queryTarget]);
+                console.log(rows);
+                return rows;
+            } catch (e) {
+                console.log(e.stack);
+                return false;
+            }
+        } else if (searchScope == 'follower') { //나를 팔로우하는 사람
+            const query = `
+                SELECT user_id, image, user_name, cumulative_value
+                FROM "User"
+                WHERE user_id IN (
+                    SELECT follower_id
+                    FROM "FollowMap"
+                    WHERE following_id = $1
+                )            
+            `
+            try {
+                await db.query(query, [searchTarget]);
+                return true;
+            } catch (e) {
+                console.log(e.stack);
+                return false;
+            }
+        } else if (searchScope == 'following') { //내가 팔로우하는 사람
+            const query = `
+                SELECT user_id, image, user_name, cumulative_value
+                FROM "User"
+                WHERE user_id IN (
+                    SELECT following_id
+                    FROM "FollowMap"
+                    WHERE follower_id = $1
+                )            
+            `
+            try {
+                await db.query(query, [searchTarget]);
+                return true;
+            } catch (e) {
+                console.log(e.stack);
+                return false;
+            }
         }
     }
 }
