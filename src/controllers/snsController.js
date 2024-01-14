@@ -62,8 +62,9 @@ module.exports = {
     searchUser: async(req, res) => {
         const searchTarget = req.body.searchTarget; //이메일 또는 닉네임
         const searchScope = req.body.searchScope; //검색 범위
+        const user_id = req.user.user_id;
 
-        const searchResult = await snsModel.searchUser(searchTarget, searchScope);
+        const searchResult = await snsModel.searchUser(searchTarget, searchScope, user_id);
         res.status(200).json({
             result: "success",
             searchResult: searchResult
@@ -71,11 +72,13 @@ module.exports = {
     },
     showFollowList: async(req, res) => {
         const user_id = req.user.user_id;
+
         const followList = await snsModel.showFollowList(user_id);
         res.status(200).json({
             result: "success",
             followList: followList
         });
-    }
+    },
+
 }
 ;
