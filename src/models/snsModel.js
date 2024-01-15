@@ -51,9 +51,34 @@ module.exports = {
         
     },
     followUser: async(follower_id, following_id) => {
-        const query = 'INSERT INTO "FollowMap" (Follower_id, Following_id) VALUES ($1, $2)';
-        try {
-            await db.query(query, [follower_id, following_id]);
+        if (follower_id == following_id) {
+            console.log('자기 자신을 팔로우할 수 없습니다.');
+            return false;
+        }
+        const query = `
+        INSERT INTO "FollowMap" (follower_id, following_id, isPending)
+        SELECT
+            $1,
+            $2,
+            CASE
+                WHEN U.private THEN false
+                ELSE true
+            END
+        FROM
+            "User" U
+        WHERE
+            user_id = $2
+        RETURNING isPending
+        `;
+        try {   
+            const {rows} = await db.query(query, [follower_id, following_id]);
+            const isPending = rows[0].isPending;
+            if (!isPending) {
+                const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
+                const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
+                await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
+                await db.query(updateQuery2, [follower_id]) 
+            }
             return true;
         } catch (e) {
             console.log(e.stack);
