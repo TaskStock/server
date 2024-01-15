@@ -204,9 +204,14 @@ module.exports = {
         }
     },
     acceptPending: async(follower_id, following_id) => {
-        const query = 'UPDATE "FollowMap" SET isPending = false WHERE follower_id = $1 AND following_id = $2';
+        const pendingQuery = 'UPDATE "FollowMap" SET isPending = false WHERE follower_id = $1 AND following_id = $2';
+        const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
+        const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
         try {
-            await db.query(query, [follower_id, following_id]);
+            await db.query(pendingQuery, [follower_id, following_id]);
+            await db.query(followerCountQuery, [following_id]);
+            await db.query(followingCountQuery, [follower_id]);
+
             return true;
         } catch (e) {
             console.log(e.stack);
