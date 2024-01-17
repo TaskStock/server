@@ -19,7 +19,7 @@ function generateAccessToken(userData) {
 }
 
 function generateRefreshToken(userData) {
-    const expiresIn = "30d";
+    const expiresIn = "2y";
     const user_id = userData.user_id;
     const device_id = userData.device_id;
     const refreshToken = jwt.sign({user_id, device_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
