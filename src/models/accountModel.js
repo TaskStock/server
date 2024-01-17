@@ -68,7 +68,6 @@ module.exports = {
         }
         const userData = rows[0];
 
-        // 회원가입 도중 이탈하는 경우를 대비해 기본 설정을 저장
         const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
         const defaultSet = [userData.user_id, isAgree, theme, language];
 
@@ -79,18 +78,18 @@ module.exports = {
 
         return userData;
     },
-    saveRefreshToken: async(user_id, refreshToken) => {
-        const selectQuery = 'SELECT * FROM "Token" WHERE user_id = $1';
-        const {rowCount} = await db.query(selectQuery, [user_id]);
+    saveRefreshToken: async(user_id, refreshToken, device_id) => {
+        const selectQuery = 'SELECT * FROM "Token" WHERE device_id = $1 and user_id = $2';
+        const {rowCount} = await db.query(selectQuery, [device_id, user_id]);
         if (rowCount === 0) {
-            const insertQuery = 'INSERT INTO "Token" (user_id, refresh_token) VALUES ($1, $2)';
-            await db.query(insertQuery, [user_id, refreshToken])
+            const insertQuery = 'INSERT INTO "Token" (user_id, refresh_token, device_id) VALUES ($1, $2, $3)';
+            await db.query(insertQuery, [user_id, refreshToken, device_id])
                 .catch(e => {
                     console.error(e.stack);
                 });
         } else {
-            const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE user_id = $2';
-            await db.query(updateQuery, [refreshToken, user_id])
+            const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE user_id = $2 and device_id = $3';
+            await db.query(updateQuery, [refreshToken, user_id, device_id])
                 .catch(e => {
                     console.error(e.stack);
                 });
@@ -135,9 +134,9 @@ module.exports = {
             console.log(e.stack);
         }
     },
-    checkRefreshToken: async(user_id, refreshToken) => {
-        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1';
-        const {rows} = await db.query(query, [user_id]);
+    checkRefreshToken: async(user_id, refreshToken, device_id) => {
+        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1 and device_id = $2';
+        const {rows} = await db.query(query, [user_id, device_id]);
         if (rows.length === 0) {
             return 'noToken';
         }

@@ -11,7 +11,8 @@ const transdate = require('../service/transdateService.js');
 function generateAccessToken(userData) {
     const expiresIn = "1h";
     const user_id = userData.user_id;
-    const accessToken = jwt.sign({user_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+    const device_id = userData.device_id;
+    const accessToken = jwt.sign({user_id, device_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
     const accessExp = jwt.decode(accessToken).exp;
 
     return [accessToken, accessExp];
@@ -20,7 +21,8 @@ function generateAccessToken(userData) {
 function generateRefreshToken(userData) {
     const expiresIn = "30d";
     const user_id = userData.user_id;
-    const refreshToken = jwt.sign({user_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
+    const device_id = userData.device_id;
+    const refreshToken = jwt.sign({user_id, device_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
     const refreshExp = jwt.decode(refreshToken).exp;
     
     return [refreshToken, refreshExp];
@@ -105,6 +107,8 @@ module.exports = {
     register: async (req, res) => {
         try {
             const email = req.body.email;
+            const userDevice = req.body.device_id;
+
             const queryResult = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
 
             //앞에서 확인하긴 했는데 공격에 대비해서 한번 더 확인
@@ -117,13 +121,14 @@ module.exports = {
 
             const registerData = req.body; 
             const userData = await accountModel.register(registerData);
+            userData.device_id = userDevice;
 
             //accessToken 처리
             const [accessToken, accessExp] = generateAccessToken(userData);
 
             // refreshToken 처리
             const [refreshToken, refreshExp] = generateRefreshToken(userData);
-            await accountModel.saveRefreshToken(userData.user_id, refreshToken); // refreshToken DB에 저장(user_id가 PK)
+            await accountModel.saveRefreshToken(userData.user_id, refreshToken, userDevice); // refreshToken DB에 저장(decive_id가 PK)
 
             console.log("회원가입 성공");
 
@@ -154,9 +159,12 @@ module.exports = {
     login: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
+            const userDevice = req.body.device_id;
+            userData.device_id = userDevice;
+
             const [accessToken, accessExp] = generateAccessToken(userData);
             const [refreshToken, refreshExp] = generateRefreshToken(userData);
-            await accountModel.saveRefreshToken(userData.user_id, refreshToken);
+            await accountModel.saveRefreshToken(userData.user_id, refreshToken, userDevice);
 
             console.log("로그인 성공");
             return res.status(200).json({ 
@@ -206,7 +214,10 @@ module.exports = {
     refresh: async (req, res) => {
         try {
             const refreshToken = req.body.refreshToken;
-            const user_id = jwt.decode(refreshToken).user_id;
+            const decoded = jwt.decode(refreshToken);
+            const user_id = decoded.user_id;
+            const device_id = decoded.device_id;
+
             
             if (refreshToken === null) {
                 console.log("refreshToken 재발급 실패.")
@@ -215,7 +226,7 @@ module.exports = {
                     message: "refreshToken이 없습니다." 
                 });
             }
-            const certified = await accountModel.checkRefreshToken(user_id, refreshToken);
+            const certified = await accountModel.checkRefreshToken(user_id, refreshToken, device_id);
             if (certified === 'noToken') {
                 console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
                 return res.status(401).json({

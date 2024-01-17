@@ -87,8 +87,12 @@ module.exports = {
     },
     unfollowUser: async(follower_id, unfollowing_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE Follower_id = $1 AND Following_id = $2';
+        const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id = $1';
+        const updateQuery2 = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id = $1';
         try {
             await db.query(query, [follower_id, unfollowing_id]);
+            await db.query(updateQuery1, [unfollowing_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
+            await db.query(updateQuery2, [follower_id]) 
             return true;
         } catch (e) {
             console.log(e.stack);
