@@ -123,6 +123,21 @@ module.exports = {
                 result: "fail"
             });
         }
+    },
+    acceptPenging: async(req, res) => {
+        const following_id = req.user.user_id;
+        const follower_id = req.body.follower_id;
+        const acceptResult = await snsModel.acceptPending(follower_id, following_id);
+        
+        if (acceptResult) {
+            res.status(200).json({
+                result: "success"
+            });
+        } else {
+            res.status(400).json({
+                result: "fail"
+            });
+        }
     }
 
 }
