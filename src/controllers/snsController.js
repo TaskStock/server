@@ -139,6 +139,21 @@ module.exports = {
                 result: "fail"
             });
         }
+    },
+    changeDefaultImage: async(req, res) => {
+        const user_id = req.user.user_id;
+        const changeResult = await snsModel.changeDefaultImage(user_id);
+        
+        if (changeResult) {
+            res.status(200).json({
+                result: "success",
+                imagePath: 'public/images/ic_profile.png'
+            });
+        } else {
+            res.status(500).json({
+                result: "fail"
+            });
+        }
     }
 
 }
