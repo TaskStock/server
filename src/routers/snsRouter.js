@@ -13,7 +13,7 @@ router.get('/list', snsController.showFollowList);
 router.patch('/edit/info', snsController.editUserInfo);
 router.patch('/edit/image', uploader.single('image'), snsController.editUserImage);
 router.patch('/pending', snsController.acceptPenging);
-//
+router.patch('/edit/default', snsController.changeDefaultImage);
 
 module.exports = router;
 

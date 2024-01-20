@@ -186,20 +186,21 @@ module.exports = {
         }
     },
     editUserImage: async(user_id, image_path) => {
-        const updateQuery = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         const checkQuery = 'SELECT image FROM "User" WHERE user_id = $1';
+        const updateQuery = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         try {
             const {rows} = await db.query(checkQuery, [user_id]);
             const oldImagePath = rows[0].image;
-            fs.unlink(oldImagePath, (err) => {
-                if (err) {
-                    console.log('기존 이미지 삭제 실패')
-                    console.error(err);
-                    return
-                }
-                console.log('기존 이미지 삭제 성공');
-            });
-
+            if (oldImagePath !== 'public/images/ic_profile.png') {
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) {
+                        console.log('기존 이미지 삭제 실패')
+                        console.error(err);
+                        return
+                    }
+                    console.log('기존 이미지 삭제 성공');
+                });
+            }
             await db.query(updateQuery, [image_path, user_id]);
             return true;
         } catch (e) {
@@ -216,6 +217,16 @@ module.exports = {
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
 
+            return true;
+        } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
+    },
+    changeDefaultImage: async(user_id) => {
+        const query = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, ['public/images/ic_profile.png', user_id]);
             return true;
         } catch (e) {
             console.log(e.stack);

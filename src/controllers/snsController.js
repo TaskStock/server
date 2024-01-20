@@ -115,7 +115,8 @@ module.exports = {
         if (uploadResult) {
             console.log("이미지 변경 완료");
             return res.status(200).json({
-                result: "success"
+                result: "success",
+                imagePath : image_path
             });
         } else {
             console.log("이미지 변경 실패");
@@ -135,6 +136,21 @@ module.exports = {
             });
         } else {
             res.status(400).json({
+                result: "fail"
+            });
+        }
+    },
+    changeDefaultImage: async(req, res) => {
+        const user_id = req.user.user_id;
+        const changeResult = await snsModel.changeDefaultImage(user_id);
+        
+        if (changeResult) {
+            res.status(200).json({
+                result: "success",
+                imagePath: 'public/images/ic_profile.png'
+            });
+        } else {
+            res.status(500).json({
                 result: "fail"
             });
         }
