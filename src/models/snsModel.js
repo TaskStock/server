@@ -191,15 +191,16 @@ module.exports = {
         try {
             const {rows} = await db.query(checkQuery, [user_id]);
             const oldImagePath = rows[0].image;
-            fs.unlink(oldImagePath, (err) => {
-                if (err) {
-                    console.log('기존 이미지 삭제 실패')
-                    console.error(err);
-                    return
-                }
-                console.log('기존 이미지 삭제 성공');
-            });
-
+            if (oldImagePath != null) {
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) {
+                        console.log('기존 이미지 삭제 실패')
+                        console.error(err);
+                        return
+                    }
+                    console.log('기존 이미지 삭제 성공');
+                });
+            }
             await db.query(updateQuery, [image_path, user_id]);
             return true;
         } catch (e) {
