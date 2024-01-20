@@ -1,5 +1,6 @@
 const projectModel = require('../models/projectModel.js');
 const todoModel = require('../models/todoModel.js');
+const retrospectModel = require('../models/retrospectModel.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{
@@ -26,27 +27,17 @@ module.exports = {
     
         res.json({result: "success"});
     },
-    writeRetrospect: async(req, res, next) =>{
-        const {project_id, retrospect} = req.body;
-        const user_id = req.user.user_id;
-        
-        try{
-            await projectModel.updateRetrospect(project_id, user_id, retrospect);
-        }catch(error){
-            next(error);
-        }
-    
-        res.json({result: "success"});
-    },
     // 프로젝트와 해당 프로젝트의 todo들 반환
     readProjectWithTodos: async(req, res, next) =>{
-        const project_id = req.query.project_id;
+        const project_id = req.params.project_id;
         const user_id = req.user.user_id;
-        
+
         try{
             const project = await projectModel.readProject(project_id, user_id);
             const todos = await todoModel.readTodosUsingProject(project_id, user_id);
-            res.json({project: project, todos: todos});
+            const todoCount = await todoModel.getTodoCount(user_id, project_id);
+            const retrospectCount = await retrospectModel.getRetrospectCount(user_id, project_id);
+            res.json({project: project, todos: todos, todoCount: todoCount, retrospectCount: retrospectCount});
         }catch(error){
             next(error);
         }
