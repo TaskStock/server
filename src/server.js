@@ -30,6 +30,7 @@ app.use(cors(corsConfig));
 app.use(passport.initialize());
 
 ///static 설정
+app.use('/public', express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
 //Router

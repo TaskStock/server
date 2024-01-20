@@ -45,7 +45,7 @@ module.exports = {
     },
     register: async(registerData) => {
         const {email, userName, password, isAgree, strategy, userPicture, theme, language} = registerData; 
-        
+        const defaultImage = 'public/images/ic_profile.png'
         let rows;      
         if (password === null) {    //소셜 로그인의 경우
             const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
@@ -59,8 +59,8 @@ module.exports = {
             // 비밀번호 암호화
             const hashedPassword = await bcrypt.hash(password, 10);
             
-            const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
-            const {rows: _rows} = await db.query(query, [email, hashedPassword, userName])
+            const query = 'INSERT INTO "User" (email, password, user_name, image) VALUES ($1, $2, $3, $4) RETURNING *';
+            const {rows: _rows} = await db.query(query, [email, hashedPassword, userName, defaultImage])
                 .catch(e => {
                     console.error(e.stack);
                 });
