@@ -106,10 +106,10 @@ module.exports = {
             return userData;
         }
     },
-    deleteRefreshToken: async(user_id) => {
-        const query = 'DELETE FROM "Token" WHERE user_id = $1';
+    deleteRefreshToken: async(user_id, device_id) => {
+        const query = 'DELETE FROM "Token" WHERE user_id = $1 and device_id = $2';
         try {
-            const {rowCount} = await db.query(query, [user_id])
+            const {rowCount} = await db.query(query, [user_id, device_id])
             if (rowCount === 1) {
                 return true;
             } else {

@@ -187,7 +187,8 @@ module.exports = {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
-            const deleteResult = await accountModel.deleteRefreshToken(user_id);
+            const userDevice = req.body.device_id;
+            const deleteResult = await accountModel.deleteRefreshToken(user_id, userDevice);
             
             if (deleteResult) {
                 console.log("로그아웃 성공");
