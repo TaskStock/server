@@ -115,7 +115,8 @@ module.exports = {
         if (uploadResult) {
             console.log("이미지 변경 완료");
             return res.status(200).json({
-                result: "success"
+                result: "success",
+                imagePath : image_path
             });
         } else {
             console.log("이미지 변경 실패");
