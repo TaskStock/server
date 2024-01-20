@@ -29,9 +29,9 @@ module.exports = {
     },
     // 프로젝트와 해당 프로젝트의 todo들 반환
     readProjectWithTodos: async(req, res, next) =>{
-        const project_id = req.query.project_id;
+        const project_id = req.params.project_id;
         const user_id = req.user.user_id;
-        
+
         try{
             const project = await projectModel.readProject(project_id, user_id);
             const todos = await todoModel.readTodosUsingProject(project_id, user_id);

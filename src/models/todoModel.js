@@ -175,7 +175,7 @@ module.exports = {
         const count = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows[0]);
-                return res.rows[0];
+                return res.rows[0].count;
             })
             .catch(e => {
                 console.error(e.stack);
