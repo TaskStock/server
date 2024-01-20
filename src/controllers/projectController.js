@@ -1,5 +1,6 @@
 const projectModel = require('../models/projectModel.js');
 const todoModel = require('../models/todoModel.js');
+const retrospectModel = require('../models/retrospectModel.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{
@@ -34,7 +35,9 @@ module.exports = {
         try{
             const project = await projectModel.readProject(project_id, user_id);
             const todos = await todoModel.readTodosUsingProject(project_id, user_id);
-            res.json({project: project, todos: todos});
+            const todoCount = await todoModel.getTodoCount(user_id, project_id);
+            const retrospectCount = await retrospectModel.getRetrospectCount(user_id, project_id);
+            res.json({project: project, todos: todos, todoCount: todoCount, retrospectCount: retrospectCount});
         }catch(error){
             next(error);
         }
