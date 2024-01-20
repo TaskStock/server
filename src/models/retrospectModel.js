@@ -59,4 +59,20 @@ module.exports = {
             });
         return count;
     },
+    getRetrospectsWithMonth: async(user_id, start_date, end_date)=>{
+        const query = "select * from \"Retrospect\" where user_id=$1 and created_date>=$2 and created_date<$3";
+        const values = [user_id, start_date, end_date];
+
+        const retrospects = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return retrospects;
+    },
 }
