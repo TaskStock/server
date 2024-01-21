@@ -75,4 +75,36 @@ module.exports = {
             });
         return retrospects;
     },
+    getRetrospectsAll: async(user_id, offset, limit)=>{
+        const query = "select * from \"Retrospect\" where user_id=$1 order by created_date desc limit $2 offset $3";
+        const values = [user_id, limit, offset];
+
+        const retrospects = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return retrospects;
+    },
+    getRetrospectsWithProject: async(user_id, project_id, offset, limit)=>{
+        const query = "select * from \"Retrospect\" where user_id=$1 and project_id=$2 order by created_date desc limit $3 offset $4";
+        const values = [user_id, project_id, limit, offset];
+
+        const retrospects = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return retrospects;
+    },
 }

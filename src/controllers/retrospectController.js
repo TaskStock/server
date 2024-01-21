@@ -57,5 +57,38 @@ module.exports = {
         }
     
         res.json({result: "success"});
+    },
+    getRetrospectsAll: async(req, res, next) =>{
+        const offset = req.query.offset;
+        const limit = req.query.limit;
+
+        const user_id = req.user.user_id;
+        
+        try{
+            const retrospects = await retrospectModel.getRetrospectsAll(user_id, offset, limit);
+
+            return res.json({retrospects: retrospects});
+        }catch(error){
+            next(error);
+        }
+    
+        res.json({result: "success"});
+    },
+    getRetrospectsWithProject: async(req, res, next) =>{
+        const project_id = req.params.project_id;
+        const offset = req.query.offset;
+        const limit = req.query.limit;
+
+        const user_id = req.user.user_id;
+        
+        try{
+            const retrospects = await retrospectModel.getRetrospectsWithProject(user_id, project_id, offset, limit);
+
+            return res.json({retrospects: retrospects});
+        }catch(error){
+            next(error);
+        }
+    
+        res.json({result: "success"});
     }
 }
