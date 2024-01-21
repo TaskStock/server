@@ -61,4 +61,18 @@ module.exports = {
             });
         return projects;
     },
+    deleteProject: async(project_id, user_id)=>{
+        const query = "delete from \"Project\" where user_id=$1 and project_id=$2";
+        const values = [user_id, project_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }

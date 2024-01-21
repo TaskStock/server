@@ -52,4 +52,16 @@ module.exports = {
             next(error);
         }
     },
+    deleteProject: async(req, res, next) =>{
+        const {project_id} = req.body;
+        const user_id = req.user.user_id;
+        
+        try{
+            await projectModel.deleteProject(project_id, user_id);
+        }catch(error){
+            next(error);
+        }
+    
+        res.json({result: "success"});
+    },
 }
