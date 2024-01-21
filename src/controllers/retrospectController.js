@@ -20,7 +20,7 @@ module.exports = {
         const user_id = req.user.user_id;
         
         try{
-            await retrospectModel.updateProject(retrospect_id, user_id, content);
+            await retrospectModel.updateRetrospect(retrospect_id, user_id, content);
         }catch(error){
             next(error);
         }
@@ -32,7 +32,7 @@ module.exports = {
         const user_id = req.user.user_id;
         
         try{
-            await retrospectModel.deleteTodo(retrospect_id, user_id);
+            await retrospectModel.deleteRestrospect(retrospect_id, user_id);
         }catch(error){
             next(error);
         }

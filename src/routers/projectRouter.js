@@ -7,5 +7,6 @@ router.post('', projectController.newProject);
 router.put('', projectController.updateProject);
 router.get('/withTodos/:project_id', projectController.readProjectWithTodos);
 router.get('/all', projectController.readAllProjects);
+router.delete('', projectController.deleteProjects);
 
 module.exports = router;
