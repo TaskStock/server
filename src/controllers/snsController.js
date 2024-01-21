@@ -66,6 +66,7 @@ module.exports = {
         const searchTarget = req.query.searchTarget; //이메일 또는 닉네임
         const searchScope = req.query.searchScope; //검색 범위
         const user_id = req.user.user_id;
+        console.log(searchTarget, searchScope, user_id)
 
         const searchResult = await snsModel.searchUser(searchTarget, searchScope, user_id);
         res.status(200).json({

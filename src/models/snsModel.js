@@ -103,7 +103,7 @@ module.exports = {
         const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
             const query = `
-                SELECT  user_id, image, user_name, cumulative_value
+                SELECT  user_id, image, user_name, cumulative_value, strategy
                 FROM "User"
                 WHERE (user_name LIKE $1 OR email LIKE $1) AND user_id != $2
                 `
@@ -117,7 +117,7 @@ module.exports = {
             }
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
             const query = `
-                SELECT U.user_id, U.image, U.user_name, U.cumulative_value
+                SELECT U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy
                 FROM "User" U
                 JOIN "FollowMap" F
                 ON U.user_id = F.follower_id
@@ -133,7 +133,7 @@ module.exports = {
             }
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
             const query = `
-                SELECT U.user_id, U.image, U.user_name, U.cumulative_value
+                SELECT U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy
                 FROM "User" U
                 JOIN "FollowMap" F
                 ON U.user_id = F.following_id
@@ -156,25 +156,45 @@ module.exports = {
     showFollowList: async(user_id) => {
         //나를 팔로우하는 사람들 (F.following_id = user_id)
         const followerQuery = `
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value
+            SELECT 
+                U.user_id, 
+                U.image, 
+                U.user_name, 
+                U.cumulative_value, 
+                U.private, 
+                F.pending, 
+                true AS "isFollowingMe",
+                CASE 
+                    WHEN F.following_id IS NOT NULL THEN true
+                    ELSE false
+                END AS "isFollowingYou"
             FROM "User" U
-            JOIN "FollowMap" F
-            ON U.user_id = F.follower_id
+            FULL OUTER JOIN "FollowMap" F ON U.user_id = F.follower_id
             WHERE F.following_id = $1
-        `
+        `;
         //내가 팔로우하는 사람들 (F.follower_id = user_id)
         const followingQuery = `
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value
+            SELECT 
+                U.user_id, 
+                U.image, 
+                U.user_name, 
+                U.cumulative_value, 
+                U.private, 
+                F.pending, 
+                true AS "isFollowingMe",
+                CASE
+                    WHEN F.following_id IS NULL THEN false
+                    ELSE true
+                END AS "isFollowingYou"
             FROM "User" U
-            JOIN "FollowMap" F
-            ON U.user_id = F.following_id
+            LEFT JOIN "FollowMap" F ON U.user_id = F.following_id
             WHERE F.follower_id = $1
-        `
+        `;
         try {
             console.log(user_id)
             const {rows: followerList} = await db.query(followerQuery, [user_id]);
             const {rows: followingList} = await db.query(followingQuery, [user_id]);
-            return [followerList[0], followingList[0]]
+            return [followerList, followingList]
         } catch (e) {
             console.log(e.stack);
             return false;
