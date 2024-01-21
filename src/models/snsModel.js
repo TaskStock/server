@@ -61,7 +61,7 @@ module.exports = {
             $1,
             $2,
             CASE
-                WHEN U.private THEN false
+                WHEN private = false THEN false
                 ELSE true
             END
         FROM
