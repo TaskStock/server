@@ -56,7 +56,7 @@ module.exports = {
             return false;
         }
         const query = `
-        INSERT INTO "FollowMap" (follower_id, following_id, isPending)
+        INSERT INTO "FollowMap" (follower_id, following_id, pending)
         SELECT
             $1,
             $2,
@@ -68,12 +68,12 @@ module.exports = {
             "User" U
         WHERE
             user_id = $2
-        RETURNING isPending
+        RETURNING pending
         `;
         try {   
             const {rows} = await db.query(query, [follower_id, following_id]);
-            const isPending = rows[0].isPending;
-            if (!isPending) {
+            const pending = rows[0].pending;
+            if (!pending) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
                 await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
@@ -153,15 +153,15 @@ module.exports = {
             return [];
         }
     },
-    showFollowList: async(user_id) => {     
+    showFollowList: async(user_id) => {
         const query = `
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type, F.isPending
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type, F.pending
             FROM "User" U
             JOIN "FollowMap" F
             ON U.user_id = F.follower_id
             WHERE F.following_id = $1
             UNION ALL
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type, F.isPending
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type, F.pending
             FROM "User" U
             JOIN "FollowMap" F
             ON U.user_id = F.following_id
@@ -209,7 +209,7 @@ module.exports = {
         }
     },
     acceptPending: async(follower_id, following_id) => {
-        const pendingQuery = 'UPDATE "FollowMap" SET isPending = false WHERE follower_id = $1 AND following_id = $2';
+        const pendingQuery = 'UPDATE "FollowMap" SET pending = false WHERE follower_id = $1 AND following_id = $2';
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
         try {
