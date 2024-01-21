@@ -154,22 +154,27 @@ module.exports = {
         }
     },
     showFollowList: async(user_id) => {
-        const query = `
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type, F.pending
+        //나를 팔로우하는 사람들 (F.following_id = user_id)
+        const followerQuery = `
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value
             FROM "User" U
             JOIN "FollowMap" F
             ON U.user_id = F.follower_id
             WHERE F.following_id = $1
-            UNION ALL
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type, F.pending
+        `
+        //내가 팔로우하는 사람들 (F.follower_id = user_id)
+        const followingQuery = `
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value
             FROM "User" U
             JOIN "FollowMap" F
             ON U.user_id = F.following_id
             WHERE F.follower_id = $1
         `
         try {
-            const {rows} = await db.query(query, [user_id]);
-            return rows;
+            console.log(user_id)
+            const {rows: followerList} = await db.query(followerQuery, [user_id]);
+            const {rows: followingList} = await db.query(followingQuery, [user_id]);
+            return [followerList[0], followingList[0]]
         } catch (e) {
             console.log(e.stack);
             return false;
