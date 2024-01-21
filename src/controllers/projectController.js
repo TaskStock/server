@@ -35,9 +35,7 @@ module.exports = {
         try{
             const project = await projectModel.readProject(project_id, user_id);
             const todos = await todoModel.readTodosUsingProject(project_id, user_id);
-            const todoCount = await todoModel.getTodoCount(user_id, project_id);
-            const retrospectCount = await retrospectModel.getRetrospectCount(user_id, project_id);
-            res.json({project: project, todos: todos, todoCount: todoCount, retrospectCount: retrospectCount});
+            res.json({project: project, todos: todos});
         }catch(error){
             next(error);
         }
@@ -51,5 +49,17 @@ module.exports = {
         }catch(error){
             next(error);
         }
+    },
+    deleteProject: async(req, res, next) =>{
+        const {project_id} = req.body;
+        const user_id = req.user.user_id;
+        
+        try{
+            await projectModel.deleteProject(project_id, user_id);
+        }catch(error){
+            next(error);
+        }
+    
+        res.json({result: "success"});
     },
 }

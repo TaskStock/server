@@ -15,7 +15,7 @@ module.exports = {
                 throw e;
             });
     },
-    updateProject: async(retrospect_id, user_id, content)=>{
+    updateRetrospect: async(retrospect_id, user_id, content)=>{
         const query = "update \"Retrospect\" set content=$1 where retrospect_id=$2 and user_id=$3";
         const values = [content, retrospect_id, user_id];
 
@@ -29,7 +29,7 @@ module.exports = {
                 throw e;
             });
     },
-    deleteTodo: async(retrospect_id, user_id)=>{
+    deleteRestrospect: async(retrospect_id, user_id)=>{
         const query = "delete from \"Retrospect\" where retrospect_id=$1 and user_id=$2";
         const values = [retrospect_id, user_id];
 
