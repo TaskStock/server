@@ -154,7 +154,7 @@ module.exports = {
                 result: "fail"
             });
         }
-    }
+    },
 
 }
 ;

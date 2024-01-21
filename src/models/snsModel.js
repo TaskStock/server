@@ -153,15 +153,15 @@ module.exports = {
             return [];
         }
     },
-    showFollowList: async(user_id) => {
+    showFollowList: async(user_id) => {     
         const query = `
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type, F.isPending
             FROM "User" U
             JOIN "FollowMap" F
             ON U.user_id = F.follower_id
             WHERE F.following_id = $1
             UNION ALL
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type
+            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type, F.isPending
             FROM "User" U
             JOIN "FollowMap" F
             ON U.user_id = F.following_id
