@@ -91,13 +91,22 @@ module.exports = {
             });
         return retrospects;
     },
-    getRetrospectsWithProject: async(user_id, project_id, offset, limit)=>{
-        const query = "select * from \"Retrospect\" where user_id=$1 and project_id=$2 order by created_date desc limit $3 offset $4";
-        const values = [user_id, project_id, limit, offset];
+    getRetrospectsWithProject: async(user_id, project_id, offset, limit, filter, search)=>{
+        let query;
+        let values;
+
+        console.log(search);
+        if(search === undefined){
+            query = "select * from \"Retrospect\" where user_id=$1 and project_id=$2 order by $3 limit $4 offset $5";
+            values = [user_id, project_id, filter, limit, offset];
+        }else{
+            query = "select * from \"Retrospect\" where user_id=$1 and project_id=$2 and content like $3 order by $4 limit $5 offset $6";
+            values = [user_id, project_id, search, filter, limit, offset];
+        }
 
         const retrospects = await db.query(query, values)
             .then(res => {
-                // console.log(res.rows);
+                console.log(res.rows);
                 return res.rows;
             })
             .catch(e => {
