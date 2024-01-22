@@ -156,40 +156,43 @@ module.exports = {
     showFollowList: async(user_id) => {
         //나를 팔로우하는 사람들 (F.following_id = user_id)
         const followerQuery = `
+        SELECT 
+            U.user_id, 
+            U.image, 
+            U.user_name, 
+            U.cumulative_value, 
+            U.private, 
+            FM.pending, 
+            true AS "isFollowingMe",
+            CASE 
+                WHEN F2.following_id IS NOT NULL THEN true
+                ELSE false
+            END AS "isFollowingYou"
+        FROM "User" U
+        LEFT JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        WHERE FM.following_id = $1
+    `;
+            //내가 팔로우하는 사람들 (F.follower_id = user_id)
+            const followingQuery = `
             SELECT 
                 U.user_id, 
                 U.image, 
                 U.user_name, 
                 U.cumulative_value, 
                 U.private, 
-                F.pending, 
-                true AS "isFollowingMe",
-                CASE 
-                    WHEN F.following_id IS NOT NULL THEN true
-                    ELSE false
-                END AS "isFollowingYou"
-            FROM "User" U
-            FULL OUTER JOIN "FollowMap" F ON U.user_id = F.follower_id
-            WHERE F.following_id = $1
-        `;
-        //내가 팔로우하는 사람들 (F.follower_id = user_id)
-        const followingQuery = `
-            SELECT 
-                U.user_id, 
-                U.image, 
-                U.user_name, 
-                U.cumulative_value, 
-                U.private, 
-                F.pending, 
-                true AS "isFollowingMe",
+                FM.pending, 
                 CASE
-                    WHEN F.following_id IS NULL THEN false
-                    ELSE true
-                END AS "isFollowingYou"
+                    WHEN F2.follower_id IS NOT NULL THEN true
+                    ELSE false
+                END AS "isFollowingMe",
+                true AS "isFollowingYou"
             FROM "User" U
-            LEFT JOIN "FollowMap" F ON U.user_id = F.following_id
-            WHERE F.follower_id = $1
+            LEFT JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
+            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+            WHERE FM.follower_id = $1
         `;
+        
         try {
             console.log(user_id)
             const {rows: followerList} = await db.query(followerQuery, [user_id]);
