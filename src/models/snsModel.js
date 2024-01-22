@@ -103,10 +103,25 @@ module.exports = {
         const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
             const query = `
-                SELECT  user_id, image, user_name, cumulative_value, strategy
-                FROM "User"
-                WHERE (user_name LIKE $1 OR email LIKE $1) AND user_id != $2
-                `
+            SELECT  
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                CASE 
+                    WHEN F1.follower_id IS NOT NULL THEN true
+                    ELSE false
+                END AS "isFollowingMe",
+                CASE 
+                    WHEN F2.following_id IS NOT NULL THEN true
+                    ELSE false
+                END AS "isFollowingYou",
+                CASE
+                    WHEN F1.pending = true THEN true
+                    ELSE false
+                END AS "pending"
+            FROM "User" U
+            LEFT JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $2
+            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $2
+            WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
+                        `
             try {
                 const excludedId = user_id;
                 const {rows} = await db.query(query, [queryTarget, excludedId]);
@@ -117,12 +132,22 @@ module.exports = {
             }
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
             const query = `
-                SELECT U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy
+            SELECT  
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                true AS "isFollowingMe",
+                CASE 
+                    WHEN F2.following_id IS NOT NULL THEN true
+                    ELSE false
+                END AS "isFollowingYou",
+                CASE
+                    WHEN F1.pending = true THEN true
+                    ELSE false
+                END AS "pending"
                 FROM "User" U
-                JOIN "FollowMap" F
-                ON U.user_id = F.follower_id
-                WHERE F.following_id = $1
-                AND (U.user_name LIKE $2 OR U.email LIKE $2)
+            JOIN "FollowMap" F1 ON U.user_id = F1.follower_id
+            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+            WHERE F1.following_id = $1
+            AND (U.user_name LIKE $2 OR U.email LIKE $2)
             `
             try {
                 const {rows} = await db.query(query, [user_id, queryTarget]);
@@ -133,12 +158,22 @@ module.exports = {
             }
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
             const query = `
-                SELECT U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy
-                FROM "User" U
-                JOIN "FollowMap" F
-                ON U.user_id = F.following_id
-                WHERE F.follower_id = $1
-                AND (U.user_name LIKE $2 OR U.email LIKE $2)
+            SELECT  
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                CASE 
+                    WHEN F2.follower_id IS NOT NULL THEN true
+                    ELSE false
+                END AS "isFollowingMe",
+                true AS "isFollowingYou",
+                CASE
+                    WHEN F1.pending = true THEN true
+                    ELSE false
+                END AS "pending"
+            FROM "User" U
+            JOIN "FollowMap" F1 ON U.user_id = F1.following_id
+            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+            WHERE F1.follower_id = $1
+            AND (U.user_name LIKE $2 OR U.email LIKE $2)
             `
             try {
                 console.log(user_id)
@@ -162,7 +197,8 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            FM.pending, 
+            FM.pending,
+            U.strategy,
             true AS "isFollowingMe",
             CASE 
                 WHEN F2.following_id IS NOT NULL THEN true
@@ -181,7 +217,8 @@ module.exports = {
                 U.user_name, 
                 U.cumulative_value, 
                 U.private, 
-                FM.pending, 
+                FM.pending,
+                U.strategy,
                 CASE
                     WHEN F2.follower_id IS NOT NULL THEN true
                     ELSE false
