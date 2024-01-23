@@ -82,7 +82,6 @@ module.exports = {
             } else {
                 isFollowingYou = false;
             }
-            // TODO isFollowingMe, isFollowingYou, pending
             
             // 상대도 나를 팔로우하고 있는지 확인
             const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
@@ -113,17 +112,18 @@ module.exports = {
         }
     },
     searchUser: async(searchTarget, searchScope, user_id) => {
+        // TODO isFollowingMe, isFollowingYou를 pending까지 검사해서 true/false로 반환
         const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
             const query = `
             SELECT  
                 U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
                 CASE 
-                    WHEN F1.follower_id IS NOT NULL THEN true
+                    WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
                 CASE 
-                    WHEN F2.following_id IS NOT NULL THEN true
+                    WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingYou",
                 CASE
@@ -134,7 +134,7 @@ module.exports = {
             LEFT JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $2
             LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $2
             WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
-                        `
+            `
             try {
                 const excludedId = user_id;
                 const {rows} = await db.query(query, [queryTarget, excludedId]);
@@ -146,16 +146,15 @@ module.exports = {
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
             const query = `
             SELECT  
-                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
-                true AS "isFollowingMe",
-                CASE 
-                    WHEN F2.following_id IS NOT NULL THEN true
-                    ELSE false
-                END AS "isFollowingYou",
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, FM1.pending,
                 CASE
                     WHEN F1.pending = true THEN true
                     ELSE false
-                END AS "pending"
+                END AS "isFollowingMe"
+                CASE 
+                    WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingYou"
                 FROM "User" U
             JOIN "FollowMap" F1 ON U.user_id = F1.follower_id
             LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
@@ -172,16 +171,15 @@ module.exports = {
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
             const query = `
             SELECT  
-                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, F1.pending,
                 CASE 
-                    WHEN F2.follower_id IS NOT NULL THEN true
+                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
-                true AS "isFollowingYou",
                 CASE
                     WHEN F1.pending = true THEN true
                     ELSE false
-                END AS "pending"
+                END AS "isFollowingYou"
             FROM "User" U
             JOIN "FollowMap" F1 ON U.user_id = F1.following_id
             LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
@@ -213,7 +211,7 @@ module.exports = {
             FM.pending,
             U.strategy,
             CASE
-                WHEN F2.pending = false THEN true
+                WHEN FM.pending = false THEN true
                 ELSE false
             END AS "isFollowingMe",
             CASE 
@@ -221,32 +219,32 @@ module.exports = {
                 ELSE false
             END AS "isFollowingYou"
         FROM "User" U
-        LEFT JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
+        JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
         WHERE FM.following_id = $1
     `;
-            //내가 팔로우하는 사람들 (F.follower_id = user_id)
-            const followingQuery = `
-            SELECT 
-                U.user_id, 
-                U.image, 
-                U.user_name, 
-                U.cumulative_value, 
-                U.private, 
-                FM.pending,
-                U.strategy,
-                CASE
-                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
-                    ELSE false
-                END AS "isFollowingMe",
-                CASE
-                    WHEN FM.pending = false THEN true
-                    ELSE false
-                END AS "isFollowingYou"
-            FROM "User" U
-            LEFT JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
-            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
-            WHERE FM.follower_id = $1
+        //내가 팔로우하는 사람들 (F.follower_id = user_id)
+        const followingQuery = `
+        SELECT 
+            U.user_id, 
+            U.image, 
+            U.user_name, 
+            U.cumulative_value, 
+            U.private, 
+            FM.pending,
+            U.strategy,
+            CASE
+                WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
+                ELSE false
+            END AS "isFollowingMe",
+            CASE 
+                WHEN FM.pending = false THEN true
+                ELSE false
+            END AS "isFollowingYou"
+        FROM "User" U
+        JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+        WHERE FM.follower_id = $1
         `;
         
         try {
