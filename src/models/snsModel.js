@@ -76,14 +76,18 @@ module.exports = {
             if (!pending) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
-                await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
-                await db.query(updateQuery2, [follower_id]) 
+                await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다림
+                await db.query(updateQuery2, [follower_id])
+                isFollowingYou = true;
+            } else {
+                isFollowingYou = false;
             }
             // TODO isFollowingMe, isFollowingYou, pending
-            isFollowingYou = true;
+            
+            // 상대도 나를 팔로우하고 있는지 확인
             const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
-            if (checkRows.length == 0) {
+            if (checkRows.length == 0 && pending == false) {
                 isFollowingMe = true;
             } else {
                 isFollowingMe = false;
@@ -210,7 +214,7 @@ module.exports = {
             U.strategy,
             true AS "isFollowingMe",
             CASE 
-                WHEN F2.following_id IS NOT NULL THEN true
+                WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
                 ELSE false
             END AS "isFollowingYou"
         FROM "User" U
@@ -229,7 +233,7 @@ module.exports = {
                 FM.pending,
                 U.strategy,
                 CASE
-                    WHEN F2.follower_id IS NOT NULL THEN true
+                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
                 true AS "isFollowingYou"
