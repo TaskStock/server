@@ -212,7 +212,10 @@ module.exports = {
             U.private, 
             FM.pending,
             U.strategy,
-            true AS "isFollowingMe",
+            CASE
+                WHEN F2.pending = false THEN true
+                ELSE false
+            END AS "isFollowingMe"
             CASE 
                 WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
                 ELSE false
@@ -236,7 +239,10 @@ module.exports = {
                     WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
-                true AS "isFollowingYou"
+                CASE
+                    WHEN FM.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingYou"
             FROM "User" U
             LEFT JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
             LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
