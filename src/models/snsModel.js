@@ -79,10 +79,10 @@ module.exports = {
                 await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
                 await db.query(updateQuery2, [follower_id]) 
             }
-            return true;
+            return [true, pending];
         } catch (e) {
             console.log(e.stack);
-            return false;
+            return [false];
         }
     },
     unfollowUser: async(follower_id, unfollowing_id) => {
