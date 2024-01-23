@@ -68,7 +68,7 @@ module.exports = {
             "User" U
         WHERE
             user_id = $2
-        RETURNING pending
+        RETURNING *
         `;
         try {   
             const {rows} = await db.query(query, [follower_id, following_id]);
@@ -79,7 +79,16 @@ module.exports = {
                 await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
                 await db.query(updateQuery2, [follower_id]) 
             }
-            return [true, pending];
+            // TODO isFollowingMe, isFollowingYou, pending
+            isFollowingYou = true;
+            const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
+            const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
+            if (checkRows.length == 0) {
+                isFollowingMe = true;
+            } else {
+                isFollowingMe = false;
+            }
+            return [true, pending, isFollowingMe, isFollowingYou];
         } catch (e) {
             console.log(e.stack);
             return [false];

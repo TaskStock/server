@@ -35,12 +35,14 @@ module.exports = {
     followUser: async(req, res) => {
         const follower_id = req.user.user_id;
         const following_id = req.body.following_id;
-        const [followResult, pending] = await snsModel.followUser(follower_id, following_id);
+        const [followResult, pending, isFollowingMe, isFollowingYou] = await snsModel.followUser(follower_id, following_id);
 
         if (followResult) {
             res.status(200).json({
                 result: "success",
-                pending: pending
+                pending: pending,
+                isFollowingMe: isFollowingMe,
+                isFollowingYou: isFollowingYou
             });
         } else {
             res.status(400).json({
