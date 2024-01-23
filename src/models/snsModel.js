@@ -117,27 +117,23 @@ module.exports = {
         if (searchScope == 'global') { //전체
             const query = `
             SELECT  
-                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, F1.pending,
                 CASE 
                     WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
-                END AS "isFollowingMe",
+                END AS "isFollowingYou",
                 CASE 
                     WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
-                END AS "isFollowingYou",
-                CASE
-                    WHEN F1.pending = true THEN true
-                    ELSE false
-                END AS "pending"
+                END AS "isFollowingMe"
             FROM "User" U
-            LEFT JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $2
-            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $2
+            LEFT JOIN "FollowMap" F1 ON (U.user_id = F1.following_id AND F1.follower_id = $2)
+            LEFT JOIN "FollowMap" F2 ON (U.user_id = F2.follower_id AND F2.following_id = $2)
             WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
             `
             try {
-                const excludedId = user_id;
-                const {rows} = await db.query(query, [queryTarget, excludedId]);
+                // 로그인한 사용자 = user_id, queryTarget = 검색어
+                const {rows} = await db.query(query, [queryTarget, user_id]);
                 return rows;
             } catch (e) {
                 console.log(e.stack);
