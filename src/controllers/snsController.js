@@ -163,16 +163,18 @@ module.exports = {
         const following_id = req.body.following_id;
         const cancelResult = await snsModel.cancelFollow(follower_id, following_id);
         
-        if (cancelResult) {
-            res.status(200).json({
+        if (cancelResult == true) {
+            return res.status(200).json({
                 result: "success"
             });
-        } else {
-            res.status(500).json({
+        } else if (cancelResult == false) {
+            return res.status(500).json({
                 result: "fail"
             });
-        }
+        } else if (cancelResult == 'alreadyAccepted') {
+            return res.status(400).json({
+                result: "alreadyAccepted"
+            });
+        } 
     }
-
 }
-;

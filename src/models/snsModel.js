@@ -300,13 +300,19 @@ module.exports = {
     },
     //팔로우 요청 취소
     cancelFollow: async(follower_id, following_id) => {
-        const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
+        const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2 RETURNING pending';
         try {
-            console.log('팔로우 요청 취소 - DB에서 레코드 삭제')
             await db.query(query, [follower_id, following_id]);
+            if (pending == false) {
+                console.log('이미 팔로우 요청이 수락된 상태입니다.');
+                rollbackQuery = 'INSERT INTO "FollowMap" (follower_id, following_id, pending) VALUES ($1, $2, false)';
+                await db.query(rollbackQuery, [follower_id, following_id]);
+                return 'alreadyAccepted'
+            }
+            console.log('팔로우 요청 취소 성공')
             return true;
         } catch (e) {
-            console.log('팔로우 요청 취소 실패')
+            console.log('팔로우 요청 취소 실패 - DB에 없는 레코드를 삭제하려고 했을 수 있음')
             console.log(e.stack);
             return false;
         }
