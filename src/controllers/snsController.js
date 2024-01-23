@@ -158,6 +158,21 @@ module.exports = {
             });
         }
     },
+    cancelFollow: async(req, res) => {
+        const follower_id = req.user.user_id;
+        const following_id = req.body.following_id;
+        const cancelResult = await snsModel.cancelFollow(follower_id, following_id);
+        
+        if (cancelResult) {
+            res.status(200).json({
+                result: "success"
+            });
+        } else {
+            res.status(500).json({
+                result: "fail"
+            });
+        }
+    }
 
 }
 ;

@@ -297,5 +297,18 @@ module.exports = {
             console.log(e.stack);
             return false;
         }
+    },
+    //팔로우 요청 취소
+    cancelFollow: async(follower_id, following_id) => {
+        const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
+        try {
+            console.log('팔로우 요청 취소 - DB에서 레코드 삭제')
+            await db.query(query, [follower_id, following_id]);
+            return true;
+        } catch (e) {
+            console.log('팔로우 요청 취소 실패')
+            console.log(e.stack);
+            return false;
+        }
     }
 }
