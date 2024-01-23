@@ -66,17 +66,24 @@ module.exports = {
         }
     },
     searchUser: async(req, res) => {
+        try {
         const searchTarget = req.query.searchTarget; //이메일 또는 닉네임
         const searchScope = req.query.searchScope; //검색 범위
         const user_id = req.user.user_id;
         console.log(searchTarget, searchScope, user_id)
 
         const searchResult = await snsModel.searchUser(searchTarget, searchScope, user_id);
-        res.status(200).json({
+        return res.status(200).json({
             result: "success",
             searchResult: searchResult
-        });
-    },
+        })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({
+            result: "fail",
+            message: "서버 내부 오류"
+        })
+    }},
     showFollowList: async(req, res) => {
         const user_id = req.user.user_id;
 
