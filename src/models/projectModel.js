@@ -1,9 +1,9 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    insertProject: async(user_id, name, ispublic)=>{
-        const query = "insert into \"Project\" (user_id, name, ispublic) VALUES ($1, $2, $3)";
-        const values = [user_id, name, ispublic];
+    insertProject: async(user_id, name, public_range)=>{
+        const query = "insert into \"Project\" (user_id, name, public_range) VALUES ($1, $2, $3)";
+        const values = [user_id, name, public_range];
 
         await db.query(query, values)
             .then(res => {
@@ -15,9 +15,9 @@ module.exports = {
                 throw e;
             });
     },
-    updateProject: async(project_id, user_id, name, ispublic)=>{
-        const query = "update \"Project\" set name=$1, ispublic=$2 where user_id=$3 and project_id=$4";
-        const values = [name, ispublic, user_id, project_id];
+    updateProject: async(project_id, user_id, name, public_range)=>{
+        const query = "update \"Project\" set name=$1, public_range=$2 where user_id=$3 and project_id=$4";
+        const values = [name, public_range, user_id, project_id];
 
         await db.query(query, values)
             .then(res => {

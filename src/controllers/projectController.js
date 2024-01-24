@@ -4,11 +4,15 @@ const retrospectModel = require('../models/retrospectModel.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{
-        const {name, ispublic} = req.body;
+        const {name, public_range} = req.body;
         const user_id = req.user.user_id;
+        // public_range
+        // none : 비공개
+        // follow : 팔로워공개
+        // all : 전체공개
         
         try{
-            await projectModel.insertProject(user_id, name, ispublic);
+            await projectModel.insertProject(user_id, name, public_range);
         }catch(error){
             next(error);
         }
@@ -16,11 +20,11 @@ module.exports = {
         res.json({result: "success"});
     },
     updateProject: async(req, res, next) =>{
-        const {project_id, name, ispublic} = req.body;
+        const {project_id, name, public_range} = req.body;
         const user_id = req.user.user_id;
         
         try{
-            await projectModel.updateProject(project_id, user_id, name, ispublic);
+            await projectModel.updateProject(project_id, user_id, name, public_range);
         }catch(error){
             next(error);
         }
