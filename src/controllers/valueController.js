@@ -55,8 +55,8 @@ module.exports = {
         const user_id = req.user.user_id;
         const region = req.user.region;
         
-        const trans_start_date = transdate.localDateToUTCWith6AM(start_date, region);
-        const trans_end_date = transdate.localDateToUTCWith6AM(end_date, region);
+        const trans_start_date = transdate.getSettlementTime(start_date, region);
+        const trans_end_date = transdate.getSettlementTime(end_date, region);
 
         if (isNaN(trans_start_date.getTime()) || isNaN(trans_end_date.getTime())) {
             return res.status(400).json({result: "fail", message: "잘못된 타임존입니다."});
