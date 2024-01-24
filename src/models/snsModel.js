@@ -315,8 +315,8 @@ module.exports = {
     cancelFollow: async(follower_id, following_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2 RETURNING pending';
         try {
-            await db.query(query, [follower_id, following_id]);
-            if (pending == false) {
+            const {rows} = await db.query(query, [follower_id, following_id]);
+            if (rows[0].pending == false) {
                 console.log('이미 팔로우 요청이 수락된 상태입니다.');
                 rollbackQuery = 'INSERT INTO "FollowMap" (follower_id, following_id, pending) VALUES ($1, $2, false)';
                 await db.query(rollbackQuery, [follower_id, following_id]);
