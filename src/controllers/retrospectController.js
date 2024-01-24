@@ -2,6 +2,25 @@ const retrospectModel = require('../models/retrospectModel.js');
 
 const transdate = require('../service/transdateService.js');
 
+function filtering(filter){
+    if(filter === undefined){   // default : 최신순
+        filter = "created_date desc";
+    }else if(filter === "earliest"){    // 최신순
+        filter = "created_date desc";
+    }else if(filter === "latest"){  // 오래된순
+        filter = "created_date";
+    }else{
+        filter = "created_date desc";
+    }
+    return filter;
+}
+function searching(search){
+    if(search !== undefined){
+        search = "%"+search+"%";
+    }
+    return search;
+}
+
 module.exports = {
     newRetrospect: async(req, res, next) =>{
         const {project_id, content} = req.body;
@@ -61,11 +80,15 @@ module.exports = {
     getRetrospectsAll: async(req, res, next) =>{
         const offset = req.query.offset;
         const limit = req.query.limit;
+        let filter = req.query.filter;
+        let search = req.query.search;
 
         const user_id = req.user.user_id;
         
         try{
-            const retrospects = await retrospectModel.getRetrospectsAll(user_id, offset, limit);
+            filter = filtering(filter);
+            search = searching(search);
+            const retrospects = await retrospectModel.getRetrospectsAll(user_id, offset, limit, filter, search);
 
             return res.json({retrospects: retrospects});
         }catch(error){
@@ -78,11 +101,17 @@ module.exports = {
         const project_id = req.params.project_id;
         const offset = req.query.offset;
         const limit = req.query.limit;
+        let filter = req.query.filter;
+        let search = req.query.search;
 
         const user_id = req.user.user_id;
         
         try{
-            const retrospects = await retrospectModel.getRetrospectsWithProject(user_id, project_id, offset, limit);
+            // 필터는 정해진 규격에 맞게 변환해주고 검색은 그대로 모델로 전달
+            filter = filtering(filter);
+            search = searching(search);
+
+            const retrospects = await retrospectModel.getRetrospectsWithProject(user_id, project_id, offset, limit, filter, search);
 
             return res.json({retrospects: retrospects});
         }catch(error){

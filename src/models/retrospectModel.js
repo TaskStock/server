@@ -75,9 +75,17 @@ module.exports = {
             });
         return retrospects;
     },
-    getRetrospectsAll: async(user_id, offset, limit)=>{
-        const query = "select * from \"Retrospect\" where user_id=$1 order by created_date desc limit $2 offset $3";
-        const values = [user_id, limit, offset];
+    getRetrospectsAll: async(user_id, offset, limit, filter, search)=>{
+        let query;
+        let values;
+
+        if(search === undefined){
+            query = `select * from \"Retrospect\" where user_id=$1 order by ${filter} limit $2 offset $3`;
+            values = [user_id, limit, offset];
+        }else{
+            query = `select * from \"Retrospect\" where user_id=$1 and content like $2 order by ${filter} limit $4 offset $5`;
+            values = [user_id, search, limit, offset];
+        }
 
         const retrospects = await db.query(query, values)
             .then(res => {
@@ -91,9 +99,17 @@ module.exports = {
             });
         return retrospects;
     },
-    getRetrospectsWithProject: async(user_id, project_id, offset, limit)=>{
-        const query = "select * from \"Retrospect\" where user_id=$1 and project_id=$2 order by created_date desc limit $3 offset $4";
-        const values = [user_id, project_id, limit, offset];
+    getRetrospectsWithProject: async(user_id, project_id, offset, limit, filter, search)=>{
+        let query;
+        let values;
+
+        if(search === undefined){
+            query = `select * from \"Retrospect\" where user_id=$1 and project_id=$2 order by ${filter} limit $3 offset $4`;
+            values = [user_id, project_id, limit, offset];
+        }else{
+            query = `select * from \"Retrospect\" where user_id=$1 and project_id=$2 and content like $3 order by ${filter} limit $4 offset $5`;
+            values = [user_id, project_id, search, limit, offset];
+        }
 
         const retrospects = await db.query(query, values)
             .then(res => {
