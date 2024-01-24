@@ -35,11 +35,14 @@ module.exports = {
     followUser: async(req, res) => {
         const follower_id = req.user.user_id;
         const following_id = req.body.following_id;
-        const followResult = await snsModel.followUser(follower_id, following_id);
+        const [followResult, pending, isFollowingMe, isFollowingYou] = await snsModel.followUser(follower_id, following_id);
 
         if (followResult) {
             res.status(200).json({
-                result: "success"
+                result: "success",
+                pending: pending,
+                isFollowingMe: isFollowingMe,
+                isFollowingYou: isFollowingYou
             });
         } else {
             res.status(400).json({
@@ -63,23 +66,33 @@ module.exports = {
         }
     },
     searchUser: async(req, res) => {
-        const searchTarget = req.body.searchTarget; //이메일 또는 닉네임
-        const searchScope = req.body.searchScope; //검색 범위
+        try {
+        const searchTarget = req.query.searchTarget; //이메일 또는 닉네임
+        const searchScope = req.query.searchScope; //검색 범위
         const user_id = req.user.user_id;
+        console.log(searchTarget, searchScope, user_id)
 
         const searchResult = await snsModel.searchUser(searchTarget, searchScope, user_id);
-        res.status(200).json({
+        return res.status(200).json({
             result: "success",
             searchResult: searchResult
-        });
-    },
+        })
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({
+            result: "fail",
+            message: "서버 내부 오류"
+        })
+    }},
     showFollowList: async(req, res) => {
         const user_id = req.user.user_id;
 
-        const followList = await snsModel.showFollowList(user_id);
+        const [followerList, followingList] = await snsModel.showFollowList(user_id);
+
         res.status(200).json({
             result: "success",
-            followList: followList
+            followerList: followerList,
+            followingList: followingList
         });
     },
     editUserInfo: async(req, res) => {
@@ -154,7 +167,24 @@ module.exports = {
                 result: "fail"
             });
         }
+    },
+    cancelFollow: async(req, res) => {
+        const follower_id = req.user.user_id;
+        const following_id = req.body.following_id;
+        const cancelResult = await snsModel.cancelFollow(follower_id, following_id);
+        
+        if (cancelResult == true) {
+            return res.status(200).json({
+                result: "success"
+            });
+        } else if (cancelResult == false) {
+            return res.status(500).json({
+                result: "fail"
+            });
+        } else if (cancelResult == 'alreadyAccepted') {
+            return res.status(400).json({
+                result: "alreadyAccepted"
+            });
+        } 
     }
-
 }
-;

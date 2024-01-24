@@ -56,33 +56,45 @@ module.exports = {
             return false;
         }
         const query = `
-        INSERT INTO "FollowMap" (follower_id, following_id, isPending)
+        INSERT INTO "FollowMap" (follower_id, following_id, pending)
         SELECT
             $1,
             $2,
             CASE
-                WHEN U.private THEN false
+                WHEN private = false THEN false
                 ELSE true
             END
         FROM
             "User" U
         WHERE
             user_id = $2
-        RETURNING isPending
+        RETURNING *
         `;
         try {   
             const {rows} = await db.query(query, [follower_id, following_id]);
-            const isPending = rows[0].isPending;
-            if (!isPending) {
+            const pending = rows[0].pending;
+            if (!pending) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
-                await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
-                await db.query(updateQuery2, [follower_id]) 
+                await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다림
+                await db.query(updateQuery2, [follower_id])
+                isFollowingYou = true;
+            } else {
+                isFollowingYou = false;
             }
-            return true;
+            
+            // 상대도 나를 팔로우하고 있는지 확인
+            const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
+            const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
+            if (checkRows.length == 0 && pending == false) {
+                isFollowingMe = true;
+            } else {
+                isFollowingMe = false;
+            }
+            return [true, pending, isFollowingMe, isFollowingYou];
         } catch (e) {
             console.log(e.stack);
-            return false;
+            return [false];
         }
     },
     unfollowUser: async(follower_id, unfollowing_id) => {
@@ -100,16 +112,28 @@ module.exports = {
         }
     },
     searchUser: async(searchTarget, searchScope, user_id) => {
+        // TODO isFollowingMe, isFollowingYou를 pending까지 검사해서 true/false로 반환
         const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
             const query = `
-                SELECT  user_id, image, user_name, cumulative_value
-                FROM "User"
-                WHERE (user_name LIKE $1 OR email LIKE $1) AND user_id != $2
-                `
+            SELECT  
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, F1.pending,
+                CASE 
+                    WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingYou",
+                CASE 
+                    WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingMe"
+            FROM "User" U
+            LEFT JOIN "FollowMap" F1 ON (U.user_id = F1.following_id AND F1.follower_id = $2)
+            LEFT JOIN "FollowMap" F2 ON (U.user_id = F2.follower_id AND F2.following_id = $2)
+            WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
+            `
             try {
-                const excludedId = user_id;
-                const {rows} = await db.query(query, [queryTarget, excludedId]);
+                // 로그인한 사용자 = user_id, queryTarget = 검색어
+                const {rows} = await db.query(query, [queryTarget, user_id]);
                 return rows;
             } catch (e) {
                 console.log(e.stack);
@@ -117,12 +141,21 @@ module.exports = {
             }
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
             const query = `
-                SELECT U.user_id, U.image, U.user_name, U.cumulative_value
+            SELECT  
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, FM1.pending,
+                CASE
+                    WHEN F1.pending = true THEN true
+                    ELSE false
+                END AS "isFollowingMe"
+                CASE 
+                    WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingYou"
                 FROM "User" U
-                JOIN "FollowMap" F
-                ON U.user_id = F.follower_id
-                WHERE F.following_id = $1
-                AND (U.user_name LIKE $2 OR U.email LIKE $2)
+            JOIN "FollowMap" F1 ON U.user_id = F1.follower_id
+            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+            WHERE F1.following_id = $1
+            AND (U.user_name LIKE $2 OR U.email LIKE $2)
             `
             try {
                 const {rows} = await db.query(query, [user_id, queryTarget]);
@@ -133,12 +166,21 @@ module.exports = {
             }
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
             const query = `
-                SELECT U.user_id, U.image, U.user_name, U.cumulative_value
-                FROM "User" U
-                JOIN "FollowMap" F
-                ON U.user_id = F.following_id
-                WHERE F.follower_id = $1
-                AND (U.user_name LIKE $2 OR U.email LIKE $2)
+            SELECT  
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, F1.pending,
+                CASE 
+                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingMe",
+                CASE
+                    WHEN F1.pending = true THEN true
+                    ELSE false
+                END AS "isFollowingYou"
+            FROM "User" U
+            JOIN "FollowMap" F1 ON U.user_id = F1.following_id
+            LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+            WHERE F1.follower_id = $1
+            AND (U.user_name LIKE $2 OR U.email LIKE $2)
             `
             try {
                 console.log(user_id)
@@ -154,22 +196,58 @@ module.exports = {
         }
     },
     showFollowList: async(user_id) => {
-        const query = `
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'follower' AS follow_type
-            FROM "User" U
-            JOIN "FollowMap" F
-            ON U.user_id = F.follower_id
-            WHERE F.following_id = $1
-            UNION ALL
-            SELECT U.user_id, U.image, U.user_name, U.cumulative_value, 'following' AS follow_type
-            FROM "User" U
-            JOIN "FollowMap" F
-            ON U.user_id = F.following_id
-            WHERE F.follower_id = $1
-        `
+        //나를 팔로우하는 사람들 (F.following_id = user_id)
+        const followerQuery = `
+        SELECT 
+            U.user_id, 
+            U.image, 
+            U.user_name, 
+            U.cumulative_value, 
+            U.private, 
+            FM.pending,
+            U.strategy,
+            CASE
+                WHEN FM.pending = false THEN true
+                ELSE false
+            END AS "isFollowingMe",
+            CASE 
+                WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                ELSE false
+            END AS "isFollowingYou"
+        FROM "User" U
+        JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        WHERE FM.following_id = $1
+    `;
+        //내가 팔로우하는 사람들 (F.follower_id = user_id)
+        const followingQuery = `
+        SELECT 
+            U.user_id, 
+            U.image, 
+            U.user_name, 
+            U.cumulative_value, 
+            U.private, 
+            FM.pending,
+            U.strategy,
+            CASE
+                WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
+                ELSE false
+            END AS "isFollowingMe",
+            CASE 
+                WHEN FM.pending = false THEN true
+                ELSE false
+            END AS "isFollowingYou"
+        FROM "User" U
+        JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+        WHERE FM.follower_id = $1
+        `;
+        
         try {
-            const {rows} = await db.query(query, [user_id]);
-            return rows;
+            console.log(user_id)
+            const {rows: followerList} = await db.query(followerQuery, [user_id]);
+            const {rows: followingList} = await db.query(followingQuery, [user_id]);
+            return [followerList, followingList]
         } catch (e) {
             console.log(e.stack);
             return false;
@@ -209,7 +287,7 @@ module.exports = {
         }
     },
     acceptPending: async(follower_id, following_id) => {
-        const pendingQuery = 'UPDATE "FollowMap" SET isPending = false WHERE follower_id = $1 AND following_id = $2';
+        const pendingQuery = 'UPDATE "FollowMap" SET pending = false WHERE follower_id = $1 AND following_id = $2';
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
         try {
@@ -229,6 +307,25 @@ module.exports = {
             await db.query(query, ['public/images/ic_profile.png', user_id]);
             return true;
         } catch (e) {
+            console.log(e.stack);
+            return false;
+        }
+    },
+    //팔로우 요청 취소
+    cancelFollow: async(follower_id, following_id) => {
+        const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2 RETURNING pending';
+        try {
+            const {rows} = await db.query(query, [follower_id, following_id]);
+            if (rows[0].pending == false) {
+                console.log('이미 팔로우 요청이 수락된 상태입니다.');
+                rollbackQuery = 'INSERT INTO "FollowMap" (follower_id, following_id, pending) VALUES ($1, $2, false)';
+                await db.query(rollbackQuery, [follower_id, following_id]);
+                return 'alreadyAccepted'
+            }
+            console.log('팔로우 요청 취소 성공')
+            return true;
+        } catch (e) {
+            console.log('팔로우 요청 취소 실패 - DB에 없는 레코드를 삭제하려고 했을 수 있음')
             console.log(e.stack);
             return false;
         }
