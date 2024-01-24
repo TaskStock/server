@@ -47,7 +47,7 @@ module.exports = {
         res.json({result: "success", todo_id: inserted_todo.todo_id, index: inserted_todo.index});
     },
     readTodo: async(req, res, next) =>{
-        // 같은 날짜의 todo들이더라도 정산시간이 6시이므로 수정불가능한(?) todo가 불러와질 수 있음에 주의
+        // 같은 날짜의 todo들이더라도 정산시간이 6시이므로 수정불가능한(?) todo가 불러와질 수 있음에 주의 -> 정산시간이 0시로 변경되면서 해결됨
         const date = req.query.date;
         // date : 클라이언트로부터 받은 시간 정보를 UTC 기준 timestamp로 변환
         const user_id = req.user.user_id;

@@ -2,12 +2,6 @@ const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
 const { startOfDay, startOfMonth, addHours, addMonths, addDays } = require('date-fns');
 
 module.exports = {
-    // 2024-01-16 -> 2024-01-15T21:00:00.000Z (로컬이 Asia/Seoul 인 경우)
-    localDateToUTCWith6AM: (date, timezone) =>{
-        const local6am = date+"T06:00:00";
-        const result = zonedTimeToUtc(local6am, timezone);
-        return result;
-    },
     localDateToUTCWithStartOfDay: (date, timezone) =>{
         const result = zonedTimeToUtc(date, timezone);
         return result;
@@ -26,15 +20,9 @@ module.exports = {
         // 종속성을 제거하려고 했지만 실패했고 .toLocaleString()과 같은 함수는 로컬 시간대를 정상적으로 잘 뽑기 때문에 일단 이렇게 쓴다.
 
         const startOfToday = startOfDay(nowZoneTime); // utc이지만 로컬 시간대에 맞는 시작일을 제대로 구하고 있음
-        const sixAM = addHours(startOfToday, 6);   // 정산시간(6시)
-        let result;
-        if (nowZoneTime >= sixAM) {
-            result = sixAM;
-        } else {
-            result = addHours(sixAM, -24);
-        }
-        // 결과를 UTC로 변환 - 이미 UTC인데? 필요한가?
-        const resultUtc = zonedTimeToUtc(result, timezone);
+        const nextDay = addDays(startOfToday, 1);
+
+        const resultUtc = zonedTimeToUtc(nextDay, timezone);
 
         return resultUtc;
     },
@@ -43,15 +31,9 @@ module.exports = {
         const nowZoneTime = utcToZonedTime(utc, timezone);
 
         const startOfToday = startOfDay(nowZoneTime);
-        const sixAM = addHours(startOfToday, 6);
-        let result;
-        if (nowZoneTime >= sixAM) {
-            result = sixAM;
-        } else {
-            result = addHours(sixAM, -24);
-        }
-        // 결과를 UTC로 변환 - 이미 UTC인데? 필요한가?
-        const resultUtc = zonedTimeToUtc(result, timezone);
+        const nextDay = addDays(startOfToday, 1);
+
+        const resultUtc = zonedTimeToUtc(nextDay, timezone);
 
         return resultUtc;
     },
