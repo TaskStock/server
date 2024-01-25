@@ -32,18 +32,20 @@ module.exports = {
         return value;
     },
     createByExistUser: async(user_id, date, percentage, start, end, low, high, combo)=>{
-        const query = "insert into \"Value\" (user_id, date, percentage, start, \"end\", low, high, combo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
+        const query = "insert into \"Value\" (user_id, date, percentage, start, \"end\", low, high, combo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *";
         const values = [user_id, date, percentage, start, end, low, high, combo];
 
-        await db.query(query, values)
+        const value = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows);
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
+        return value;
     },
     getValues: async(user_id, start_date, end_date)=>{
         const query = "select * from \"Value\" where user_id=$1 and date>=$2 and date<$3 order by date";
@@ -95,7 +97,7 @@ module.exports = {
         const query = "select * from \"Value\" where user_id=$1 and date=$2";
         const q_values = [user_id, date];
 
-        const values = await db.query(query, q_values)
+        const value = await db.query(query, q_values)
             .then(res => {
                 // console.log(res.rows[0]);
                 return res.rows[0];
@@ -105,13 +107,13 @@ module.exports = {
 
                 throw e;
             });
-        return values;
+        return value;
     },
     updateValueEnd: async(value_id, end)=>{
         const query = 'update "Value" set "end"=$1 where value_id=$2 returning *';
-        const values = [end, value_id];
+        const q_values = [end, value_id];
 
-        const value = await db.query(query, values)
+        const value = await db.query(query, q_values)
             .then(res => {
                 // console.log(res.rows);
                 return res.rows[0];

@@ -25,24 +25,26 @@ const todoModel = require('../models/todoModel.js');
 // 5-1. 모든 유저의 작업이 끝났다면 timezone에 대해 다음 스케쥴러를 설정한다.
 
 async function settlementJob(user_id, startTime, sttime, tommorowsttime){
-    const value = await valueModel.getValueOne(user_id, sttime);
+    let value = await valueModel.getValueOne(user_id, sttime);
 
     if(value === undefined){    // 해당되는 날짜의 value가 없는 경우
         return;
     }
 
+    // check==true인 todo만 가져오도록 설계하면 성능 향상 가능
     const todos = await todoModel.readTodoForScheduler(user_id, startTime, sttime);
-    let updatedValue;
     for(let i=0;i<todos.length;i++){
         let end = value.end;
 
         if(todos[i].check === false){
             end = value.end + calculate.failedTodo(todos[i].level);
+            value = await valueModel.updateValueEnd(value.value_id, end);
         }
-    
-        updatedValue = await valueModel.updateValueEnd(value.value_id, end);
     }
 
+    const updateValue = await valueModel.getValueOne(user_id, tommorowsttime);
+
+    // 3. 다음 날짜의 value 생성
     const start = updatedValue.end;
     const end = start;
     const low = start;
@@ -50,7 +52,11 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
     const percentage = null;    // 계산 로직 필요
     const combo = 0;    // 계산 로직 필요
 
-    await valueModel.createByExistUser(user_id, tommorowsttime, percentage, start, end, low, high, combo, "Asia/Seoul");
+    const tommorowValue = await valueModel.createByExistUser(user_id, tommorowsttime, percentage, start, end, low, high, combo);
+
+    // 4. 미리 만들어진 todo 반영
+    const maked_todos = await todoModel.readTodoForScheduler(user_id, sttime, tommorowsttime);
+
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
