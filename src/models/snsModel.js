@@ -1,5 +1,6 @@
 const db = require('../config/db.js');
 const fs = require('fs');
+const { processNotice } = require('../service/noticeService.js')
 
 module.exports = {
     changePrivate: async(user_id, private) => {
@@ -84,6 +85,7 @@ module.exports = {
             }
             
             // 상대도 나를 팔로우하고 있는지 확인
+            try {
             const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
             if (checkRows.length == 0 && pending == false) {
@@ -91,6 +93,21 @@ module.exports = {
             } else {
                 isFollowingMe = false;
             }
+            } catch (e) {
+                console.log(e.stack);
+                return false;
+            } 
+
+            // 상대에게 알림 생성 - fololler_id, following_id, type, pending, info, isFollowingMe, isFollowingYou
+            const predata = {
+                user_id: following_id,
+                follower_id: follower_id,
+                type: 'sns.follow',
+                isFollowingYou: isFollowingYou,
+                isFollowingMe: isFollowingMe,
+            };
+            await processNotice(predata);
+
             return [true, pending, isFollowingMe, isFollowingYou];
         } catch (e) {
             console.log(e.stack);
