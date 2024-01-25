@@ -15,9 +15,9 @@ module.exports = {
                 throw e;
             });
     },
-    updateProject: async(project_id, user_id, name, public_range)=>{
-        const query = "update \"Project\" set name=$1, public_range=$2 where user_id=$3 and project_id=$4";
-        const values = [name, public_range, user_id, project_id];
+    updateProject: async(project_id, user_id, name, public_range, finished)=>{
+        const query = "update \"Project\" set name=$1, public_range=$2, finished=$3 where user_id=$4 and project_id=$5";
+        const values = [name, public_range, finished, user_id, project_id];
 
         await db.query(query, values)
             .then(res => {
