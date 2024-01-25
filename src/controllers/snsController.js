@@ -32,7 +32,6 @@ module.exports = {
         }
     },
     followUser: async(req, res) => {
-        const user_name = req.user.user_name;
         const follower_id = req.user.user_id;
         const following_id = req.body.following_id;
         const [followResult, pending, isFollowingMe, isFollowingYou] = await snsModel.followUser(follower_id, following_id);

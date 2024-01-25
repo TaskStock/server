@@ -26,8 +26,12 @@ module.exports = {
             });
         }
 
-        if (predata.notice_type === 'sns.accept') {
-            noticeData.content = `${noticeData.user_name}님이 팔로우 요청을 수락했습니다.`;
+        if (predata.type === 'sns.accept') {
+            following_name = await accountModel.getUserNameById(predata.following_id);
+            noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
+            noticeData.info = JSON.stringify({
+                following_id: predata.following_id
+            });
         }
 
         await noticeModel.createNotice(noticeData);

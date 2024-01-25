@@ -312,6 +312,14 @@ module.exports = {
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
 
+            // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
+            const predata = {
+                user_id: follower_id,
+                following_id: following_id,
+                type: 'sns.accept'
+            };
+            await processNotice(predata);
+
             return true;
         } catch (e) {
             console.log(e.stack);
