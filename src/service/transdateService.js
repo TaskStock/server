@@ -13,6 +13,7 @@ module.exports = {
         // toLocaleDateString 가 로컬시간대의 날짜를 뽑아내는데 배포서버에도 제대로 작동할지 모르겠음
         return result;
     },
+    // 오늘 value의 정산시간을 utc로 반환
     getSettlementTimeInUTC: (timezone) =>{
         const nowUtc = new Date();  // 서버컴퓨터의 로컬 시간대를 포함한 utc
         const nowZoneTime = utcToZonedTime(nowUtc, timezone);   // 사용자의 로컬 시간대를 포함시킨 utc
