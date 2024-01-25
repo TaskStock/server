@@ -24,7 +24,7 @@ const todoModel = require('../models/todoModel.js');
 // 5. 다음 스케쥴러 설정
 // 5-1. 모든 유저의 작업이 끝났다면 timezone에 대해 다음 스케쥴러를 설정한다.
 
-async function settlementJob(user_id, startTime, sttime){
+async function settlementJob(user_id, startTime, sttime, tommorowsttime){
     const value = await valueModel.getValueOne(user_id, sttime);
 
     if(value === undefined){    // 해당되는 날짜의 value가 없는 경우
@@ -32,6 +32,7 @@ async function settlementJob(user_id, startTime, sttime){
     }
 
     const todos = await todoModel.readTodoForScheduler(user_id, startTime, sttime);
+    let updatedValue;
     for(let i=0;i<todos.length;i++){
         let end = value.end;
 
@@ -39,18 +40,26 @@ async function settlementJob(user_id, startTime, sttime){
             end = value.end + calculate.failedTodo(todos[i].level);
         }
     
-        await valueModel.updateValueEnd(value.value_id, end);
+        updatedValue = await valueModel.updateValueEnd(value.value_id, end);
     }
 
+    const start = updatedValue.end;
+    const end = start;
+    const low = start;
+    const high = start;
+    const percentage = null;    // 계산 로직 필요
+    const combo = 0;    // 계산 로직 필요
+
+    await valueModel.createByExistUser(user_id, tommorowsttime, percentage, start, end, low, high, combo, "Asia/Seoul");
 }
 
-async function settlementJobManager(timezone, startTime, sttime){
+async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
     const user_ids = await accountModel.getUsersIdByRegion(timezone);
     
     console.log(user_ids);
     await Promise.all(
         user_ids.map(user => 
-            settlementJob(user.user_id, startTime, sttime)
+            settlementJob(user.user_id, startTime, sttime, tommorowsttime)
         )
     );
 }
@@ -59,6 +68,7 @@ module.exports = {
     scheduling: (timeZone) => {
         const startTime = transdate.getStartToday(timeZone);
         const nextSettlement = transdate.getSettlementTimeInUTC(timeZone);
+        const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timeZone);
     
     //   schedule.scheduleJob(nextSettlement, async function() {
     //     await settlementJob(timeZone, nextSettlement);
@@ -66,7 +76,7 @@ module.exports = {
     //     scheduling(timeZone); // 다음 날짜에 대한 재스케줄링
     //   });
 
-        settlementJobManager(timeZone, startTime, nextSettlement);
+        settlementJobManager(timeZone, startTime, nextSettlement, tommorowSettlement);
     }
     
     // 예시 타임존

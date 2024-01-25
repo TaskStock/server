@@ -108,17 +108,20 @@ module.exports = {
         return values;
     },
     updateValueEnd: async(value_id, end)=>{
-        const query = 'update "Value" set "end"=$1 where value_id=$2';
+        const query = 'update "Value" set "end"=$1 where value_id=$2 returning *';
         const values = [end, value_id];
 
-        await db.query(query, values)
+        const value = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows);
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
+        
+        return value;
     },
 }
