@@ -13,6 +13,7 @@ module.exports = {
         // toLocaleDateString 가 로컬시간대의 날짜를 뽑아내는데 배포서버에도 제대로 작동할지 모르겠음
         return result;
     },
+    // 오늘 value의 정산시간을 utc로 반환
     getSettlementTimeInUTC: (timezone) =>{
         const nowUtc = new Date();  // 서버컴퓨터의 로컬 시간대를 포함한 utc
         const nowZoneTime = utcToZonedTime(nowUtc, timezone);   // 사용자의 로컬 시간대를 포함시킨 utc
@@ -23,6 +24,29 @@ module.exports = {
         const nextDay = addDays(startOfToday, 1);
 
         const resultUtc = zonedTimeToUtc(nextDay, timezone);
+
+        return resultUtc;
+    },
+    // 내일 value의 정산시간을 utc로 반환
+    getTommorowSettlementTimeInUTC: (timezone) =>{
+        const nowUtc = new Date();
+        const nowZoneTime = utcToZonedTime(nowUtc, timezone);
+
+        const startOfToday = startOfDay(nowZoneTime);
+        const next2Day = addDays(startOfToday, 2);
+
+        const resultUtc = zonedTimeToUtc(next2Day, timezone);
+
+        return resultUtc;
+    },
+    // 현재 날짜의 시작시간(정산시간 - 하루 와 같음)
+    getStartToday: (timezone) =>{
+        const nowUtc = new Date();
+        const nowZoneTime = utcToZonedTime(nowUtc, timezone);
+
+        const startOfToday = startOfDay(nowZoneTime);
+
+        const resultUtc = zonedTimeToUtc(startOfToday, timezone);
 
         return resultUtc;
     },

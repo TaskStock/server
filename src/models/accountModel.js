@@ -176,5 +176,22 @@ module.exports = {
             return false;        
         } 
     }, 
+    // 스케쥴러 위한 모델
+    getUsersIdByRegion: async(region) => {
+        const query = 'select user_id from "User" where region = $1';
+        const values = [region];
+
+        const user_ids = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return user_ids;
+    },
 }
 

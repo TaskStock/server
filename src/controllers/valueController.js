@@ -11,7 +11,7 @@ module.exports = {
         try{
             const settlementTime = transdate.getSettlementTimeInUTC(region);
 
-            await valueModel.createByNewUser(user_id, settlementTime, region);
+            await valueModel.createByNewUser(user_id, settlementTime);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
@@ -36,7 +36,7 @@ module.exports = {
 
             const settlementTime = transdate.getSettlementTimeInUTC(region);
 
-            await valueModel.createByExistUser(user_id, settlementTime, percentage, start, end, low, high, combo, region);
+            await valueModel.createByExistUser(user_id, settlementTime, percentage, start, end, low, high, combo);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
