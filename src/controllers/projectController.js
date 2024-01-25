@@ -20,11 +20,11 @@ module.exports = {
         res.json({result: "success"});
     },
     updateProject: async(req, res, next) =>{
-        const {project_id, name, public_range} = req.body;
+        const {project_id, name, public_range, finished} = req.body;
         const user_id = req.user.user_id;
         
         try{
-            await projectModel.updateProject(project_id, user_id, name, public_range);
+            await projectModel.updateProject(project_id, user_id, name, public_range, finished);
         }catch(error){
             next(error);
         }
