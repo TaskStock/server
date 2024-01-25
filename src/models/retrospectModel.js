@@ -15,9 +15,9 @@ module.exports = {
                 throw e;
             });
     },
-    updateRetrospect: async(retrospect_id, user_id, content)=>{
-        const query = "update \"Retrospect\" set content=$1 where retrospect_id=$2 and user_id=$3";
-        const values = [content, retrospect_id, user_id];
+    updateRetrospect: async(retrospect_id, project_id, user_id, content)=>{
+        const query = "update \"Retrospect\" set content=$1, project_id=$2 where retrospect_id=$3 and user_id=$4";
+        const values = [content, project_id, retrospect_id, user_id];
 
         await db.query(query, values)
             .then(res => {
