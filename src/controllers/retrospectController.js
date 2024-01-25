@@ -5,10 +5,10 @@ const transdate = require('../service/transdateService.js');
 function filtering(filter){
     if(filter === undefined){   // default : 최신순
         filter = "created_date desc";
-    }else if(filter === "earliest"){    // 최신순
-        filter = "created_date desc";
-    }else if(filter === "latest"){  // 오래된순
+    }else if(filter === "earliest"){    // 오래된순
         filter = "created_date";
+    }else if(filter === "latest"){  // 최신순
+        filter = "created_date desc";
     }else{
         filter = "created_date desc";
     }
