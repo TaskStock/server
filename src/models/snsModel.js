@@ -270,14 +270,13 @@ module.exports = {
             const {rows} = await db.query(checkQuery, [user_id]);
             const oldImagePath = rows[0].image;
             if (oldImagePath !== 'public/images/ic_profile.png') {
-                fs.unlink(oldImagePath, (err) => {
-                    if (err) {
-                        console.log('기존 이미지 삭제 실패')
-                        console.error(err);
-                        return
-                    }
+                try {
+                    await fs.promises.unlink(oldImagePath);
                     console.log('기존 이미지 삭제 성공');
-                });
+                } catch (err) {
+                    console.error('기존 이미지 삭제 실패', err);
+                    throw err; // 에러 발생 시 함수 실행 중단
+                }
             }
             await db.query(updateQuery, [image_path, user_id]);
             return true;
