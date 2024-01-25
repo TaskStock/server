@@ -72,6 +72,10 @@ app.use((err, req, res, next) => {
     res.send('오류 발생: ' + err.message);
 });
 
+// 스케쥴러 테스트
+// const scheduler = require("./service/scheduler.js");
+// scheduler.scheduling('Asia/Seoul');
+
 app.listen(app.get('port'), ()=>{
     console.log(app.get('port'), '번 포트에서 대기 중')
 });

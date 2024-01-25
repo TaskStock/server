@@ -5,6 +5,7 @@ const calculate = require('./calculateService.js');
 
 const valueModel = require('../models/valueModel.js');
 const accountModel = require('../models/accountModel.js');
+const todoModel = require('../models/todoModel.js');
 
 // 1. 각 타임존에 대해 다음 정산시간에 대한 스케쥴러를 설정
 // 1-1. timezone의 다음 정산시간을 transdate에서 받아온다.
@@ -23,20 +24,54 @@ const accountModel = require('../models/accountModel.js');
 // 5. 다음 스케쥴러 설정
 // 5-1. 모든 유저의 작업이 끝났다면 timezone에 대해 다음 스케쥴러를 설정한다.
 
-function settlementJob(timezone, sttime){
+async function settlementJob(user_id, startTime, sttime){
+    const value = await valueModel.getValueOne(user_id, sttime);
+
+    if(value === undefined){    // 해당되는 날짜의 value가 없는 경우
+        return;
+    }
+
+    const todos = await todoModel.readTodoForScheduler(user_id, startTime, sttime);
+    for(let i=0;i<todos.length;i++){
+        let end = value.end;
+
+        if(todos[i].check === false){
+            end = value.end + calculate.failedTodo(todos[i].level);
+        }
     
+        await valueModel.updateValueEnd(value.value_id, end);
+    }
+
 }
 
-function scheduling(timeZone) {
-  const nextSettlement = transdate.getSettlementTimeInUTC(timeZone);
-
-  schedule.scheduleJob(nextSettlement, async function() {
-    settlementJob(timeZone, nextSettlement);
-
-    scheduling(timeZone); // 다음 날짜에 대한 재스케줄링
-  });
+async function settlementJobManager(timezone, startTime, sttime){
+    const user_ids = await accountModel.getUsersIdByRegion(timezone);
+    
+    console.log(user_ids);
+    await Promise.all(
+        user_ids.map(user => 
+            settlementJob(user.user_id, startTime, sttime)
+        )
+    );
 }
 
-// 예시 타임존
-const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
-timeZones.forEach(tz => scheduling(tz)); // 각 타임존에 대해 함수 호출
+module.exports = {
+    scheduling: (timeZone) => {
+        const startTime = transdate.getStartToday(timeZone);
+        const nextSettlement = transdate.getSettlementTimeInUTC(timeZone);
+    
+    //   schedule.scheduleJob(nextSettlement, async function() {
+    //     await settlementJob(timeZone, nextSettlement);
+    
+    //     scheduling(timeZone); // 다음 날짜에 대한 재스케줄링
+    //   });
+
+        settlementJobManager(timeZone, startTime, nextSettlement);
+    }
+    
+    // 예시 타임존
+    // const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
+    // timeZones.forEach(tz => scheduling(tz)); // 각 타임존에 대해 함수 호출
+    
+    // settlementJob('Asia/Seoul', transdate.getSettlementTimeInUTC('Asia/Seoul'));
+}

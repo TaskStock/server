@@ -184,4 +184,21 @@ module.exports = {
             });
         return count;
     },
+    // 스케쥴러 성능을 위해 최소한의 데이터만 전송(level이 0이면 정산 대상이 아니므로 제외)
+    readTodoForScheduler: async(user_id, start_date, end_date)=>{
+        const query = 'select todo_id, "check", level from \"Todo\" where user_id=$1 and date>=$2 and date<$3 and level != 0';
+        const values = [user_id, start_date, end_date];
+
+        const todos = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return todos;
+    },
 }

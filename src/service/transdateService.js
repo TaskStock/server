@@ -27,6 +27,17 @@ module.exports = {
 
         return resultUtc;
     },
+    // 현재 날짜의 시작시간(정산시간 - 하루 와 같음)
+    getStartToday: (timezone) =>{
+        const nowUtc = new Date();
+        const nowZoneTime = utcToZonedTime(nowUtc, timezone);
+
+        const startOfToday = startOfDay(nowZoneTime);
+
+        const resultUtc = zonedTimeToUtc(startOfToday, timezone);
+
+        return resultUtc;
+    },
     // string인 utc를 받아서 timezone에 따라 해당 지역 정산시간으로 변환
     getSettlementTime: (utc, timezone) =>{
         const nowZoneTime = utcToZonedTime(utc, timezone);

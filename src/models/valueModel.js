@@ -90,4 +90,35 @@ module.exports = {
                 throw e;
             });
     },
+    // 스케쥴러에 사용
+    getValueOne: async(user_id, date)=>{
+        const query = "select * from \"Value\" where user_id=$1 and date=$2";
+        const q_values = [user_id, date];
+
+        const values = await db.query(query, q_values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return values;
+    },
+    updateValueEnd: async(value_id, end)=>{
+        const query = 'update "Value" set "end"=$1 where value_id=$2';
+        const values = [end, value_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }
