@@ -12,9 +12,11 @@ module.exports = {
         }
     },
     getAllNotice: async (user_id) => {
-        const query = 'SELECT content, notice_type, is_read, created_time FROM notice WHERE user_id = ?';
+        const query = 'SELECT content, type, info, is_read, created_time FROM "Notice" WHERE user_id = ?';
+        const updateQuery = 'UPDATE "Notice" SET is_read = true WHERE user_id = ?';
         try {
             const {rows: noticeData} = await db.query(query, [user_id]);
+            await db.query(updateQuery, [user_id]);
             return noticeData;
         }
         catch (err) {
