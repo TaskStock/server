@@ -83,7 +83,7 @@ module.exports = {
             query = `select * from \"Retrospect\" where user_id=$1 order by ${filter} limit $2 offset $3`;
             values = [user_id, limit, offset];
         }else{
-            query = `select * from \"Retrospect\" where user_id=$1 and content like $2 order by ${filter} limit $4 offset $5`;
+            query = `select * from \"Retrospect\" where user_id=$1 and content like $2 order by ${filter} limit $3 offset $4`;
             values = [user_id, search, limit, offset];
         }
 
