@@ -12,13 +12,14 @@ module.exports = {
         };
         
         if (predata.type === 'sns.follow') {
-            followerData = await accountModel.getUserById(predata.follower_id);
+            follower_name = await accountModel.getUserNameById(predata.follower_id);
             if (predata.pending === false)
-                noticeData.content = `${noticeData.user_name}님이 팔로우를 시작했습니다.`;
+                noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
             else {
-                noticeData.content = `${noticeData.user_name}님이 팔로우 요청을 보냈습니다.`;
+                noticeData.content = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
             }
             noticeData.info = JSON.stringify({
+                follower_id: predata.follower_id,
                 isFollowingMe: predata.isFollowingMe,
                 isFollowingYou: predata.isFollowingYou,
                 pending: predata.pending

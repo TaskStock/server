@@ -2,9 +2,9 @@ const db = require('../config/db.js');
 
 module.exports = {
     createNotice: async (noticeData) => {
-        const query = 'INSERT INTO notice (user_id, content, type, info) VALUES (?, ?, ?, ?)';
+        const query = 'INSERT INTO "Notice" (user_id, content, type, info) VALUES ($1, $2, $3, $4)';
         try {
-            await db.query(query, [noticeData.user_id, noticeData.content, noticeData.notice_type, noticeData.info]);
+            await db.query(query, [noticeData.user_id, noticeData.content, noticeData.type, noticeData.info]);
             return true;
         } catch (err) {
             console.log('createNotice ERROR : ', err);

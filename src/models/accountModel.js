@@ -120,7 +120,7 @@ module.exports = {
             return false;
         }
     },
-    getUserById: async(user_id) => { //user_id로 유저 정보 가져오기
+    getUserById: async(user_id) => { //user_id로 유저 전체 정보 가져오기
         const query = `
         SELECT "User".*, "UserSetting".theme, "UserSetting".language 
         FROM "User" 
@@ -132,6 +132,16 @@ module.exports = {
         return rows;
         } catch (e) {
             console.log(e.stack);
+        }
+    },
+    getUserNameById: async(user_id) => { //user_id로 유저 이름 가져오기
+        const query = 'SELECT user_name FROM "User" WHERE user_id = $1';
+        try {
+            const {rows} = await db.query(query, [user_id])
+            return rows[0].user_name;
+        } catch (e) {
+            console.log(e.stack);
+            return 
         }
     },
     checkRefreshToken: async(user_id, refreshToken, device_id) => {

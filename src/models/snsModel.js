@@ -105,6 +105,7 @@ module.exports = {
                 type: 'sns.follow',
                 isFollowingYou: isFollowingYou,
                 isFollowingMe: isFollowingMe,
+                pending: pending
             };
             await processNotice(predata);
 
