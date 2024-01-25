@@ -35,11 +35,11 @@ module.exports = {
         res.json({result: "success"});
     },
     updateRetrospect: async(req, res, next) =>{
-        const {retrospect_id, content} = req.body;
+        const {retrospect_id, project_id, content} = req.body;
         const user_id = req.user.user_id;
         
         try{
-            await retrospectModel.updateRetrospect(retrospect_id, user_id, content);
+            await retrospectModel.updateRetrospect(retrospect_id, project_id, user_id, content);
         }catch(error){
             next(error);
         }
