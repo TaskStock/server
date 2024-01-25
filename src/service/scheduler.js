@@ -42,21 +42,31 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
         }
     }
 
-    const updateValue = await valueModel.getValueOne(user_id, tommorowsttime);
-
     // 3. 다음 날짜의 value 생성
-    const start = updatedValue.end;
+    const start = value.end;
     const end = start;
     const low = start;
     const high = start;
     const percentage = null;    // 계산 로직 필요
     const combo = 0;    // 계산 로직 필요
 
-    const tommorowValue = await valueModel.createByExistUser(user_id, tommorowsttime, percentage, start, end, low, high, combo);
+    let tommorowValue = await valueModel.createByExistUser(user_id, tommorowsttime, percentage, start, end, low, high, combo);
 
     // 4. 미리 만들어진 todo 반영
     const maked_todos = await todoModel.readTodoForScheduler(user_id, sttime, tommorowsttime);
+    for(let i=0;i<maked_todos.length;i++){
+        console.log(maked_todos[i]);
+        const level = maked_todos[i].level;
+        let end = tommorowValue.end;
+        const low = tommorowValue.low - calculate.changeLevelForLow(0, level);
+        const high = tommorowValue.high + calculate.changeLevelForHighEnd(0, level);
 
+        if(maked_todos[i].check === true){
+            end = tommorowValue.end + calculate.changeLevelForHighEnd(0, maked_todos[i].level);
+        }
+
+        tommorowValue = await valueModel.updateValueForMakedTodos(tommorowValue.value_id, end, low, high);
+    }
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){

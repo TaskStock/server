@@ -126,4 +126,21 @@ module.exports = {
         
         return value;
     },
+    updateValueForMakedTodos: async(value_id, end, low, high)=>{
+        const query = 'update "Value" set "end"=$1, low=$2, high=$3 where value_id=$4 returning *';
+        const q_values = [end, low, high, value_id];
+
+        const value = await db.query(query, q_values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        
+        return value;
+    },
 }
