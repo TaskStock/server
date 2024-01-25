@@ -72,7 +72,10 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
     const user_ids = await accountModel.getUsersIdByRegion(timezone);
     
-    console.log(user_ids);
+    if(user_ids === undefined){
+        return;
+    }    
+
     await Promise.all(
         user_ids.map(user => 
             settlementJob(user.user_id, startTime, sttime, tommorowsttime)
@@ -80,24 +83,21 @@ async function settlementJobManager(timezone, startTime, sttime, tommorowsttime)
     );
 }
 
-module.exports = {
-    scheduling: (timeZone) => {
-        const startTime = transdate.getStartToday(timeZone);
-        const nextSettlement = transdate.getSettlementTimeInUTC(timeZone);
-        const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timeZone);
-    
-    //   schedule.scheduleJob(nextSettlement, async function() {
-    //     await settlementJob(timeZone, nextSettlement);
-    
-    //     scheduling(timeZone); // 다음 날짜에 대한 재스케줄링
-    //   });
+function mainScheduler(timezone){
+    const startTime = transdate.getStartToday(timezone);
+    const nextSettlement = transdate.getSettlementTimeInUTC(timezone);
+    const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timezone);
 
-        settlementJobManager(timeZone, startTime, nextSettlement, tommorowSettlement);
+    schedule.scheduleJob(nextSettlement, async function() {
+        await settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement);
+        
+        mainScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
+    });
+}
+
+module.exports = {
+    scheduling: () => {
+        const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
+        timeZones.forEach(tz => mainScheduler(tz)); // 각 타임존에 대해 함수 호출
     }
-    
-    // 예시 타임존
-    // const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
-    // timeZones.forEach(tz => scheduling(tz)); // 각 타임존에 대해 함수 호출
-    
-    // settlementJob('Asia/Seoul', transdate.getSettlementTimeInUTC('Asia/Seoul'));
 }
