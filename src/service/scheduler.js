@@ -31,13 +31,11 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
         return;
     }
 
-    // check==true인 todo만 가져오도록 설계하면 성능 향상 가능
-    const todos = await todoModel.readTodoForScheduler(user_id, startTime, sttime);
+    // check==false인 todo만 가져와서 value에 반영
+    const todos = await todoModel.readTodoForSchedulerWithCheckFalse(user_id, startTime, sttime);
     for(let i=0;i<todos.length;i++){
-        if(todos[i].check === false){
-            const end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
-            value = await valueModel.updateValueEnd(value.value_id, end);
-        }
+        const end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
+        value = await valueModel.updateValueEnd(value.value_id, end);
     }
 
     // 3. 다음 날짜의 value 생성
