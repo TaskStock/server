@@ -34,10 +34,8 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
     // check==true인 todo만 가져오도록 설계하면 성능 향상 가능
     const todos = await todoModel.readTodoForScheduler(user_id, startTime, sttime);
     for(let i=0;i<todos.length;i++){
-        let end = value.end;
-
         if(todos[i].check === false){
-            end = value.end + calculate.failedTodo(todos[i].level);
+            const end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
             value = await valueModel.updateValueEnd(value.value_id, end);
         }
     }
@@ -59,10 +57,10 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
         const level = maked_todos[i].level;
         let end = tommorowValue.end;
         const low = tommorowValue.low - calculate.changeLevelForLow(0, level);
-        const high = tommorowValue.high + calculate.changeLevelForHighEnd(0, level);
+        const high = tommorowValue.high + calculate.changeLevelForHigh(0, level);
 
         if(maked_todos[i].check === true){
-            end = tommorowValue.end + calculate.changeLevelForHighEnd(0, maked_todos[i].level);
+            end = tommorowValue.end + calculate.changeLevelForEnd(0, level, true);
         }
 
         tommorowValue = await valueModel.updateValueForMakedTodos(tommorowValue.value_id, end, low, high);

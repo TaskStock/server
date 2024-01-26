@@ -35,8 +35,8 @@ module.exports = {
                     const value_id = value.value_id;
                     const start = value.start;
                     const end = value.end;
-                    const updateLow = value.low + calculate.failedTodo(level);
-                    const updateHigh = value.high + calculate.plusLevel(level);
+                    const updateLow = value.low - calculate.changeLevelForLow(0, level);
+                    const updateHigh = value.high + calculate.changeLevelForHigh(0, level);
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
                 }
@@ -117,10 +117,10 @@ module.exports = {
                     const start = value.start;
                     let end = value.end;
                     const updateLow = value.low - calculate.changeLevelForLow(todo.level, level);
-                    const updateHigh = value.high + calculate.changeLevelForHighEnd(todo.level, level);
+                    const updateHigh = value.high + calculate.changeLevelForHigh(todo.level, level);
 
                     if(todo.check === true){
-                        end = value.end + calculate.changeLevelForHighEnd(todo.level, level);
+                        end = value.end + calculate.changeLevelForEnd(todo.level, level, true);
                     }
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
@@ -153,9 +153,9 @@ module.exports = {
                 let changeAmount;
                 const endDate = transdate.plusOneDay(resultUtc);
                 if(check===true){
-                    changeAmount = calculate.plusLevel(todo.level);
+                    changeAmount = calculate.changeLevelForEnd(0, todo.level, true);
                 }else if(check===false){
-                    changeAmount = calculate.minusLevel(todo.level);
+                    changeAmount = calculate.changeLevelForEnd(todo.level, 0, true);
                 }
                 await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc, endDate);
             }
@@ -195,10 +195,10 @@ module.exports = {
                     const start = value.start;
                     let end = value.end;
                     const updateLow = value.low - calculate.changeLevelForLow(todo.level, 0);
-                    const updateHigh = value.high + calculate.changeLevelForHighEnd(todo.level, 0);
+                    const updateHigh = value.high + calculate.changeLevelForHigh(todo.level, 0);
 
                     if(todo.check === true){
-                        end = value.end + calculate.changeLevelForHighEnd(todo.level, 0);
+                        end = value.end + calculate.changeLevelForEnd(todo.level, 0, true);
                     }
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
@@ -232,8 +232,8 @@ module.exports = {
                         const value_id = value.value_id;
                         const start = value.start;
                         const end = value.end;
-                        const updateLow = value.low + calculate.cancelfailedTodo(todo.level);
-                        const updateHigh = value.high + calculate.minusLevel(todo.level);
+                        const updateLow = value.low - calculate.changeLevelForLow(todo.level, 0);
+                        const updateHigh = value.high + calculate.changeLevelForHigh(todo.level, 0);
         
                         await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
                     }else if(value.date.toISOString() > sttime){
