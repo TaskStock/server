@@ -12,7 +12,15 @@ module.exports = {
         }
     },
     getAllNotice: async (user_id) => {
-        const query = 'SELECT content, type, info, is_read, created_time FROM "Notice" WHERE user_id = $1';
+        const query = `
+            SELECT content, type, info, is_read, created_time 
+            FROM "Notice" 
+            WHERE user_id = $1
+            UNION ALL
+            SELECT notice_id, content, type, info, is_read, created_time
+            FROM "AdminNotice"
+            ORDER BY created_time DESC
+            `;
         const updateQuery = 'UPDATE "Notice" SET is_read = true WHERE user_id = $1';
         try {
             const {rows: noticeList} = await db.query(query, [user_id]);
@@ -25,11 +33,10 @@ module.exports = {
         }
     },
     getNoticeById: async (notice_id) => {
-        const query = 'SELECT content, type, info, is_read, created_time FROM "Notice" WHERE notice_id = ?';
+        const query = 'SELECT content, type, info, is_read, created_time, image FROM "AdminNotice" WHERE notice_id = $1';
         try {
             const {rows} = await db.query(query, [notice_id]);
             const noticeData = rows[0];
-            noticeData.logo = '../../public/images/logo_background.png';
             return noticeData;
         }
         catch (err) {
