@@ -143,21 +143,20 @@ module.exports = {
             const todo = await todoModel.updateCheck(todo_id, user_id, check);
 
             const resultUtc = transdate.getSettlementTimeInUTC(region);
-            const nextDayUtc = transdate.plusOneDay(resultUtc, region);
+            const previousDayUtc = transdate.minusOneDay(resultUtc, region);
 
             if(todo === undefined){
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
             }
 
-            if(todo.level !== 0 && todo.date >= resultUtc && todo.date < nextDayUtc){  // 아직 정산안됐고 오늘 날짜인 경우만
+            if(todo.level !== 0 && todo.date >= previousDayUtc && todo.date < resultUtc){  // 아직 정산안됐고 오늘 날짜인 경우만
                 let changeAmount;
-                const endDate = transdate.plusOneDay(resultUtc, region);
                 if(check===true){
                     changeAmount = calculate.changeLevelForEnd(0, todo.level, true);
                 }else if(check===false){
                     changeAmount = calculate.changeLevelForEnd(todo.level, 0, true);
                 }
-                await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc, endDate);
+                await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc);
             }
 
         }catch(error){

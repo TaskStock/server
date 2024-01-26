@@ -78,5 +78,12 @@ module.exports = {
         const nextDayUTC = zonedTimeToUtc(nextDay, timezone);
 
         return nextDayUTC;
+    },
+    minusOneDay: (date, timezone) =>{
+        const zonedDate = utcToZonedTime(date, timezone);
+        const nextDay = addDays(zonedDate, -1);
+        const nextDayUTC = zonedTimeToUtc(nextDay, timezone);
+
+        return nextDayUTC;
     }
 }
