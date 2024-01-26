@@ -6,35 +6,7 @@ const bcrypt = require('bcrypt');
 // 회원가입 controller에서 value 생성하는 곳에만 사용
 const valueModel = require('../models/valueModel.js');
 const transdate = require('../service/transdateService.js');
-
-// 현재는 email만 payload에 포함시키는데 추후에 필요한 정보들 추가. 민감한 정보는 포함시키지 않는다.
-function generateAccessToken(userData) {
-    const expiresIn = "1h";
-    const user_id = userData.user_id;
-    const device_id = userData.device_id;
-    const accessToken = jwt.sign({user_id, device_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
-    const accessExp = jwt.decode(accessToken).exp;
-
-    return [accessToken, accessExp];
-}
-
-function generateRefreshToken(userData) {
-    const expiresIn = "2y";
-    const user_id = userData.user_id;
-    const device_id = userData.device_id;
-    const refreshToken = jwt.sign({user_id, device_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
-    const refreshExp = jwt.decode(refreshToken).exp;
-    
-    return [refreshToken, refreshExp];
-}
-
-function generateAuthCode() {
-    let authCode = '';
-    for (let i = 0; i < 6; i++) {
-        authCode += Math.floor(Math.random() * 10);
-    } //여섯자리 숫자로 이루어진 인증코드 생성(string)
-    return authCode;
-}
+const { generateAccessToken, generateRefreshToken, generateAuthCode } = require('../service/authService.js');
 
 module.exports = {
     //이메일 인증

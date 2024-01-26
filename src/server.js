@@ -40,7 +40,7 @@ const snsRouter = require("./routers/snsRouter.js");
 const groupRouter = require("./routers/groupRouter.js");
 const valueRouter = require("./routers/valueRouter.js");
 const projectRouter = require("./routers/projectRouter.js");
-const alarmRouter = require("./routers/alarmRouter.js");
+const noticeRouter = require("./routers/noticeRouter.js");
 const retrospectRouter = require("./routers/retrospectRouter.js");
 
 app.get('/', (req, res) => {
@@ -61,7 +61,7 @@ app.use("/sns", passport.authenticate('jwt', { session: false }), snsRouter);
 app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
 app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
 app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
-app.use("/alarm", passport.authenticate('jwt', { session: false }), alarmRouter);
+app.use("/notice", passport.authenticate('jwt', { session: false }), noticeRouter);
 app.use("/retrospect", passport.authenticate('jwt', { session: false }), retrospectRouter);
 
 // 오류 처리 미들웨어

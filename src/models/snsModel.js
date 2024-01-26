@@ -1,5 +1,6 @@
 const db = require('../config/db.js');
 const fs = require('fs');
+const { processNotice } = require('../service/noticeService.js')
 
 module.exports = {
     changePrivate: async(user_id, private) => {
@@ -84,6 +85,7 @@ module.exports = {
             }
             
             // 상대도 나를 팔로우하고 있는지 확인
+            try {
             const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
             if (checkRows.length == 0 && pending == false) {
@@ -91,6 +93,22 @@ module.exports = {
             } else {
                 isFollowingMe = false;
             }
+            } catch (e) {
+                console.log(e.stack);
+                return false;
+            } 
+
+            // 상대에게 알림 생성 - fololler_id, following_id, type, pending, info, isFollowingMe, isFollowingYou
+            const predata = {
+                user_id: following_id,
+                follower_id: follower_id,
+                type: 'sns.follow',
+                isFollowingYou: isFollowingYou,
+                isFollowingMe: isFollowingMe,
+                pending: pending
+            };
+            await processNotice(predata);
+
             return [true, pending, isFollowingMe, isFollowingYou];
         } catch (e) {
             console.log(e.stack);
@@ -270,14 +288,13 @@ module.exports = {
             const {rows} = await db.query(checkQuery, [user_id]);
             const oldImagePath = rows[0].image;
             if (oldImagePath !== 'public/images/ic_profile.png') {
-                fs.unlink(oldImagePath, (err) => {
-                    if (err) {
-                        console.log('기존 이미지 삭제 실패')
-                        console.error(err);
-                        return
-                    }
+                try {
+                    await fs.promises.unlink(oldImagePath);
                     console.log('기존 이미지 삭제 성공');
-                });
+                } catch (err) {
+                    console.error('기존 이미지 삭제 실패', err);
+                    throw err; // 에러 발생 시 함수 실행 중단
+                }
             }
             await db.query(updateQuery, [image_path, user_id]);
             return true;
@@ -294,6 +311,14 @@ module.exports = {
             await db.query(pendingQuery, [follower_id, following_id]);
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
+
+            // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
+            const predata = {
+                user_id: follower_id,
+                following_id: following_id,
+                type: 'sns.accept'
+            };
+            await processNotice(predata);
 
             return true;
         } catch (e) {
