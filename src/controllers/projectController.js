@@ -1,6 +1,5 @@
 const projectModel = require('../models/projectModel.js');
 const todoModel = require('../models/todoModel.js');
-const retrospectModel = require('../models/retrospectModel.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{

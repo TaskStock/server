@@ -2,17 +2,6 @@ const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
 const { startOfDay, startOfMonth, addHours, addMonths, addDays } = require('date-fns');
 
 module.exports = {
-    localDateToUTCWithStartOfDay: (date, timezone) =>{
-        const result = zonedTimeToUtc(date, timezone);
-        return result;
-    },
-    UTCToLocalDate: (date, timezone) =>{
-        const utcDate = date.toISOString();
-        const localTimestamp = utcToZonedTime(utcDate, timezone); // utc 시간대 그대로이긴 한데 timezone은 적용되는 것 같긴함
-        const result = localTimestamp.toLocaleDateString('en-CA');
-        // toLocaleDateString 가 로컬시간대의 날짜를 뽑아내는데 배포서버에도 제대로 작동할지 모르겠음
-        return result;
-    },
     // 오늘 value의 정산시간을 utc로 반환
     getSettlementTimeInUTC: (timezone) =>{
         const nowUtc = new Date();  // 서버컴퓨터의 로컬 시간대를 포함한 utc
