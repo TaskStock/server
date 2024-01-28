@@ -79,6 +79,7 @@ module.exports = {
         return userData;
     },
     saveRefreshToken: async(user_id, refreshToken, device_id) => {
+        try {
         const selectQuery = 'SELECT * FROM "Token" WHERE device_id = $1 and user_id = $2';
         const {rowCount} = await db.query(selectQuery, [device_id, user_id]);
         if (rowCount === 0) {
@@ -94,6 +95,10 @@ module.exports = {
                     console.error(e.stack);
                 });
         }
+    } catch (e) {
+        console.log(e.stack);
+        throw e;
+    }
     },
     getUserByEmail: async(email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         const query = 'SELECT * FROM "User" WHERE email = $1';
@@ -145,17 +150,23 @@ module.exports = {
         }
     },
     checkRefreshToken: async(user_id, refreshToken, device_id) => {
-        const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1 and device_id = $2';
-        const {rows} = await db.query(query, [user_id, device_id]);
-        if (rows.length === 0) {
-            return 'noToken';
-        }
-        const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
-        const inputRefreshToken = refreshToken; // 사용자가 입력한 refreshToken
+        try {
+            const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1 and device_id = $2';
+            const {rows} = await db.query(query, [user_id, device_id]);
+            if (rows.length === 0) {
+                return 'noToken';
+            }
+            const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
+            const inputRefreshToken = refreshToken; // 사용자가 입력한 refreshToken
 
-        if (dbRefreshToken === inputRefreshToken) {
-            return true;
-        } else {
+            if (dbRefreshToken === inputRefreshToken) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
             return false;
         }
     },
