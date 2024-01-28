@@ -3,8 +3,8 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const JWTStrategy = require('passport-jwt').Strategy;
 const ExtractJWT = require('passport-jwt').ExtractJwt;
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const KakaoStrategy = require('passport-kakao').Strategy;
+// const GoogleStrategy = require('passport-google-oauth20').Strategy;
+// const KakaoStrategy = require('passport-kakao').Strategy;
 
 require("dotenv").config();
 
@@ -58,6 +58,7 @@ passport.use(new JWTStrategy({
 ));
 
 // 구글 로그인을 위한 google strategy
+/*
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -135,6 +136,6 @@ passport.use(new KakaoStrategy(
         }
     }
 ))
-
+*/
 
 module.exports = passport;
