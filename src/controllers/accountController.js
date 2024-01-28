@@ -195,7 +195,7 @@ module.exports = {
                 refreshExp: refreshExp,
                 strategy: userData.strategy
             });
-        } else { //존재하면 로그인
+        } else if (userData.strategy !== 'local') { //존재하고, 이메일로 회원가입한 회원이 아니면
             const userDevice = userData.device_id;
             existingUser.device_id = userDevice;
 
@@ -210,6 +210,13 @@ module.exports = {
                 refreshToken: refreshToken,
                 accessExp, accessExp,
                 refreshExp: refreshExp
+            });
+        } else {
+            console.log("이미 <이메일로 회원가입>을 통해 가입된 게정입니다.");
+            return res.status(200).json({ 
+                result: "fail",
+                message: "이미 가입된 이메일입니다.",
+                strategy: userData.strategy 
             });
         }
         
