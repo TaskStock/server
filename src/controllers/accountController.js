@@ -171,6 +171,7 @@ module.exports = {
         existingUser = await accountModel.getUserByEmail(userData.email);
 
         if (existingUser === null) { //존재하지 않으면 회원가입
+            userData.password = null;
             const registeredUser = await accountModel.register(userData);
             registeredUser.device_id = userData.device_id;
             //accessToken 처리
