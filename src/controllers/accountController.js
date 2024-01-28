@@ -130,7 +130,7 @@ module.exports = {
     login: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const userDevice = req.user.device_id;
+            const userDevice = req.body.device_id;
             userData.device_id = userDevice;
 
             const [accessToken, accessExp] = generateAccessToken(userData);

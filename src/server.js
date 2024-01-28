@@ -2,17 +2,10 @@ const express = require('express');
 const app = express();
 const passport = require('../src/config/passportConfig.js');
 const cors = require('cors');
-var admin = require("firebase-admin");
 
 require("dotenv").config();
 
 app.set('port', process.env.PORT || 8000);
-
-var serviceAccount = require("../firebase-gcp-share-private-key.json");
-
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
 
 // body 데이터를 사용하기 위한 모듈
 const bodyParser = require("body-parser");
