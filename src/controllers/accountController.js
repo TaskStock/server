@@ -131,7 +131,7 @@ module.exports = {
     login: async (req, res) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
-            const userDevice = req.body.device_id;
+            const userDevice = req.user.device_id;
             userData.device_id = userDevice;
 
             const [accessToken, accessExp] = generateAccessToken(userData);
@@ -159,7 +159,7 @@ module.exports = {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
-            const userDevice = req.body.device_id;
+            const userDevice = req.user.device_id;
             const deleteResult = await accountModel.deleteRefreshToken(user_id, userDevice);
             
             if (deleteResult) {
