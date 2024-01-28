@@ -81,9 +81,8 @@ module.exports = {
             const email = req.body.email;
             const userDevice = req.body.device_id;
 
-            const queryResult = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
-
             //앞에서 확인하긴 했는데 공격에 대비해서 한번 더 확인
+            const queryResult = await accountModel.getUserByEmail(email); //이메일로 유저 정보 가져오기
             if (queryResult !== null) {
                 return res.status(200).json({
                     result: "fail",
@@ -154,6 +153,68 @@ module.exports = {
             });
         }
     }, 
+    /*userData 형식 {
+        email: "",
+        userName: "",
+        userPicture: ""
+        isAgree: 1,
+        theme: "",
+        device_id: ""
+        strategy: ""
+    }
+    */
+    //소셜 로그인
+    loginSocial: async (req, res) => {
+        const userData = req.body;
+        
+        //이미 존재하는지 체크
+        existingUser = await accountModel.getUserByEmail(userData.email);
+
+        if (existingUser === null) { //존재하지 않으면 회원가입
+            const registeredUser = await accountModel.register(userData);
+            registeredUser.device_id = userData.device_id;
+            //accessToken 처리
+            const [accessToken, accessExp] = generateAccessToken(registeredUser);
+
+            // refreshToken 처리
+            const [refreshToken, refreshExp] = generateRefreshToken(registeredUser);
+            await accountModel.saveRefreshToken(registeredUser.user_id, refreshToken, userData.device_id); // refreshToken DB에 저장(decive_id가 PK)
+
+            console.log("회원가입 성공");
+
+            // 회원가입 후 자동으로 value 생성
+            const settlementTime = transdate.getSettlementTimeInUTC(registeredUser.region);
+            await valueModel.createByNewUser(registeredUser.user_id, settlementTime);
+
+            return res.status(200).json({ 
+                result: "success",
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+                accessExp: accessExp,
+                refreshExp: refreshExp,
+                strategy: userData.strategy
+            });
+        } else { //존재하면 로그인
+            const userDevice = userData.device_id;
+            existingUser.device_id = userDevice;
+
+            const [accessToken, accessExp] = generateAccessToken(existingUser);
+            const [refreshToken, refreshExp] = generateRefreshToken(existingUser);
+            await accountModel.saveRefreshToken(existingUser.user_id, refreshToken, userDevice);
+
+            console.log("로그인 성공");
+            return res.status(200).json({ 
+                result: "success", 
+                accessToken: accessToken, 
+                refreshToken: refreshToken,
+                accessExp, accessExp,
+                refreshExp: refreshExp
+            });
+        }
+        
+
+
+    },
     //로그아웃
     logout: async (req, res) => {
         try {
