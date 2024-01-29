@@ -43,10 +43,8 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
     const end = start;
     const low = start;
     const high = start;
-    const percentage = null;    // 계산 로직 필요
-    const combo = 0;    // 계산 로직 필요
 
-    let tommorowValue = await valueModel.createByExistUser(user_id, tommorowsttime, percentage, start, end, low, high, combo);
+    let tommorowValue = await valueModel.createByExistUser(user_id, tommorowsttime, start, end, low, high);
 
     // 4. 미리 만들어진 todo 반영
     const maked_todos = await todoModel.readTodoForScheduler(user_id, sttime, tommorowsttime);

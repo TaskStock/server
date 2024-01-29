@@ -31,12 +31,10 @@ module.exports = {
             const end = start;
             const low = start;
             const high = start;
-            const percentage = null;    // 계산 로직 필요
-            const combo = 0;    // 계산 로직 필요
 
             const settlementTime = transdate.getSettlementTimeInUTC(region);
 
-            await valueModel.createByExistUser(user_id, settlementTime, percentage, start, end, low, high, combo);
+            await valueModel.createByExistUser(user_id, settlementTime, start, end, low, high);
             res.json({result: "success"});
         }catch(error){
             if(error.code === '23505'){ // 중복으로 인한 오류
