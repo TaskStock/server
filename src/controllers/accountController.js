@@ -304,8 +304,9 @@ module.exports = {
     getUserInfo: async (req, res) => {
         try {
             const user_id = req.user.user_id;
-            const { password, ...userData } = await accountModel.getUserById(user_id);
-            
+            const queryResult = await accountModel.getUserById(user_id);
+            const {password, ...userData} = queryResult[0]
+
             res.status(200).json({
                 result: "success",
                 message: "유저 정보 가져오기 성공",
