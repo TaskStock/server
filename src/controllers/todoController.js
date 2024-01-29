@@ -1,8 +1,10 @@
 const todoModel = require('../models/todoModel.js');
 const valueModel = require('../models/valueModel.js');
+const accountModel = require('../models/accountModel.js');
 
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
+const calculateService = require('../service/calculateService.js');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
@@ -121,6 +123,8 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, level, true);
+                        const percentage = calculateService.rateOfIncrease(start, end);
+                        await accountModel.updateValueField(user_id, end, percentage);
                     }
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
@@ -156,7 +160,11 @@ module.exports = {
                 }else if(check===false){
                     changeAmount = calculate.changeLevelForEnd(todo.level, 0, true);
                 }
-                await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc);
+                const updated_value = await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc);
+                const u_start = updated_value.start;
+                const u_end = updated_value.end;
+                const percentage = calculateService.rateOfIncrease(u_start, u_end);
+                await accountModel.updateValueField(user_id, u_end, percentage);
             }
 
         }catch(error){
@@ -198,6 +206,8 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, 0, true);
+                        const percentage = calculateService.rateOfIncrease(start, end);
+                        await accountModel.updateValueField(user_id, end, percentage);
                     }
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);

@@ -21,6 +21,7 @@ const todoModel = require('../models/todoModel.js');
 // 3-1. 정산작업이 끝났다면 반영된 value로 다음 날짜의 value를 생성한다.
 // 4. 미리 만들어진 todo 반영
 // 4-1. value를 생성하고 미리 만들어진 todo들이 있는지 확인하고 반영한다.
+// 4-2. user의 value 필드 업데이트
 // 5. 다음 스케쥴러 설정
 // 5-1. 모든 유저의 작업이 끝났다면 timezone에 대해 다음 스케쥴러를 설정한다.
 
@@ -48,19 +49,28 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
 
     // 4. 미리 만들어진 todo 반영
     const maked_todos = await todoModel.readTodoForScheduler(user_id, sttime, tommorowsttime);
+
+    const tv_start = tommorowValue.start;
+    let tv_end = tommorowValue.end;
+    let tv_low = tommorowValue.low;
+    let tv_high = tommorowValue.high;
+
     for(let i=0;i<maked_todos.length;i++){
-        console.log(maked_todos[i]);
         const level = maked_todos[i].level;
-        let end = tommorowValue.end;
-        const low = tommorowValue.low - calculate.changeLevelForLow(0, level);
-        const high = tommorowValue.high + calculate.changeLevelForHigh(0, level);
+        tv_low = tv_low - calculate.changeLevelForLow(0, level);
+        tv_high = tv_high + calculate.changeLevelForHigh(0, level);
 
         if(maked_todos[i].check === true){
-            end = tommorowValue.end + calculate.changeLevelForEnd(0, level, true);
+            tv_end = tv_end + calculate.changeLevelForEnd(0, level, true);
         }
 
-        tommorowValue = await valueModel.updateValueForMakedTodos(tommorowValue.value_id, end, low, high);
     }
+
+    await valueModel.updateValueForMakedTodos(tommorowValue.value_id, tv_end, tv_low, tv_high);
+
+    // 4-2. user의 value 필드 업데이트
+    const percentage = calculateService.rateOfIncrease(tv_start, tv_end);
+    await accountModel.updateValueField(user_id, tv_end, percentage);
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
