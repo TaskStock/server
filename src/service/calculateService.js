@@ -1,5 +1,5 @@
 const successMul = 1000;
-const failMul = 800;
+const failMul = 1000;
 
 module.exports = {
     // todo의 level을 수정했을 때 high와 end의 변화량
