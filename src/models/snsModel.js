@@ -355,20 +355,6 @@ module.exports = {
             return false;
         }
     },
-    /* TODO:
-    {private : true or false
-    user_name (사용자 이름)
-    cumulative_value (현재 가치)
-    start_value (시작가) }
-    following_cnt
-    follower_cnt
-    pending
-    isFollowingMe
-    isFollowingYou
-    "values": [ { "value_id": 16, "date": "2024-01-03T15:45:27.160Z", "percentage": null, "start": 50000, "end": 50000, "low": 50000, "high": 50000, "combo": 0, "user_id": 75 }, { "value_id": 18, "date": "2024-01-03T15:47:25.330Z", "percentage": null, "start": 50000, "end": 50000, "low": 50000, "high": 50000, "combo": 0, "user_id": 75 } ] }}
-    "todos": [ { "todo_id": 535, "content": "content", "check": false, "date": "2024-01-11T21:04:00.000Z", "level": 1, "index": 1, "user_id": 122, "project_id": null }, { "todo_id": 536, "content": "content", "check": false, "date": "2024-01-11T21:04:00.000Z", "level": 1, "index": 2, "user_id": 122, "project_id": null } ]  
-    "projects": [ { "project_id": 9, "name": "project1", "public_range": “none”, "user_id": 126, "todo_count": 1, "retrospect_count": 2 }, { "project_id": 13, "name": "project1", "public_range": “none”, "user_id": 126, "todo_count": 0, "retrospect_count": 0 } ]
-     */
     userDetail: async(my_id, target_id) => {
         const userQuery = `
         SELECT 
@@ -393,9 +379,9 @@ module.exports = {
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
         WHERE U.user_id = $1
         `;
-        const valueQuery = 'SELECT value_id, date, percentage, start, end, low, high FROM "Value" WHERE user_id = $1 ORDER BY date';
-        const todoQuery = 'SELECT todo_id, content, check, date, level, index, project_id FROM "Todo" WHERE user_id = $1 ORDER BY date';
-        const projectQuery = 'SELECT project_id, name, public_range, todo_count, retrospect_count FROM "Project" WHERE user_id = $1 ORDER BY project_id';
+        const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
+        const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
+        const projectQuery = 'SELECT * FROM "Project" WHERE user_id = $1 ORDER BY project_id';
         try {
             const {rows: targetRows} = await db.query(userQuery, [target_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
@@ -407,4 +393,5 @@ module.exports = {
             console.log(e.stack);
             throw e;
         }
+    },
 }

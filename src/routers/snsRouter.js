@@ -15,7 +15,7 @@ router.patch('/edit/image', uploader.single('image'), snsController.editUserImag
 router.patch('/pending', snsController.acceptPenging);
 router.patch('/edit/default', snsController.changeDefaultImage);
 router.delete('/follow', snsController.cancelFollow);
-router.get('users/:user_id', snsController.userDetail);
+router.get('/users/:user_id', snsController.userDetail);
 
 module.exports = router;
 
