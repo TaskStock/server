@@ -68,7 +68,9 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
 
     tommorowValue = await valueModel.updateValueForMakedTodos(tommorowValue.value_id, tv_end, tv_low, tv_high);
 
-    
+    // 4-2. user의 value 필드 업데이트
+    const percentage = (tv_end-tv_start)/tv_start * 100;
+    await accountModel.updateValueField(user_id, tv_end, percentage);
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){

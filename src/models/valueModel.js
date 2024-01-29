@@ -127,7 +127,7 @@ module.exports = {
         return value;
     },
     updateValueForMakedTodos: async(value_id, end, low, high)=>{
-        const query = 'update "Value" set "end"=$1, low=$2, high=$3 where value_id=$4 returning *';
+        const query = 'update "Value" set "end"=$1, low=$2, high=$3 where value_id=$4';
         const q_values = [end, low, high, value_id];
 
         const value = await db.query(query, q_values)
