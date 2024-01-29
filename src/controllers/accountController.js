@@ -195,7 +195,7 @@ module.exports = {
                 refreshExp: refreshExp,
                 strategy: userData.strategy
             });
-        } else { //존재하면 로그인
+        } else if (userData.strategy !== 'local') { //존재하고, 이메일로 회원가입한 회원이 아니면
             const userDevice = userData.device_id;
             existingUser.device_id = userDevice;
 
@@ -211,6 +211,13 @@ module.exports = {
                 accessExp, accessExp,
                 refreshExp: refreshExp
             });
+        } else {
+            console.log("이미 <이메일로 회원가입>을 통해 가입된 게정입니다.");
+            return res.status(200).json({ 
+                result: "fail",
+                message: "이미 가입된 이메일입니다.",
+                strategy: userData.strategy 
+            });
         }
         
 
@@ -221,7 +228,7 @@ module.exports = {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
-            const userDevice = req.body.device_id;
+            const userDevice = req.user.device_id;
             const deleteResult = await accountModel.deleteRefreshToken(user_id, userDevice);
             
             if (deleteResult) {

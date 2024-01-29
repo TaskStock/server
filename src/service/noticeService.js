@@ -1,5 +1,6 @@
 const noticeModel = require('../models/noticeModel.js');
 const accountModel = require('../models/accountModel.js');
+const admin = require('../config/FCMconfig.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
@@ -35,5 +36,37 @@ module.exports = {
         }
 
         await noticeModel.createNotice(noticeData);
+    },
+    // TODO : FCM 푸시 알림 전송
+    sendPush: async (noticeData) => {
+        const { user_id, content, type, info } = noticeData;
+        const queryResult = await accountModel.getUserById(user_id);
+        const userData = queryResult[0]
+        const targetToken = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
+    
+        let message = {
+            notification: {
+                title: '새 메시지가 도착했습니다',
+                body: '여기에 메시지 내용을 넣으세요'
+            },
+            
+            data: {
+                title: '테스트 데이터 발송',
+                body: 'notification과 data의 차이가 뭐지?',
+                style: '굳굳',
+            },
+            token: targetToken,
+        }
+
+        admin
+            .messaging()
+            .send(message)
+            .then(function (response) {
+                console.log('Successfully sent message: : ', response)
+            })
+            .catch(function (err) {
+                console.log('Error Sending message!!! : ', err)
+            })
+
     }
 };
