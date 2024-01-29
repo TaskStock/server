@@ -1,5 +1,6 @@
 const todoModel = require('../models/todoModel.js');
 const valueModel = require('../models/valueModel.js');
+const accountModel = require('../models/accountModel.js');
 
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
@@ -121,6 +122,8 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, level, true);
+                        const percentage = (end-start)/start * 100;
+                        await accountModel.updateValueField(user_id, end, percentage);
                     }
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
@@ -198,6 +201,8 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, 0, true);
+                        const percentage = (end-start)/start * 100;
+                        await accountModel.updateValueField(user_id, end, percentage);
                     }
     
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
