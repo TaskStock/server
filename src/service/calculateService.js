@@ -25,5 +25,10 @@ module.exports = {
             result = (to-from) * failMul;
         }
         return result;
+    },
+    // 상승률 계산
+    rateOfIncrease: (start, end) =>{
+        const percentage = (end-start)/start * 100;
+        return percentage;
     }
 }

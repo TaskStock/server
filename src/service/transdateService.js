@@ -85,5 +85,5 @@ module.exports = {
         const nextDayUTC = zonedTimeToUtc(nextDay, timezone);
 
         return nextDayUTC;
-    }
+    },
 }
