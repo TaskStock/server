@@ -55,9 +55,10 @@ module.exports = {
     },
     register: async(registerData) => {
         try {
-            const {email, userName, password, isAgree, strategy, userPicture, theme, language} = registerData; 
+            let {email, userName, password, isAgree, strategy, userPicture, theme, language} = registerData; 
             let defaultImage = 'public/images/ic_profile.png'
             let rows;      
+            
             if (password === null) {    //소셜 로그인의 경우
                 const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
                 if (userPicture === null) {
