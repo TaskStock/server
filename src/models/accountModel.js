@@ -145,7 +145,7 @@ module.exports = {
             return false;
         }
     },
-    getUserById: async(user_id) => { //user_id로 유저 전체 정보 가져오기
+    getUserById: async(user_id) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
         const query = `
         SELECT "User".*, "UserSetting".theme, "UserSetting".language 
         FROM "User" 

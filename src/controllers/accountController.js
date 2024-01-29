@@ -313,7 +313,8 @@ module.exports = {
     },
     getUserInfo: async (req, res) => {
         try {
-            const { password, ...userData } = req.user;
+            const user_id = req.user.user_id;
+            const { password, ...userData } = await accountModel.getUserById(user_id);
             
             res.status(200).json({
                 result: "success",
