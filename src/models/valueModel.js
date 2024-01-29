@@ -31,9 +31,9 @@ module.exports = {
             });
         return value;
     },
-    createByExistUser: async(user_id, date, percentage, start, end, low, high, combo)=>{
-        const query = "insert into \"Value\" (user_id, date, percentage, start, \"end\", low, high, combo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) returning *";
-        const values = [user_id, date, percentage, start, end, low, high, combo];
+    createByExistUser: async(user_id, date, start, end, low, high)=>{
+        const query = "insert into \"Value\" (user_id, date, start, \"end\", low, high) VALUES ($1, $2, $3, $4, $5, $6) returning *";
+        const values = [user_id, date, start, end, low, high];
 
         const value = await db.query(query, values)
             .then(res => {
