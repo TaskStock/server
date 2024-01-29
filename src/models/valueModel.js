@@ -65,18 +65,20 @@ module.exports = {
     },
     updateValueBecauseTodoComplete: async(user_id, change_amount, date)=>{
         // 정산기준으로 value 는 하루에 하나만 있어야한다.
-        const query = "update \"Value\" set \"end\"=\"end\"+$1 where user_id=$2 and date=$3";
-        const values = [change_amount, user_id, date];
+        const query = 'update "Value" set "end"="end"+$1 where user_id=$2 and date=$3 returning start, "end"';
+        const q_values = [change_amount, user_id, date];
 
-        await db.query(query, values)
+        const value = await db.query(query, q_values)
             .then(res => {
                 // console.log(res.rows);
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
+        return value;
     },
     updateValue: async(user_id, value_id, start, end, low, high)=>{
         const query = "update \"Value\" set start=$1, \"end\"=$2, low=$3, high=$4 where user_id=$5 and value_id=$6";
@@ -130,17 +132,14 @@ module.exports = {
         const query = 'update "Value" set "end"=$1, low=$2, high=$3 where value_id=$4';
         const q_values = [end, low, high, value_id];
 
-        const value = await db.query(query, q_values)
+        await db.query(query, q_values)
             .then(res => {
                 // console.log(res.rows);
-                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
-        
-        return value;
     },
 }

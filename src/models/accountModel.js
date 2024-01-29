@@ -246,7 +246,7 @@ module.exports = {
     },
     // 현재 value 가치, value 상승률 업데이트
     updateValueField: async(user_id, cumulative_value, value_yesterday_ago)=>{
-        const query = 'update "Retrospect" set cumulative_value=$1, value_yesterday_ago=$2 where user_id=$3';
+        const query = 'update "User" set cumulative_value=$1, value_yesterday_ago=$2 where user_id=$3';
         const values = [cumulative_value, value_yesterday_ago, user_id];
 
         await db.query(query, values)

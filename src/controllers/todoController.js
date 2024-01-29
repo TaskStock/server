@@ -159,7 +159,12 @@ module.exports = {
                 }else if(check===false){
                     changeAmount = calculate.changeLevelForEnd(todo.level, 0, true);
                 }
-                await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc);
+                const updated_value = await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc);
+                console.log(updated_value);
+                const u_start = updated_value.start;
+                const u_end = updated_value.end;
+                const percentage = (u_end-u_start)/u_start * 100;
+                await accountModel.updateValueField(user_id, u_end, percentage);
             }
 
         }catch(error){
