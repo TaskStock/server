@@ -185,5 +185,40 @@ module.exports = {
                 result: "alreadyAccepted"
             });
         } 
+    },
+    /* TODO:
+    {private : true or false
+    user_name (사용자 이름)
+    cumulative_value (현재 가치)
+    start_value (시작가) }
+    following_cnt
+    follower_cnt
+    pending
+    isFollowingMe
+    isFollowingYou
+    "values": [ { "value_id": 16, "date": "2024-01-03T15:45:27.160Z", "percentage": null, "start": 50000, "end": 50000, "low": 50000, "high": 50000, "combo": 0, "user_id": 75 }, { "value_id": 18, "date": "2024-01-03T15:47:25.330Z", "percentage": null, "start": 50000, "end": 50000, "low": 50000, "high": 50000, "combo": 0, "user_id": 75 } ] }}
+    "todos": [ { "todo_id": 535, "content": "content", "check": false, "date": "2024-01-11T21:04:00.000Z", "level": 1, "index": 1, "user_id": 122, "project_id": null }, { "todo_id": 536, "content": "content", "check": false, "date": "2024-01-11T21:04:00.000Z", "level": 1, "index": 2, "user_id": 122, "project_id": null } ]  
+    "projects": [ { "project_id": 9, "name": "project1", "public_range": “none”, "user_id": 126, "todo_count": 1, "retrospect_count": 2 }, { "project_id": 13, "name": "project1", "public_range": “none”, "user_id": 126, "todo_count": 0, "retrospect_count": 0 } ]
+     */
+    userDetail: async(req, res) => {
+        try {
+        const my_id = req.user.user_id;
+        const target_id = req.params.user_id;
+
+        [targetData, values, todos, projects] = await snsModel.userDetail(my_id, target_id)
+        return res.status(200).json({
+            result: "success",
+            targetData: targetData,
+            values: values,
+            todos: todos,
+            projects: projects
+        })
+        } catch (e) {
+            console.log(e)
+            return res.status(500).json({
+                result: "fail",
+                message: "서버 내부 오류"
+            })
+        }
     }
 }
