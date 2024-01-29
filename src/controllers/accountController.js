@@ -153,21 +153,11 @@ module.exports = {
             });
         }
     }, 
-    /*userData 형식 {
-        email: "",
-        userName: "",
-        userPicture: ""
-        isAgree: 1,
-        theme: "",
-        device_id: ""
-        strategy: ""
-    }
-    */
     //소셜 로그인
     loginSocial: async (req, res) => {
         const userData = req.body;
         
-        //이미 존재하는지 체크
+        //이미 존재하는지 체크 - 애플은 이메일
         existingUser = await accountModel.getUserByEmail(userData.email);
 
         if (existingUser === null) { //존재하지 않으면 회원가입
@@ -179,7 +169,7 @@ module.exports = {
 
             // refreshToken 처리
             const [refreshToken, refreshExp] = generateRefreshToken(registeredUser);
-            await accountModel.saveRefreshToken(registeredUser.user_id, refreshToken, userData.device_id); // refreshToken DB에 저장(decive_id가 PK)
+            await accountModel.saveRefreshToken(registeredUser.user_id, refreshToken, userData.device_id); 
 
             console.log("회원가입 성공");
 
@@ -195,7 +185,7 @@ module.exports = {
                 refreshExp: refreshExp,
                 strategy: userData.strategy
             });
-        } else if (userData.strategy !== 'local') { //존재하고, 이메일로 회원가입한 회원이 아니면
+        } else if (userData.strategy !== 'local') { //존재하고, 소셜 로그인으로 가입한 유저의 경우 로그인
             const userDevice = userData.device_id;
             existingUser.device_id = userDevice;
 
@@ -227,7 +217,7 @@ module.exports = {
     logout: async (req, res) => {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
-            const user_id = req.user.user_id; // passport를 통해 넘어온 객체는 req.user에 저장되어 있음 (req.body가 아님)
+            const user_id = req.user.user_id; 
             const userDevice = req.user.device_id;
             const deleteResult = await accountModel.deleteRefreshToken(user_id, userDevice);
             
