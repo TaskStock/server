@@ -43,8 +43,11 @@ passport.use(new JWTStrategy({
 },
     async (jwtPayload, done) => {
         try {
-            const userData = await accountModel.getUserById(jwtPayload.user_id); //반드시 검사해야함
-            userData[0].device_id = jwtPayload.device_id;
+            const userData = {
+                user_id: jwtPayload.user_id,
+                device_id: jwtPayload.device_id,
+                region: jwtPayload.region
+            }
             // console.log('userData:', userData)
             if (userData === null) {
                 return done(null, false, { message: '권한 없음' });

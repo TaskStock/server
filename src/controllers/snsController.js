@@ -185,5 +185,26 @@ module.exports = {
                 result: "alreadyAccepted"
             });
         } 
+    },
+    userDetail: async(req, res) => {
+        try {
+        const my_id = req.user.user_id;
+        const target_id = req.params.user_id;
+
+        const [targetData, values, todos, projects] = await snsModel.userDetail(my_id, target_id)
+        return res.status(200).json({
+            result: "success",
+            targetData: targetData,
+            values: values,
+            todos: todos,
+            projects: projects
+        })
+        } catch (e) {
+            console.log(e)
+            return res.status(500).json({
+                result: "fail",
+                message: "서버 내부 오류"
+            })
+        }
     }
 }

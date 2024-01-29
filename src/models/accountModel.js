@@ -60,6 +60,9 @@ module.exports = {
             let rows;      
             if (password === null) {    //소셜 로그인의 경우
                 const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
+                if (userPicture === null) {
+                    userPicture = defaultImage;
+                }
                 const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
                     .catch(e => {
                         console.error(e.stack);
@@ -145,7 +148,7 @@ module.exports = {
             return false;
         }
     },
-    getUserById: async(user_id) => { //user_id로 유저 전체 정보 가져오기
+    getUserById: async(user_id) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
         const query = `
         SELECT "User".*, "UserSetting".theme, "UserSetting".language 
         FROM "User" 

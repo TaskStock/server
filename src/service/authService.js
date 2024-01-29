@@ -6,7 +6,8 @@ module.exports = {
         const expiresIn = "1h";
         const user_id = userData.user_id;
         const device_id = userData.device_id;
-        const accessToken = jwt.sign({user_id, device_id}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
+        const region = userData.region;
+        const accessToken = jwt.sign({user_id, device_id, region}, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
         const accessExp = jwt.decode(accessToken).exp;
 
         return [accessToken, accessExp];
@@ -16,7 +17,8 @@ module.exports = {
         const expiresIn = "2y";
         const user_id = userData.user_id;
         const device_id = userData.device_id;
-        const refreshToken = jwt.sign({user_id, device_id}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
+        const region = userData.region;
+        const refreshToken = jwt.sign({user_id, device_id, region}, process.env.REFRESH_TOKEN_SECRET, { expiresIn });
         const refreshExp = jwt.decode(refreshToken).exp;
         
         return [refreshToken, refreshExp];

@@ -354,5 +354,44 @@ module.exports = {
             console.log(e.stack);
             return false;
         }
-    }
+    },
+    userDetail: async(my_id, target_id) => {
+        const userQuery = `
+        SELECT 
+            user_id AS user_id, 
+            image, 
+            user_name, 
+            cumulative_value, 
+            private, 
+            follower_count, 
+            following_count, 
+            introduce, 
+            CASE
+                WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
+                ELSE false
+            END AS "isFollowingMe",
+            CASE 
+                WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                ELSE false
+            END AS "isFollowingYou"
+        FROM "User" U
+        LEFT JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $1
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+        WHERE U.user_id = $1
+        `;
+        const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
+        const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
+        const projectQuery = 'SELECT * FROM "Project" WHERE user_id = $1 ORDER BY project_id';
+        try {
+            const {rows: targetRows} = await db.query(userQuery, [target_id]);
+            const {rows: valueRows} = await db.query(valueQuery, [target_id]);
+            const {rows: todoRows} = await db.query(todoQuery, [target_id]);
+            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
+
+            return [targetRows[0], valueRows, todoRows, projectRows];
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
+    },
 }
