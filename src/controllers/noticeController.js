@@ -1,4 +1,5 @@
 const noticeModel = require('../models/noticeModel');
+const noticeService = require('../service/noticeService');
 
 module.exports = {
     getAllNotice: async (req, res) => {
@@ -30,7 +31,8 @@ module.exports = {
                 message: "서버 내부 오류"
             });
         }
-    }, changeNoticeSetting: async (req, res) => {
+    }, 
+    changeNoticeSetting: async (req, res) => {
         try {
             const user_id = req.user.user_id;
             const isPushOn = req.body.isPushOn;
@@ -62,5 +64,29 @@ module.exports = {
                 message: "서버 내부 오류"
             });
         }
-    }
+    },
+    sendCustomerSuggestion: async(req, res) => {
+        try {
+            const user_id = req.user.user_id;
+            const content = req.body.content
+
+            await noticeModel.saveCustomerSuggestion(user_id, content);
+
+            const noticeData = {
+                type: 'customer.suggestion',
+                user_id: user_id,
+                constent: content
+            }
+            await noticeService.sendSlack(noticeData);
+            return res.status(200).json({
+                result: "success"
+            });
+
+        } catch (e) {
+            console.log('sendCustomerfeedback ERROR : ', e);
+            return res.status(500).json({
+                message: "서버 내부 오류"
+            });
+        }
+    } 
 };

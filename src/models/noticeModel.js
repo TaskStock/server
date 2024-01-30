@@ -62,6 +62,15 @@ module.exports = {
             console.log('saveRefreshToken ERROR : ', err);
             throw err;
         }
+    },
+    saveCustomerSuggestion: async (user_id, content) => {
+        const query = 'INSERT INTO "CustomerSuggestion" (user_id, content) VALUES ($1, $2)';
+        try {
+            await db.query(query, [user_id, content]);
+        } catch (err) {
+            console.log('saveCustomerSuggestion ERROR : ', err);
+            throw err;
+        }
     }
 }
 ;

@@ -1,6 +1,7 @@
 const noticeModel = require('../models/noticeModel.js');
 const accountModel = require('../models/accountModel.js');
 const admin = require('../config/FCMconfig.js');
+const slackClient = require('../config/slackConfig.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
@@ -68,5 +69,18 @@ module.exports = {
                 console.log('Error Sending message!!! : ', err)
             })
 
+    },
+    // TODO : 타입에 따라 슬랙 메세지 전송
+    sendSlack: async (noticeData) => {
+        let message = "";
+        if (noticeData.type === 'customer.suggestion') {
+            const user_name = await accountModel.getUserNameById(noticeData.user_id);
+            const content = noticeData.content;
+            message = `*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}`;
+        } 
+        await slackClient.chat.postMessage({
+            channel: '#test',
+            text: message
+        })
     }
 };
