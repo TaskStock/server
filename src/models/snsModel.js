@@ -363,7 +363,10 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            F2.pending,
+            CASE
+                WHEN F2.pending IS NOT NULL THEN F2.pending
+                ELSE false
+            END AS "pending",
             U.follower_count, 
             U.following_count, 
             U.introduce, 
