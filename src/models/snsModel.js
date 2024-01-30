@@ -363,6 +363,7 @@ module.exports = {
             user_name, 
             cumulative_value, 
             private, 
+            pending,
             follower_count, 
             following_count, 
             introduce, 
