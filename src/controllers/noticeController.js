@@ -33,7 +33,7 @@ module.exports = {
     }, changeNoticeSetting: async (req, res) => {
         try {
             const user_id = req.user.user_id;
-            const isPushOn = req.user.isPushOn;
+            const isPushOn = req.body.isPushOn;
             await noticeModel.changeNoticeSetting(user_id, isPushOn);
             return res.status(200).json({
                 result: "success",
