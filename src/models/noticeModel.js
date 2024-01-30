@@ -43,6 +43,25 @@ module.exports = {
             console.log('getNoticeById ERROR : ', err.stack);
             throw err;
     }
+    },
+    changeNoticeSetting: async (user_id, isPushOn) => {
+        try {
+            const query = 'UPDATE "UserSetting" SET is_push_on = $1 WHERE user_id = $2';
+            console.log('changeNoticeSetting : ', user_id, isPushOn);
+            await db.query(query, [isPushOn, user_id]);
+        } catch (err) {
+            console.log('changeNoticeSetting ERROR : ', err);
+            throw err;
+        }
+    },
+    saveRefreshToken: async (user_id, FCMToken) => {
+        const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, [FCMToken, user_id]);
+        } catch (err) {
+            console.log('saveRefreshToken ERROR : ', err);
+            throw err;
+        }
     }
 }
 ;

@@ -263,5 +263,24 @@ module.exports = {
                 throw e;
             });
     },
+    changeTheme: async(user_id, theme) => {
+        const query = 'UPDATE "UserSetting" SET theme = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, [theme, user_id])
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
+    },
+    getPasswordById: async(user_id) => {
+        const query = 'SELECT password FROM "User" WHERE user_id = $1';
+        try {
+            const {rows} = await db.query(query, [user_id])
+            return rows[0].password;
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
+    }
 }
 
