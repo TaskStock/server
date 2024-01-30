@@ -13,7 +13,7 @@ module.exports = {
     },
     getAllNotice: async (user_id) => {
         const query = `
-            SELECT content, type, info, is_read, created_time 
+            SELECT notice_id, content, type, info, is_read, created_time 
             FROM "Notice" 
             WHERE user_id = $1
             UNION ALL
@@ -64,7 +64,7 @@ module.exports = {
         }
     },
     saveCustomerSuggestion: async (user_id, content) => {
-        const query = 'INSERT INTO "CustomerSuggestion" (user_id, content) VALUES ($1, $2)';
+        const query = 'INSERT INTO "CustomerService" (user_id, content) VALUES ($1, $2)';
         try {
             await db.query(query, [user_id, content]);
         } catch (err) {

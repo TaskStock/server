@@ -75,7 +75,7 @@ module.exports = {
             const noticeData = {
                 type: 'customer.suggestion',
                 user_id: user_id,
-                constent: content
+                content: content
             }
             await noticeService.sendSlack(noticeData);
             return res.status(200).json({

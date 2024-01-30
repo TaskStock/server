@@ -79,7 +79,7 @@ module.exports = {
             message = `*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}`;
         } 
         await slackClient.chat.postMessage({
-            channel: '#test',
+            channel: '#고객의견',
             text: message
         })
     }
