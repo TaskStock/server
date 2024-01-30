@@ -280,10 +280,10 @@ module.exports = {
                             message: "refreshToken이 유효하지 않습니다."
                         });
                     } else {
-                        console.log("payload에 담긴 user_id:", payload.user_id)
-                        const userData = {user_id: payload.user_id}
-                        const [accessToken, accessExp] = generateAccessToken(userData)
-                        console.log("access token 재발급 성공.")
+                        console.log("payload에 담긴 user_id:", payload.user_id);
+                        const userData = {user_id: payload.user_id};
+                        const [accessToken, accessExp] = generateAccessToken(userData);
+                        console.log("access token 재발급 성공.");
                         return res.status(200).json({
                             result: "success",
                             message: "accessToken 재발급 성공",
