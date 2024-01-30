@@ -45,5 +45,22 @@ module.exports = {
                 message: "서버 내부 오류"
             });
         }
+    },
+    saveFCMToken: async(req, res) => {
+        try {
+            const FCMToken = req.body.FCMToken;
+            const user_id = req.user.user_id;
+
+            await noticeModel.saveFCMToken(user_id, FCMToken);
+            return res.status(200).json({
+                result: "success",
+                message: "FCM 토큰 저장 완료"
+            }); 
+    } catch (e) {
+            console.log('saveFCMToken ERROR : ', e);
+            return res.status(500).json({
+                message: "서버 내부 오류"
+            });
+        }
     }
 };

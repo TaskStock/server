@@ -53,6 +53,15 @@ module.exports = {
             console.log('changeNoticeSetting ERROR : ', err);
             throw err;
         }
+    },
+    saveRefreshToken: async (user_id, FCMToken) => {
+        const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, [FCMToken, user_id]);
+        } catch (err) {
+            console.log('saveRefreshToken ERROR : ', err);
+            throw err;
+        }
     }
 }
 ;
