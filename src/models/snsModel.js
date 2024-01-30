@@ -388,7 +388,7 @@ module.exports = {
         const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
         const projectQuery = 'SELECT * FROM "Project" WHERE user_id = $1 ORDER BY project_id';
         try {
-            const {rows: targetRows} = await db.query(userQuery, [my_id, target_id]);
+            const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
             const {rows: todoRows} = await db.query(todoQuery, [target_id]);
             const {rows: projectRows} = await db.query(projectQuery, [target_id]);
