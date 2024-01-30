@@ -257,7 +257,7 @@ module.exports = {
             const decoded = jwt.decode(refreshToken);
             const user_id = decoded.user_id;
             const device_id = decoded.device_id;
-            
+
             const certified = await accountModel.checkRefreshToken(user_id, refreshToken, device_id);
             if (certified === 'noToken') {
                 console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
@@ -380,7 +380,9 @@ module.exports = {
     confirmPassword: async (req, res) => {
         try {
             const inputPW = req.body.inputPW;
-            const savedPW = req.user.password;
+            
+            const user_id = req.user.user_id;
+            const savedPW = await accountModel.getPasswordById(user_id);
 
             if (await bcrypt.compare(inputPW, savedPW)) {
                 console.log("비밀번호 확인 통과")

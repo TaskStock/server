@@ -271,6 +271,16 @@ module.exports = {
             console.log(e.stack);
             throw e;
         }
+    },
+    getPasswordById: async(user_id) => {
+        const query = 'SELECT password FROM "User" WHERE user_id = $1';
+        try {
+            const {rows} = await db.query(query, [user_id])
+            return rows[0].password;
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
     }
 }
 

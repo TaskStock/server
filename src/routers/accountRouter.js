@@ -30,8 +30,8 @@ router.post('/login/social', accountController.loginSocial);
 //계정 정보 관련
 router.post('/sendMail/password', accountController.sendMailForFindPassword);
 router.post('/change/password', accountController.changePassowrd);
-router.post('/confirm/password', passport.authenticate('jwt', { session: false }), accountController.confirmPassword);
-router.delete('/unregister', passport.authenticate('jwt', { session: false }), accountController.unregister);
+router.post('/setting/confirm/password', passport.authenticate('jwt', { session: false }), accountController.confirmPassword);
+router.delete('/setting/unregister', passport.authenticate('jwt', { session: false }), accountController.unregister);
 router.patch('/setting/theme', passport.authenticate('jwt', { session: false }), accountController.changeTheme);
 
 
