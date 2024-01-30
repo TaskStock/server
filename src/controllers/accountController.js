@@ -93,7 +93,6 @@ module.exports = {
             const registerData = req.body; 
             const userData = await accountModel.register(registerData);
             userData.device_id = userDevice;
-
             //accessToken 처리
             const [accessToken, accessExp] = generateAccessToken(userData);
 
@@ -132,7 +131,7 @@ module.exports = {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
             const userDevice = req.body.device_id;
             userData.device_id = userDevice;
-
+            
             const [accessToken, accessExp] = generateAccessToken(userData);
             const [refreshToken, refreshExp] = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(userData.user_id, refreshToken, userDevice);
@@ -164,6 +163,7 @@ module.exports = {
             userData.password = null;
             const registeredUser = await accountModel.register(userData);
             registeredUser.device_id = userData.device_id;
+            
             //accessToken 처리
             const [accessToken, accessExp] = generateAccessToken(registeredUser);
 
@@ -280,8 +280,7 @@ module.exports = {
                             message: "refreshToken이 유효하지 않습니다."
                         });
                     } else {
-                        console.log("payload에 담긴 user_id:", payload.user_id);
-                        const userData = {user_id: payload.user_id};
+                        const userData = {user_id: payload.user_id , device_id: payload.device_id, region: payload.region};
                         const [accessToken, accessExp] = generateAccessToken(userData);
                         console.log("access token 재발급 성공.");
                         return res.status(200).json({

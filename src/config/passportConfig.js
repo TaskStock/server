@@ -50,12 +50,9 @@ passport.use(new JWTStrategy({
                 device_id: jwtPayload.device_id,
                 region: jwtPayload.region
             }
-            console.log('userData:', userData)
-            if (userData === null) {
-                return done(null, false, { message: '권한 없음' });
-            } else {
-                return done(null, userData);
-            }
+            console.log('passport userData:', userData)
+            return done(null, userData);
+
         } catch (error) {
             console.log(error);
             return done(error);
