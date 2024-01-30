@@ -43,6 +43,15 @@ module.exports = {
             console.log('getNoticeById ERROR : ', err.stack);
             throw err;
     }
+    },
+    changeNoticeSetting: async (user_id, isPushOn) => {
+        try {
+            const query = 'UPDATE "UserSetting" SET isPushOn = $1 WHERE user_id = $2';
+            await db.query(query, [isPushOn, user_id]);
+        } catch (err) {
+            console.log('changeNoticeSetting ERROR : ', err);
+            throw err;
+        }
     }
 }
 ;

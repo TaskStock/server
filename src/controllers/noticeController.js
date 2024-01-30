@@ -30,5 +30,20 @@ module.exports = {
                 message: "서버 내부 오류"
             });
         }
+    }, changeNoticeSetting: async (req, res) => {
+        try {
+            const user_id = req.user.user_id;
+            const isPushOn = req.user.isPushOn;
+            await noticeModel.changeNoticeSetting(user_id, isPushOn);
+            return res.status(200).json({
+                result: "success",
+                message: "알림 설정 변경 완료"
+            });
+        } catch (e) {
+            console.log('changeNoticeSetting ERROR : ', e);
+            return res.status(500).json({
+                message: "서버 내부 오류"
+            });
+        }
     }
 };
