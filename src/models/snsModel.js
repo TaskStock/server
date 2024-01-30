@@ -358,16 +358,16 @@ module.exports = {
     userDetail: async(my_id, target_id) => {
         const userQuery = `
         SELECT 
-            user_id AS user_id, 
-            image, 
-            user_name, 
-            cumulative_value, 
-            private, 
-            pending,
-            follower_count, 
-            following_count, 
-            introduce, 
-            strategy,
+            U.user_id, 
+            U.image, 
+            U.user_name, 
+            U.cumulative_value, 
+            U.private, 
+            F2.pending,
+            U.follower_count, 
+            U.following_count, 
+            U.introduce, 
+            U.strategy,
             CASE
                 WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                 ELSE false
