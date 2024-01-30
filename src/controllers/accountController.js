@@ -246,10 +246,6 @@ module.exports = {
     refresh: async (req, res) => {
         try {
             const refreshToken = req.body.refreshToken;
-            const decoded = jwt.decode(refreshToken);
-            const user_id = decoded.user_id;
-            const device_id = decoded.device_id;
-
             
             if (refreshToken === null) {
                 console.log("refreshToken 재발급 실패.")
@@ -258,6 +254,10 @@ module.exports = {
                     message: "refreshToken이 없습니다." 
                 });
             }
+            const decoded = jwt.decode(refreshToken);
+            const user_id = decoded.user_id;
+            const device_id = decoded.device_id;
+            
             const certified = await accountModel.checkRefreshToken(user_id, refreshToken, device_id);
             if (certified === 'noToken') {
                 console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
@@ -427,6 +427,24 @@ module.exports = {
             res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
+            });
+        }
+    },
+    changeTheme: async (req, res) => {
+        try {
+            const theme = req.body.theme;
+            const user_id = req.user.user_id;
+
+            await accountModel.changeTheme(user_id, theme);
+            return res.status(200).json({
+                result: "success",
+                message: "테마 변경 성공"
+            }); 
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ 
+                result: "error", 
+                message: "서버 내부 오류"
             });
         }
     }

@@ -263,5 +263,14 @@ module.exports = {
                 throw e;
             });
     },
+    changeTheme: async(user_id, theme) => {
+        const query = 'UPDATE "UserSetting" SET theme = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, [theme, user_id])
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
+    }
 }
 

@@ -32,6 +32,7 @@ router.post('/sendMail/password', accountController.sendMailForFindPassword);
 router.post('/change/password', accountController.changePassowrd);
 router.post('/confirm/password', passport.authenticate('jwt', { session: false }), accountController.confirmPassword);
 router.delete('/unregister', passport.authenticate('jwt', { session: false }), accountController.unregister);
+router.patch('/setting/theme', passport.authenticate('jwt', { session: false }), accountController.changeTheme);
 
 
 module.exports = router;
