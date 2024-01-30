@@ -357,38 +357,38 @@ module.exports = {
     },
     userDetail: async(my_id, target_id) => {
         const userQuery = `
-        SELECT 
-            U.user_id, 
-            U.image, 
-            U.user_name, 
-            U.cumulative_value, 
-            U.private, 
+        SELECT
+            U.user_id,
+            U.image,
+            U.user_name,
+            U.cumulative_value,
+            U.private,
             CASE
                 WHEN F2.pending IS NOT NULL THEN F2.pending
                 ELSE false
             END AS "pending",
-            U.follower_count, 
-            U.following_count, 
-            U.introduce, 
+            U.follower_count,
+            U.following_count,
+            U.introduce,
             U.strategy,
             CASE
                 WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                 ELSE false
-            END AS "isFollowingMe",
-            CASE 
+            END AS "isFollowingYou",
+            CASE
                 WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
                 ELSE false
-            END AS "isFollowingYou"
+            END AS "isFollowingMe"
         FROM "User" U
-        LEFT JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $1
-        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+        LEFT JOIN "FollowMap" F1 ON (U.user_id = F1.following_id AND F1.follower_id = $2)
+        LEFT JOIN "FollowMap" F2 ON (U.user_id = F2.follower_id AND F2.following_id = $2)
         WHERE U.user_id = $1
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
         const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
         const projectQuery = 'SELECT * FROM "Project" WHERE user_id = $1 ORDER BY project_id';
         try {
-            const {rows: targetRows} = await db.query(userQuery, [target_id]);
+            const {rows: targetRows} = await db.query(userQuery, [my_id, target_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
             const {rows: todoRows} = await db.query(todoQuery, [target_id]);
             const {rows: projectRows} = await db.query(projectQuery, [target_id]);
