@@ -22,6 +22,8 @@ passport.use(new LocalStrategy({
             const userData = await accountModel.getUserByEmail(email);
             if (userData === null) {
                 return done(null, false, { message: '가입 정보가 없습니다.' }); //done(error, user, info)
+            } else if (userData.strategy != 'local') {
+                return done(null, false, { message: '다른 방식으로 가입된 이메일입니다.' }); //소셜 로그인으로 가입된 이메일일 경우
             }
             const result = await bcrypt.compare(password, userData.password);
             if (result) {

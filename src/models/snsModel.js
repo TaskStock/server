@@ -366,6 +366,7 @@ module.exports = {
             follower_count, 
             following_count, 
             introduce, 
+            strategy,
             CASE
                 WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                 ELSE false
