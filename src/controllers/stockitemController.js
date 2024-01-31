@@ -1,11 +1,17 @@
 const stockitemModel = require('../models/stockitemModel.js');
+const sivalueModel = require('../models/sivalueModel.js');
+
+const transdate = require('../service/transdateService.js');
 
 module.exports = {
     newItem: async(req, res, next) =>{
         const {name, level, region} = req.body;
         
         try{
-            await stockitemModel.insertStockitem(name, level, region);
+            const stockitem_id = await stockitemModel.insertStockitem(name, level, region);
+
+            const sttime = transdate.getSettlementTimeInUTC(region);
+            await sivalueModel.createSivalue(stockitem_id, sttime);
         }catch(error){
             next(error);
         }
