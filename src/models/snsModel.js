@@ -324,7 +324,7 @@ module.exports = {
             return false;
         }
     },
-    acceptPending: async(follower_id, following_id) => {
+    acceptPending: async(follower_id, following_id, notice_id) => {
         const pendingQuery = 'UPDATE "FollowMap" SET pending = false WHERE follower_id = $1 AND following_id = $2';
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
