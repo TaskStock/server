@@ -27,7 +27,7 @@ module.exports = {
                 target_id: predata.follower_id, // 팔로우 요청한 사람 ID
                 isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
                 isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
-                pending: predata.followerPending, // 팔로우 당한 사람 입장 pending
+                pending: predata.followingPending, // 팔로우 당한 사람 입장 pending
                 displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
                 private: predata.private // 팔로우 한 사람 입장 private
             });
