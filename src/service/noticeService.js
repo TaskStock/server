@@ -24,7 +24,7 @@ module.exports = {
                 displayAccept = true;
             }
             noticeData.info = JSON.stringify({
-                target_id: follower_id, // 팔로우 요청한 사람 ID
+                target_id: predata.follower_id, // 팔로우 요청한 사람 ID
                 isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
                 isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
                 pending: predata.pending, // 팔로우 당한 사람 입장 pending

@@ -127,10 +127,10 @@ module.exports = {
             };
             await processNotice(predata);
 
-            return [true, pending, isFollowingMe, isFollowingYou];
+            return true;
         } catch (e) {
             console.log(e.stack);
-            return [false];
+            return false;
         }
     },
     unfollowUser: async(follower_id, unfollowing_id) => {
