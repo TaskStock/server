@@ -188,7 +188,8 @@ module.exports = {
                 U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
                 CASE
                     WHEN F2.pending is NOT NULL THEN F2.pending
-                    ELSE false,
+                    ELSE false
+                END AS "pending",
                 CASE 
                     WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
