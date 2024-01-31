@@ -90,6 +90,7 @@ module.exports = {
         `;
         try {
             if (notice_id != undefined) {
+                console.log('notice_id 있는 곳')
                 const noticeQuery = `
                 UPDATE "Notice"
                 SET info = jsonb_set(
@@ -105,6 +106,7 @@ module.exports = {
                 `
                 await db.query(noticeQuery, [notice_id])
             } else {
+                console.log('notice_id 없는 곳 탐')
                 const noticeQuery2 = `
                 UPDATE "Notice"
                 SET info = jsonb_set(
@@ -121,7 +123,7 @@ module.exports = {
                     FROM "Notice" N
                     JOIN "User" U
                     ON (N.user_id = U.user_id)
-                    WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
+                    WHERE (N.user_id = $1 AND N.info ->> 'target_id' = $2)
                 );
                 `
                 await db.query(noticeQuery2, [following_id, follower_id])
