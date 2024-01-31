@@ -185,7 +185,10 @@ module.exports = {
         if (searchScope == 'global') { //전체
             const query = `
             SELECT  
-                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private, F1.pending,
+                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                CASE
+                    WHEN F2.pending is NOT NULL THEN F2.pending
+                    ELSE false,
                 CASE 
                     WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
@@ -449,7 +452,7 @@ module.exports = {
             U.cumulative_value,
             U.private,
             CASE
-                WHEN F2.pending IS NOT NULL THEN F2.pending
+                WHEN F1.pending IS NOT NULL THEN F1.pending
                 ELSE false
             END AS "pending",
             U.follower_count,
