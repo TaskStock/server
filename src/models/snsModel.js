@@ -272,7 +272,7 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            FM.pending,
+            F2.pending,
             U.strategy,
             CASE
                 WHEN FM.pending = false THEN true
@@ -295,7 +295,7 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            FM.pending,
+            F2.pending,
             U.strategy,
             CASE
                 WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
