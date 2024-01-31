@@ -13,7 +13,7 @@ module.exports = {
     },
     getAllNotice: async (user_id) => {
         const query = `
-            SELECT content, type, info, is_read, created_time 
+            SELECT notice_id, content, type, info, is_read, created_time 
             FROM "Notice" 
             WHERE user_id = $1
             UNION ALL
