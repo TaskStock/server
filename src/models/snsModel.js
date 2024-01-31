@@ -75,7 +75,7 @@ module.exports = {
         )
         SELECT i.pending, U.private
         FROM inserted i
-        JOIN "User" U ON i.following_id = U.user_id;
+        JOIN "User" U ON i.following_id = U.user_id
         WHERE U.user_id = $2
         `;
         try {   
