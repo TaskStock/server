@@ -102,10 +102,9 @@ module.exports = {
                                     (info ->> 'private')::jsonb
                                 ), 
                                 '{isFollowingYou}', 
-                                (NOT (info ->> 'private')::boolean)::jsonb
+                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
                             )
-                WHERE notice_id = $1;
-                `
+                WHERE notice_id = $1;                `
                 await db.query(noticeQuery, [notice_id])
             } 
 
