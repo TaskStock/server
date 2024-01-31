@@ -65,7 +65,7 @@ module.exports = {
         */
         let isFollowingMe;
         let isFollowingYou;
-        let followingPrivate;
+        let followerPrivate;
         let followingPending;
         
         const insertQuery = `
@@ -91,7 +91,7 @@ module.exports = {
         try {   
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
             const followerPending = insertRows[0].pending;
-            followingPrivate = insertRows[0].private;
+            followerPrivate = insertRows[0].private;
             if (!followerPending) { // 상대가 공개 계정(=요청 대기 중이 아닐 때)
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
@@ -124,8 +124,9 @@ module.exports = {
                 type: 'sns',
                 isFollowingYou: isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
                 isFollowingMe: isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
-                pending: followingPending, // 팔로우 당한 사람 입장 pending
-                private: followingPrivate // 팔로우 한 사람 입장 private
+                followingPending: followingPending, // 팔로우 당한 사람 입장 조회 pending
+                followerPending: followerPending,
+                private: followerPrivate // 팔로우 한 사람 입장 private
             };
             await processNotice(predata);
 

@@ -16,7 +16,7 @@ module.exports = {
         
         if (noticeData.type === 'sns') {
             follower_name = await accountModel.getUserNameById(predata.follower_id);
-            if (predata.pending === false) { // 상대가 공개 계정일 때
+            if (predata.followerPending === false) { // 팔로우 당한 사람이 공개 계정일 때
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
                 displayAccept = false;
             } else { // 상대가 비공개 계정일 때
@@ -27,7 +27,7 @@ module.exports = {
                 target_id: predata.follower_id, // 팔로우 요청한 사람 ID
                 isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
                 isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
-                pending: predata.pending, // 팔로우 당한 사람 입장 pending
+                pending: predata.followingPending, // 팔로우 당한 사람 입장 pending
                 displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
                 private: predata.private // 팔로우 한 사람 입장 private
             });
