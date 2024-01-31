@@ -13,7 +13,7 @@ module.exports = {
     },
     getAllNotice: async (user_id) => {
         const query = `
-            SELECT notice_id, content, type, info, is_read, created_time 
+            SELECT content, type, info, is_read, created_time 
             FROM "Notice" 
             WHERE user_id = $1
             UNION ALL
@@ -28,8 +28,8 @@ module.exports = {
             return noticeList;
         }
         catch (err) {
-            console.log('getAllNotice ERROR : ', err.stack);
-            throw err;
+            // console.log('getAllNotice ERROR : ', err.stack);
+            throw(err);
         }
     },
     getNoticeById: async (notice_id) => {

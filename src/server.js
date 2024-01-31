@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const passport = require('../src/config/passportConfig.js');
 const cors = require('cors');
+const { sendSlack } = require('./service/noticeService.js');
 
 require("dotenv").config();
 
@@ -65,11 +66,26 @@ app.use("/notice", passport.authenticate('jwt', { session: false }), noticeRoute
 app.use("/retrospect", passport.authenticate('jwt', { session: false }), retrospectRouter);
 
 // 오류 처리 미들웨어
-app.use((err, req, res, next) => {
+app.use(async (err, req, res, next) => {
+    console.log('오류처리 미들웨어 호출')
+    // MODEL - throw(err) -> CONTROLLER - next(err) -> ERROR MIDDLEWARE
+    // 슬랙 알림 - 리팩토링 후 배포 버전에서만 사용
+    // err.type = 'error';
+    // await sendSlack(err);
+    
+    // 로그 기록 - 배포 버전에선 삭제
+    console.error(err.stack);    
+    
     res.status(err.status || 500);
 
-    console.error(err.stack); // 로그 기록
-    res.send('오류 발생: ' + err.message);
+    // 클라이언트에 전송 - 리팩토링 전에만 사용
+    res.send(err.message); 
+
+    // 클라이언트에 전송 - 리팩토링 후 배포 버전에서만 사용
+    // res.json({
+    //     result: "error",
+    //     message: err.message
+    // });
 });
 
 // 스케쥴러

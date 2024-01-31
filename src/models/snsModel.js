@@ -102,7 +102,7 @@ module.exports = {
             const predata = {
                 user_id: following_id,
                 follower_id: follower_id,
-                type: 'sns.follow',
+                type: 'sns',
                 isFollowingYou: isFollowingYou,
                 isFollowingMe: isFollowingMe,
                 pending: pending
@@ -316,7 +316,7 @@ module.exports = {
             const predata = {
                 user_id: follower_id,
                 following_id: following_id,
-                type: 'sns.accept'
+                type: 'general'
             };
             await processNotice(predata);
 

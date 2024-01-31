@@ -2,7 +2,7 @@ const noticeModel = require('../models/noticeModel');
 const noticeService = require('../service/noticeService');
 
 module.exports = {
-    getAllNotice: async (req, res) => {
+    getAllNotice: async (req, res, next) => {
         try {
             const user_id = req.user.user_id;
             console.log('user_id : ', user_id);
@@ -11,10 +11,12 @@ module.exports = {
                 noticeList: noticeList
         });
         } catch (err) {
-            console.log('getAllNotice ERROR : ', err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+            // console.log('getAllNotice ERROR : ', err);
+            err.name = 'getAllNotice ERROR'; // err에 name객체 있음
+            next(err);
+            // return res.status(500).json({
+            //     message: "서버 내부 오류"
+            // });
         }
     },
     //운영진 공지사항 읽어올 때만 사용

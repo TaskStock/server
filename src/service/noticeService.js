@@ -72,21 +72,36 @@ module.exports = {
     },
     // TODO : 타입에 따라 슬랙 메세지 전송
     sendSlack: async (noticeData) => {
-        let message = "";
-        if (noticeData.type === 'customer.suggestion') {
-            const user_name = await accountModel.getUserNameById(noticeData.user_id);
-            const content = noticeData.content;
-            message = `*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}`;
+        try {
+            let message = "";
+            if (noticeData.type === 'customer.suggestion') {
+                const user_name = await accountModel.getUserNameById(noticeData.user_id);
+                const content = noticeData.content;
+                message = `
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}\n\nuser_id = ${noticeData.user_id}
+                `;
 
-            await slackClient.chat.postMessage({
-                channel: '#고객의견',
-                text: message
-            })
-            return
+                await slackClient.chat.postMessage({
+                    channel: '#고객의견',
+                    text: message
+                })
+                return
+            } 
+            if (noticeData.type === 'error') {
+                const errorData = noticeData;
+                console.log("sendSlack errorData: ", errorData)
+                message = `
+                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n===STACK TRACE===\n${errorData.stack}
+                `;
+                await slackClient.chat.postMessage({
+                    channel: '#error',
+                    text: message
+                });
+                return
+            }
+        } catch (err) {
+            console.log('sendSlack ERROR : ', err);
+            next(err)
         } 
-
-        if (noticeData.type === 'error') {
-            // const message
-        }
-    } 
+    }
 };
