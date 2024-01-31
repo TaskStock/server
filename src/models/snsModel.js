@@ -56,24 +56,33 @@ module.exports = {
             console.log('자기 자신을 팔로우할 수 없습니다.');
             return false;
         }
+        // TODO : 상대 계정의 private 여부를 확인
         const query = `
-        INSERT INTO "FollowMap" (follower_id, following_id, pending)
-        SELECT
-            $1,
-            $2,
-            CASE
-                WHEN private = false THEN false
-                ELSE true
-            END
-        FROM
-            "User" U
-        WHERE
-            user_id = $2
-        RETURNING *
+        WITH inserted AS (
+            INSERT INTO "FollowMap" (follower_id, following_id, pending)
+            SELECT
+                $1,
+                $2,
+                CASE
+                    WHEN U.private = false THEN false
+                    ELSE true
+                END
+            FROM
+                "User" U
+            WHERE
+                U.user_id = $2
+            RETURNING follower_id, following_id, pending
+        )
+        SELECT i.pending, U.private
+        FROM inserted i
+        JOIN "User" U ON i.following_id = U.user_id;
+        WHERE U.user_id = $2
         `;
         try {   
             const {rows} = await db.query(query, [follower_id, following_id]);
             const pending = rows[0].pending;
+            const private = rows[0].private;
+
             if (!pending) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
@@ -84,11 +93,11 @@ module.exports = {
                 isFollowingYou = false;
             }
             
-            // 상대도 나를 팔로우하고 있는지, 상대의 private은 뭔지 확인
+            // 상대도 나를 팔로우하고 있는지 확인
             try {
-            const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
+            const checkQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
-            if (checkRows.length != 0 && pending == false) {
+            if (checkRows.length != 0 && rows[0].pending == false) {
                 isFollowingMe = true;
             } else {
                 isFollowingMe = false;
@@ -105,7 +114,8 @@ module.exports = {
                 type: 'sns',
                 isFollowingYou: isFollowingYou,
                 isFollowingMe: isFollowingMe,
-                pending: pending
+                pending: pending,
+                private: private
             };
             await processNotice(predata);
 

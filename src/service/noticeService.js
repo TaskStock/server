@@ -28,7 +28,8 @@ module.exports = {
                 isFollowingMe: predata.isFollowingMe,
                 isFollowingYou: predata.isFollowingYou,
                 pending: predata.pending,
-                displayAccept: displayAccept
+                displayAccept: displayAccept,
+                private: predata.private
             });
         }
 
@@ -39,7 +40,7 @@ module.exports = {
                 target_id: predata.following_id
             });
         }
-
+        // 알림 DB에 추가
         await noticeModel.createNotice(noticeData);
     },
     // TODO : FCM 푸시 알림 전송
