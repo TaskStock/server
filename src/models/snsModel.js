@@ -331,9 +331,9 @@ module.exports = {
         
         const noticeQuery = `
         UPDATE "Notice" 
-        SET info.isFollowingMe = true, 
-            info.displayAccept = false 
-        WHERE notice_id = $1`
+        SET info = jsonb_set(jsonb_set(info, '{isFollowingMe}', 'true'), '{displayAccept}', 'false')
+        WHERE notice_id = $1;
+        `
         try {
             await db.query(pendingQuery, [follower_id, following_id]);
             await db.query(followerCountQuery, [following_id]);
