@@ -51,11 +51,14 @@ module.exports = {
         }
         
     },
-    followUser: async(follower_id, following_id) => {
+    followUser: async(follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
             console.log('자기 자신을 팔로우할 수 없습니다.');
             return false;
         }
+        //pending이 private과 같아져야 함, isFollowingYou은 private의 반대
+        let noticeQuery;
+
         /*
             isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
             isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
@@ -88,7 +91,24 @@ module.exports = {
         FROM inserted i
         JOIN "User" U ON i.follower_id = U.user_id;
         `;
-        try {   
+        try {
+            if (notice_id != undefined) {
+                noticeQuery = `
+                UPDATE "Notice"
+                SET info = jsonb_set(
+                                jsonb_set(
+                                    info, 
+                                    '{pending}', 
+                                    (info ->> 'private')::jsonb
+                                ), 
+                                '{isFollowingYou}', 
+                                (NOT (info ->> 'private')::boolean)::jsonb
+                            )
+                WHERE notice_id = $1;
+                `
+                await db.query(noticeQuery, [notice_id])
+            } 
+
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
             const followerPending = insertRows[0].pending;
             followerPrivate = insertRows[0].private;
@@ -136,14 +156,24 @@ module.exports = {
             return false;
         }
     },
-    unfollowUser: async(follower_id, unfollowing_id) => {
+    unfollowUser: async(follower_id, unfollowing_id, notice_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE Follower_id = $1 AND Following_id = $2';
         const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id = $1';
         const updateQuery2 = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id = $1';
+
         try {
             await db.query(query, [follower_id, unfollowing_id]);
             await db.query(updateQuery1, [unfollowing_id]) //await로 비동기 연산이 끝날 때까지 기다려줘야 함(LOCK 방지)
             await db.query(updateQuery2, [follower_id]) 
+            if (notice_id != undefined) {
+                const noticeQuery = `
+                UPDATE "Notice"
+                SET info = info || {"isFollowingYou" : false}
+                where notice_id = $1
+                `
+                await db.query(noticeQuery, [notice_id])
+            }
+
             return true;
         } catch (e) {
             console.log(e.stack);
@@ -331,7 +361,7 @@ module.exports = {
         
         const noticeQuery = `
         UPDATE "Notice" 
-        SET info = jsonb_set(jsonb_set(info, '{isFollowingMe}', 'true'), '{displayAccept}', 'false')
+        SET info = info || '{"isFollowingMe": true, "displayAccept": false}'
         WHERE notice_id = $1;
         `
         try {
@@ -365,18 +395,46 @@ module.exports = {
         }
     },
     //팔로우 요청 취소
-    cancelFollow: async(follower_id, following_id) => {
+    cancelFollow: async(follower_id, following_id, notice_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2 RETURNING pending';
         try {
             const {rows} = await db.query(query, [follower_id, following_id]);
+            
             if (rows[0].pending == false) {
                 console.log('이미 팔로우 요청이 수락된 상태입니다.');
                 rollbackQuery = 'INSERT INTO "FollowMap" (follower_id, following_id, pending) VALUES ($1, $2, false)';
                 await db.query(rollbackQuery, [follower_id, following_id]);
                 return 'alreadyAccepted'
             }
+            
+            if (notice_id !== undefined) {
+                // 팔로우 요청한 사람 알림 수정
+                const followerNoticeQuery = `
+                UPDATE "Notice"
+                SET info = info || {"pending" : false, "isFollowingYou" : false}
+                WHERE notice_id = $1
+                `
+                await db.query(followerNoticeQuery, [notice_id])
+                // 팔로우 요청 받은 사람 알림 삭제
+                const followingNoticeQuery = `
+                DELETE FROM "Notice" 
+                WHERE notice_id IN (
+                    SELECT N.notice_id
+                    FROM "Notice" N
+                    JOIN "User" U
+                    ON (N.user_id = U.user_id)
+                    WHERE U.user_id = $1 AND N.info ->> 'target_id' = $2
+                )
+                `
+                await db.query(followingNoticeQuery, [notice_id, follower_id])
+            }
+            
+
+
+
             console.log('팔로우 요청 취소 성공')
             return true;
+
         } catch (e) {
             console.log('팔로우 요청 취소 실패 - DB에 없는 레코드를 삭제하려고 했을 수 있음')
             console.log(e.stack);

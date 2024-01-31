@@ -34,7 +34,9 @@ module.exports = {
     followUser: async(req, res) => {
         const follower_id = req.user.user_id;
         const following_id = req.body.following_id;
-        const followResult = await snsModel.followUser(follower_id, following_id);
+        const notice_id = req.body.notice_id
+        
+        const followResult = await snsModel.followUser(follower_id, following_id, notice_id);
 
         if (followResult) {
             res.status(200).json({
@@ -46,10 +48,10 @@ module.exports = {
             });
         }
     },
-    unfollowUser: async(req, res) => {
+    unfollowUser: async(req, res, notice_id) => {
         const follower_id = req.user.user_id;
         const unfollowing_id = req.body.unfollowing_id;
-        const unfollowResult = await snsModel.unfollowUser(follower_id, unfollowing_id);
+        const unfollowResult = await snsModel.unfollowUser(follower_id, unfollowing_id, notice_id);
 
         if (unfollowResult) {
             res.status(200).json({
@@ -168,7 +170,8 @@ module.exports = {
     cancelFollow: async(req, res) => {
         const follower_id = req.user.user_id;
         const following_id = req.body.following_id;
-        const cancelResult = await snsModel.cancelFollow(follower_id, following_id);
+        const notice_id = req.body.notice_id;
+        const cancelResult = await snsModel.cancelFollow(follower_id, following_id, notice_id);
         
         if (cancelResult == true) {
             return res.status(200).json({
