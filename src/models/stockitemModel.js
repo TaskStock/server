@@ -2,18 +2,20 @@ const db = require('../config/db.js');
 
 module.exports = {
     insertStockitem: async(name, level, region)=>{
-        const query = 'insert into "Stockitem" (name, level, region) VALUES ($1, $2, $3)';
+        const query = 'insert into "Stockitem" (name, level, region) VALUES ($1, $2, $3) returning stockitem_id';
         const values = [name, level, region];
 
-        await db.query(query, values)
+        const stockitem_id = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows[0]);
+                return res.rows[0].stockitem_id;
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
+        return stockitem_id;
     },
     updateStockitem: async(stockitem_id, name, level)=>{
         const query = 'update "Stockitem" set name=$1, level=$2 where stockitem_id=$3';

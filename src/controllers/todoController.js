@@ -4,7 +4,6 @@ const accountModel = require('../models/accountModel.js');
 
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
-const calculateService = require('../service/calculateService.js');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
@@ -123,7 +122,7 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, level, true);
-                        const percentage = calculateService.rateOfIncrease(start, end);
+                        const percentage = calculate.rateOfIncrease(start, end);
                         await accountModel.updateValueField(user_id, end, percentage);
                     }
     
@@ -163,7 +162,7 @@ module.exports = {
                 const updated_value = await valueModel.updateValueBecauseTodoComplete(user_id, changeAmount, resultUtc);
                 const u_start = updated_value.start;
                 const u_end = updated_value.end;
-                const percentage = calculateService.rateOfIncrease(u_start, u_end);
+                const percentage = calculate.rateOfIncrease(u_start, u_end);
                 await accountModel.updateValueField(user_id, u_end, percentage);
             }
 
@@ -206,7 +205,7 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, 0, true);
-                        const percentage = calculateService.rateOfIncrease(start, end);
+                        const percentage = calculate.rateOfIncrease(start, end);
                         await accountModel.updateValueField(user_id, end, percentage);
                     }
     
