@@ -65,7 +65,7 @@ app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter)
 app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
 app.use("/notice", passport.authenticate('jwt', { session: false }), noticeRouter);
 app.use("/retrospect", passport.authenticate('jwt', { session: false }), retrospectRouter);
-app.use("/stockitem", passport.authenticate('jwt', { session: false }), stockitemRouter);
+app.use("/stockitem", stockitemRouter);
 app.use("/sivalue", passport.authenticate('jwt', { session: false }), sivalueRouter);
 
 // 오류 처리 미들웨어
