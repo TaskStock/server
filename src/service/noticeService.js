@@ -7,40 +7,42 @@ module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
     processNotice: async (predata) => {
         let noticeData = {
-            user_id: predata.user_id,
-            content: '',
-            type: predata.type,
-            info: ''
+            user_id: predata.user_id, // 알림을 받을 사람 ID
+            content: '', // 알림 내용
+            type: predata.type, // 알림 타입
+            info: '' // 알림 터치 등 동작 구현을 위한 추가 정보
         };
         let displayAccept;
         
-        if (predata.type === 'sns') {
+        if (noticeData.type === 'sns') {
             follower_name = await accountModel.getUserNameById(predata.follower_id);
-            if (predata.pending === false) {
+            if (predata.pending === false) { // 상대가 공개 계정일 때
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
                 displayAccept = false;
-            } else {
+            } else { // 상대가 비공개 계정일 때
                 noticeData.content = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
                 displayAccept = true;
             }
             noticeData.info = JSON.stringify({
-                target_id: predata.follower_id,
-                isFollowingMe: predata.isFollowingMe,
-                isFollowingYou: predata.isFollowingYou,
-                pending: predata.pending,
-                displayAccept: displayAccept,
-                private: predata.private
+                target_id: follower_id, // 팔로우 요청한 사람 ID
+                isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
+                isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
+                pending: predata.pending, // 팔로우 당한 사람 입장 pending
+                displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
+                private: predata.private // 팔로우 한 사람 입장 private
             });
         }
 
-        if (predata.type === 'general') {
+        if (noticeData.type === 'general') {
             following_name = await accountModel.getUserNameById(predata.following_id);
             noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
+
             noticeData.info = JSON.stringify({
                 target_id: predata.following_id
             });
         }
-        // 알림 DB에 추가
+
+        // ! 알림 DB에 추가
         await noticeModel.createNotice(noticeData);
     },
     // TODO : FCM 푸시 알림 전송

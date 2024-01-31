@@ -56,8 +56,19 @@ module.exports = {
             console.log('자기 자신을 팔로우할 수 없습니다.');
             return false;
         }
-        // TODO : 상대 계정의 private 여부를 확인
-        const query = `
+        /*
+            isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
+            isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
+            pending: predata.pending, // 팔로우 당한 사람 입장 pending
+            displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
+            private: predata.private // 팔로우 한 사람 입장 private
+        */
+        let isFollowingMe;
+        let isFollowingYou;
+        let followingPrivate;
+        let followingPending;
+        
+        const insertQuery = `
         WITH inserted AS (
             INSERT INTO "FollowMap" (follower_id, following_id, pending)
             SELECT
@@ -71,51 +82,48 @@ module.exports = {
                 "User" U
             WHERE
                 U.user_id = $2
-            RETURNING follower_id, following_id, pending
+            RETURNING following_id, pending
         )
         SELECT i.pending, U.private
         FROM inserted i
-        JOIN "User" U ON i.following_id = U.user_id
-        WHERE U.user_id = $2
+        JOIN "User" U ON i.following_id = U.user_id;
         `;
         try {   
-            const {rows} = await db.query(query, [follower_id, following_id]);
-            const pending = rows[0].pending;
-            const private = rows[0].private;
-
-            if (!pending) {
+            const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
+            const followerPending = insertRows[0].pending;
+            followingPrivate = insertRows[0].private;
+            if (!followerPending) { // 상대가 공개 계정(=요청 대기 중이 아닐 때)
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
                 await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다림
                 await db.query(updateQuery2, [follower_id])
-                isFollowingYou = true;
-            } else {
-                isFollowingYou = false;
+                isFollowingMe = true; // 팔로우 당한 사람 입장
+            } else { // 상대가 비공개 계정일 때(요청 대기 중일 때)
+                isFollowingMe = false; //팔로우 당한 사람 입장
             }
             
-            // 상대도 나를 팔로우하고 있는지 확인
-            try {
+            // 상대 입장에서의 isFollowingYou 체크 
             const checkQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
-            if (checkRows.length != 0 && rows[0].pending == false) {
-                isFollowingMe = true;
+            if (checkRows.length != 0 && checkRows[0].pending == false) { //행이 존재하고 요청 대기중이 아니라면
+                isFollowingYou = true; // 팔로우 당한 사람 입장
+                followingPending = false;
+                
             } else {
-                isFollowingMe = false;
+                isFollowingMe = false; // 팔로우 당한 사람 입장
+                followingPending = true;
             }
-            } catch (e) {
-                console.log(e.stack);
-                return false;
-            } 
 
-            // 상대에게 알림 생성 - fololler_id, following_id, type, pending, info, isFollowingMe, isFollowingYou
+
+            // 상대에게 알림 생성
             const predata = {
                 user_id: following_id,
                 follower_id: follower_id,
                 type: 'sns',
                 isFollowingYou: isFollowingYou,
                 isFollowingMe: isFollowingMe,
-                pending: pending,
-                private: private
+                pending: followingPending,
+                private: followingPrivate
             };
             await processNotice(predata);
 
@@ -324,9 +332,9 @@ module.exports = {
 
             // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
             const predata = {
-                user_id: follower_id,
-                following_id: following_id,
-                type: 'general'
+                user_id: follower_id, // 알림을 받을 사람
+                following_id: following_id, // 터치하면 이동할 대상
+                type: 'general' // 알림 타입
             };
             await processNotice(predata);
 
