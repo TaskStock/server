@@ -328,10 +328,17 @@ module.exports = {
         const pendingQuery = 'UPDATE "FollowMap" SET pending = false WHERE follower_id = $1 AND following_id = $2';
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
+        
+        const noticeQuery = `
+        UPDATE "Notice" 
+        SET info.isFollowingMe = true, 
+            info.displayAccept = false 
+        WHERE notice_id = $1`
         try {
             await db.query(pendingQuery, [follower_id, following_id]);
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
+            await db.query(noticeQuery, [notice_id])
 
             // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
             const predata = {
