@@ -13,7 +13,7 @@ module.exports = {
     },
     getAllNotice: async (user_id) => {
         const query = `
-            SELECT content, type, info, is_read, created_time 
+            SELECT notice_id, content, type, info, is_read, created_time 
             FROM "Notice" 
             WHERE user_id = $1
             UNION ALL
@@ -28,8 +28,8 @@ module.exports = {
             return noticeList;
         }
         catch (err) {
-            console.log('getAllNotice ERROR : ', err.stack);
-            throw err;
+            // console.log('getAllNotice ERROR : ', err.stack);
+            throw(err);
         }
     },
     getNoticeById: async (notice_id) => {
@@ -60,6 +60,15 @@ module.exports = {
             await db.query(query, [FCMToken, user_id]);
         } catch (err) {
             console.log('saveRefreshToken ERROR : ', err);
+            throw err;
+        }
+    },
+    saveCustomerSuggestion: async (user_id, content) => {
+        const query = 'INSERT INTO "CustomerService" (user_id, content) VALUES ($1, $2)';
+        try {
+            await db.query(query, [user_id, content]);
+        } catch (err) {
+            console.log('saveCustomerSuggestion ERROR : ', err);
             throw err;
         }
     }

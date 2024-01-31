@@ -76,7 +76,7 @@ module.exports = {
             const pending = rows[0].pending;
             if (!pending) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
-                const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
+                const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1 RETURNING private';
                 await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다림
                 await db.query(updateQuery2, [follower_id])
                 isFollowingYou = true;
@@ -102,7 +102,7 @@ module.exports = {
             const predata = {
                 user_id: following_id,
                 follower_id: follower_id,
-                type: 'sns.follow',
+                type: 'sns',
                 isFollowingYou: isFollowingYou,
                 isFollowingMe: isFollowingMe,
                 pending: pending
@@ -316,7 +316,7 @@ module.exports = {
             const predata = {
                 user_id: follower_id,
                 following_id: following_id,
-                type: 'sns.accept'
+                type: 'general'
             };
             await processNotice(predata);
 

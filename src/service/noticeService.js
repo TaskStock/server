@@ -1,6 +1,7 @@
 const noticeModel = require('../models/noticeModel.js');
 const accountModel = require('../models/accountModel.js');
 const admin = require('../config/FCMconfig.js');
+const slackClient = require('../config/slackConfig.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
@@ -12,7 +13,7 @@ module.exports = {
             info: ''
         };
         
-        if (predata.type === 'sns.follow') {
+        if (predata.type === 'sns') {
             follower_name = await accountModel.getUserNameById(predata.follower_id);
             if (predata.pending === false)
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
@@ -20,18 +21,18 @@ module.exports = {
                 noticeData.content = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
             }
             noticeData.info = JSON.stringify({
-                follower_id: predata.follower_id,
+                target_id: predata.follower_id,
                 isFollowingMe: predata.isFollowingMe,
                 isFollowingYou: predata.isFollowingYou,
                 pending: predata.pending
             });
         }
 
-        if (predata.type === 'sns.accept') {
+        if (predata.type === 'general') {
             following_name = await accountModel.getUserNameById(predata.following_id);
             noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
             noticeData.info = JSON.stringify({
-                following_id: predata.following_id
+                target_id: predata.following_id
             });
         }
 
@@ -68,5 +69,39 @@ module.exports = {
                 console.log('Error Sending message!!! : ', err)
             })
 
+    },
+    // TODO : 타입에 따라 슬랙 메세지 전송
+    sendSlack: async (noticeData) => {
+        try {
+            let message = "";
+            if (noticeData.type === 'customer.suggestion') {
+                const user_name = await accountModel.getUserNameById(noticeData.user_id);
+                const content = noticeData.content;
+                message = `
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}\n\nuser_id = ${noticeData.user_id}
+                `;
+
+                await slackClient.chat.postMessage({
+                    channel: '#고객의견',
+                    text: message
+                })
+                return
+            } 
+            if (noticeData.type === 'error') {
+                const errorData = noticeData;
+                console.log("sendSlack errorData: ", errorData)
+                message = `
+                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n===STACK TRACE===\n${errorData.stack}
+                `;
+                await slackClient.chat.postMessage({
+                    channel: '#error',
+                    text: message
+                });
+                return
+            }
+        } catch (err) {
+            console.log('sendSlack ERROR : ', err);
+            next(err)
+        } 
     }
 };
