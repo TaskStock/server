@@ -12,19 +12,23 @@ module.exports = {
             type: predata.type,
             info: ''
         };
+        let displayAccept;
         
         if (predata.type === 'sns') {
             follower_name = await accountModel.getUserNameById(predata.follower_id);
-            if (predata.pending === false)
+            if (predata.pending === false) {
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
-            else {
+                displayAccept = false;
+            } else {
                 noticeData.content = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
+                displayAccept = true;
             }
             noticeData.info = JSON.stringify({
                 target_id: predata.follower_id,
                 isFollowingMe: predata.isFollowingMe,
                 isFollowingYou: predata.isFollowingYou,
-                pending: predata.pending
+                pending: predata.pending,
+                displayAccept: displayAccept
             });
         }
 

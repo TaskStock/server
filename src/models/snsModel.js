@@ -76,7 +76,7 @@ module.exports = {
             const pending = rows[0].pending;
             if (!pending) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
-                const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1 RETURNING private';
+                const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
                 await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다림
                 await db.query(updateQuery2, [follower_id])
                 isFollowingYou = true;
@@ -84,11 +84,11 @@ module.exports = {
                 isFollowingYou = false;
             }
             
-            // 상대도 나를 팔로우하고 있는지 확인
+            // 상대도 나를 팔로우하고 있는지, 상대의 private은 뭔지 확인
             try {
             const checkQuery = 'SELECT * FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
-            if (checkRows.length == 0 && pending == false) {
+            if (checkRows.length != 0 && pending == false) {
                 isFollowingMe = true;
             } else {
                 isFollowingMe = false;
