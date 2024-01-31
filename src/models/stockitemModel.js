@@ -61,4 +61,35 @@ module.exports = {
             });
         return stockitems;
     },
+    getStockitemsWithRegion: async(region)=>{
+        const query = 'select stockitem_id from "Stockitem" where region = $1';
+        const values = [region];
+
+        const stockitems = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return stockitems;
+    },
+    updateStockitemInScheduler: async(stockitem_id)=>{
+        // y_take_count, y_success_count 에 오늘 값을 먼저 넣은 후 오늘 값들은 0으로 설정
+        const query = 'update "Stockitem" set y_take_count=take_count, y_success_count=success_count, take_count=0, success_count=0 where stockitem_id=$1';
+        const values = [stockitem_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }

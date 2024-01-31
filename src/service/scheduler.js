@@ -7,6 +7,10 @@ const valueModel = require('../models/valueModel.js');
 const accountModel = require('../models/accountModel.js');
 const todoModel = require('../models/todoModel.js');
 
+const stockitemModel = require('../models/stockitemModel.js');
+const sivalueModel = require('../models/sivalueModel.js');
+
+// 정산 작업
 // 1. 각 타임존에 대해 다음 정산시간에 대한 스케쥴러를 설정
 // 1-1. timezone의 다음 정산시간을 transdate에서 받아온다.
 // 1-2. 해당 정산시간에 대해 scheduleJob을 설정한다
@@ -87,13 +91,49 @@ async function settlementJobManager(timezone, startTime, sttime, tommorowsttime)
     );
 }
 
+// 시장 종목에 대한 정산 작업
+// sivalue의 성공률은 todo로 등록하고 완료처리 될 때 반영되므로 필요x
+// stockitem에 대해 오늘 기록을 전날로 옮기고 오늘 기록은 0으로 초기화
+// 새로운 sivalue 생성
+// 추후 통계정보에 대한 추가 스케쥴링 작업이 필요할 수 있음
+// 1. 각 종목에 대해 비동기적으로 정산작업 실행
+// 2. Stockitem의 take_count, success_count를 y_take_count, y_success_count로 옮기고 0으로 초기화
+// 3. 새로운 SIValue 생성
+// 4. 통계에 대한 추가 스케쥴링 작업
+
+async function stockitemJob(stockitem_id, sttime, tommorowsttime){
+    // 2. Stockitem의 take_count, success_count를 y_take_count, y_success_count로 옮기고 0으로 초기화
+    await stockitemModel.updateStockitemInScheduler(stockitem_id);
+
+    // 3. 새로운 SIValue 생성
+    await sivalueModel.createSivalue(stockitem_id, tommorowsttime);
+}
+
+async function stockitemJobManager(timezone, sttime, tommorowsttime){
+    const stockitems = await stockitemModel.getStockitemsWithRegion(timezone);
+    
+    if(stockitems.length===0){
+        return;
+    }    
+
+    await Promise.all(
+        stockitems.map(si => 
+            stockitemJob(si.stockitem_id, sttime, tommorowsttime)
+        )
+    );
+}
+
 function mainScheduler(timezone){
     const startTime = transdate.getStartToday(timezone);
     const nextSettlement = transdate.getSettlementTimeInUTC(timezone);
     const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timezone);
+    
+    // const test = new Date();
+    // test.setTime(test.getTime()+10000);
 
     schedule.scheduleJob(nextSettlement, async function() {
         await settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement);
+        await stockitemJobManager(timezone, nextSettlement, tommorowSettlement);
         
         mainScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
     });

@@ -15,4 +15,21 @@ module.exports = {
                 throw e;
             });
     },
+    // 스케쥴러에 사용
+    // getSivalueOne: async(stockitem_id, date)=>{
+    //     const query = 'select * from "SIValue" where stockitem_id=$1 and date=$2';
+    //     const q_values = [stockitem_id, date];
+
+    //     const sivalue = await db.query(query, q_values)
+    //         .then(res => {
+    //             // console.log(res.rows[0]);
+    //             return res.rows[0];
+    //         })
+    //         .catch(e => {
+    //             console.error(e.stack);
+
+    //             throw e;
+    //         });
+    //     return sivalue;
+    // },
 }
