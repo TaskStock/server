@@ -138,7 +138,7 @@ module.exports = {
         const following_id = req.user.user_id;
         const follower_id = req.body.follower_id;
         const notice_id = req.body.notice_id
-        const acceptResult = await snsModel.acceptPending(follower_id, following_id);
+        const acceptResult = await snsModel.acceptPending(follower_id, following_id, notice_id);
         
         if (acceptResult) {
             res.status(200).json({
