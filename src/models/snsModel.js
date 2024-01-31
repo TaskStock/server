@@ -167,8 +167,8 @@ module.exports = {
             if (notice_id != undefined) {
                 const noticeQuery = `
                 UPDATE "Notice"
-                SET info = info || {"isFollowingYou" : false}
-                where notice_id = $1
+                SET info = info || '{"isFollowingYou" : false}'
+                WHERE notice_id = $1
                 `
                 await db.query(noticeQuery, [notice_id])
             }
@@ -410,7 +410,7 @@ module.exports = {
                 // 팔로우 요청한 사람 알림 수정
                 const followerNoticeQuery = `
                 UPDATE "Notice"
-                SET info = info || {"pending" : false, "isFollowingYou" : false}
+                SET info = info || '{"pending" : false, "isFollowingYou" : false}'
                 WHERE notice_id = $1
                 `
                 await db.query(followerNoticeQuery, [notice_id])
