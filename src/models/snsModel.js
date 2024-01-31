@@ -126,7 +126,8 @@ module.exports = {
                     WHERE (N.user_id = $1 AND N.info ->> 'target_id' = $2)
                 );
                 `
-                await db.query(noticeQuery2, [following_id, follower_id])
+                //user_id(팔로우 버튼 누른 주인 == 알림 주인)
+                await db.query(noticeQuery2, [follower_id, following_id])
             }
 
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
@@ -204,7 +205,8 @@ module.exports = {
                     WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
                 )
                 `
-                await db.query(noticeQuery2, [unfollowing_id, follower_id])
+                // user_id는 공지주인 == follower_id
+                await db.query(noticeQuery2, [follower_id, unfollowing_id])
             }
 
             return true;
@@ -464,7 +466,8 @@ module.exports = {
                     WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
                 )
                 `
-                await db.query(followNoticeQuery2, [following_id,follower_id])
+                // user_id(공지주인 = follower_id)
+                await db.query(followNoticeQuery2, [follower_id,following_id])
             }
             // 팔로우 요청 받은 사람 알림 삭제
             const followingNoticeQuery = `
