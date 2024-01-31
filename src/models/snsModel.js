@@ -56,9 +56,6 @@ module.exports = {
             console.log('자기 자신을 팔로우할 수 없습니다.');
             return false;
         }
-        //pending이 private과 같아져야 함, isFollowingYou은 private의 반대
-        let noticeQuery;
-
         /*
             isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
             isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
@@ -93,7 +90,7 @@ module.exports = {
         `;
         try {
             if (notice_id != undefined) {
-                noticeQuery = `
+                const noticeQuery = `
                 UPDATE "Notice"
                 SET info = jsonb_set(
                                 jsonb_set(
@@ -104,9 +101,31 @@ module.exports = {
                                 '{isFollowingYou}', 
                                 ((NOT (info ->> 'private')::boolean)::text::jsonb)
                             )
-                WHERE notice_id = $1;                `
+                WHERE notice_id = $1;
+                `
                 await db.query(noticeQuery, [notice_id])
-            } 
+            } else {
+                const noticeQuery2 = `
+                UPDATE "Notice"
+                SET info = jsonb_set(
+                                jsonb_set(
+                                    info, 
+                                    '{pending}', 
+                                    (info ->> 'private')::jsonb
+                                ), 
+                                '{isFollowingYou}', 
+                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
+                            )
+                WHERE notice_id IN (
+                    SELECT N.notice_id
+                    FROM "Notice" N
+                    JOIN "User" U
+                    ON (N.user_id = U.user_id)
+                    WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
+                );
+                `
+                await db.query(noticeQuery2, [following_id, follower_id])
+            }
 
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
             const followerPending = insertRows[0].pending;
@@ -171,6 +190,19 @@ module.exports = {
                 WHERE notice_id = $1
                 `
                 await db.query(noticeQuery, [notice_id])
+            } else {
+                const noticeQuery2 = `
+                UPDATE "Notice"
+                SET info = info || '{"isFollowingYou" : false}'
+                WHERE notice_id IN (
+                    SELECT N.notice_id
+                    FROM "Notice" N
+                    JOIN "User" U
+                    ON (N.user_id = U.user_id)
+                    WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
+                )
+                `
+                await db.query(noticeQuery2, [unfollowing_id, follower_id])
             }
 
             return true;
@@ -418,19 +450,32 @@ module.exports = {
                 WHERE notice_id = $1
                 `
                 await db.query(followerNoticeQuery, [notice_id])
-                // 팔로우 요청 받은 사람 알림 삭제
-                const followingNoticeQuery = `
-                DELETE FROM "Notice" 
+            } else {
+                const followNoticeQuery2 = `
+                UPDATE "Notice"
+                SET info = info || '{"pending" : false, "isFollowingYou" : false}'
                 WHERE notice_id IN (
                     SELECT N.notice_id
                     FROM "Notice" N
                     JOIN "User" U
                     ON (N.user_id = U.user_id)
-                    WHERE U.user_id = $1 AND N.info ->> 'target_id' = $2
+                    WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
                 )
                 `
-                await db.query(followingNoticeQuery, [notice_id, follower_id])
+                await db.query(followNoticeQuery2, [following_id,follower_id])
             }
+            // 팔로우 요청 받은 사람 알림 삭제
+            const followingNoticeQuery = `
+            DELETE FROM "Notice" 
+            WHERE notice_id IN (
+                SELECT N.notice_id
+                FROM "Notice" N
+                JOIN "User" U
+                ON (N.user_id = U.user_id)
+                WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
+            )
+            `
+            await db.query(followingNoticeQuery, [following_id, follower_id])
             
 
 
