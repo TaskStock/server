@@ -108,4 +108,36 @@ module.exports = {
             });
         return stockitem;
     },
+    increaseSuccesscount: async(stockitem_id)=>{
+        const query = 'update "Stockitem" set success_count=success_count+1 where stockitem_id=$1 returning take_count, success_count';
+        const values = [stockitem_id];
+
+        const stockitem = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return stockitem;
+    },
+    decreaseSuccesscount: async(stockitem_id)=>{
+        const query = 'update "Stockitem" set success_count=success_count-1 where stockitem_id=$1 returning take_count, success_count';
+        const values = [stockitem_id];
+
+        const stockitem = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return stockitem;
+    },
 }

@@ -178,6 +178,19 @@ module.exports = {
                 await accountModel.updateValueField(user_id, u_end, percentage);
             }
 
+            // 종목 통계정보 업데이트
+            if(todo.stockitem_id !== null && todo.date >= previousDayUtc && todo.date < resultUtc){
+                let updated_stockitem;
+                if(check === true){
+                    updated_stockitem = await stockitemModel.increaseSuccesscount(todo.stockitem_id);
+                }else if(check === false){
+                    updated_stockitem = await stockitemModel.decreaseSuccesscount(todo.stockitem_id);
+                }
+                const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                const sttime = transdate.getSettlementTimeInUTC(region);
+                await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
+            }
+
         }catch(error){
             next(error);
         }
