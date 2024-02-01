@@ -15,6 +15,20 @@ module.exports = {
                 throw e;
             });
     },
+    updateSuccessrate: async(stockitem_id, date, success_rate)=>{
+        const query = 'update "SIValue" set success_rate=$1 where stockitem_id=$2 and date=$3';
+        const values = [success_rate, stockitem_id, date];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
     // 스케쥴러에 사용
     // getSivalueOne: async(stockitem_id, date)=>{
     //     const query = 'select * from "SIValue" where stockitem_id=$1 and date=$2';

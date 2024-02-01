@@ -2,12 +2,15 @@ const todoModel = require('../models/todoModel.js');
 const valueModel = require('../models/valueModel.js');
 const accountModel = require('../models/accountModel.js');
 
+const stockitemModel = require('../models/stockitemModel.js');
+const sivalueModel = require('../models/sivalueModel.js');
+
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
 
 module.exports = {
     newTodo: async(req, res, next) =>{
-        const {content, level, project_id, nowUTC} = req.body;
+        const {content, level, project_id, nowUTC, stockitem_id} = req.body;
         // 현재는 오늘 날짜만 todo를 생성할 수 있음
         const user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
         const region = req.user.region;
@@ -24,7 +27,7 @@ module.exports = {
                 nextIndex = index.index + 1;
             }
 
-            inserted_todo = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex);
+            inserted_todo = await todoModel.insertTodo(content, level, user_id, project_id, nowUTC, nextIndex, stockitem_id);
 
             if(level !== 0){
                 const sttime = transdate.getSettlementTime(nowUTC, region).toISOString();
@@ -42,6 +45,15 @@ module.exports = {
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
                 }
             }
+
+            // 종목 정보 업데이트
+            if(stockitem_id !== null){
+                const updated_stockitem = await stockitemModel.increaseTakecount(stockitem_id);
+                const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                const sttime = transdate.getSettlementTimeInUTC(region);
+                await sivalueModel.updateSuccessrate(stockitem_id, sttime, success_rate);
+            }
+
         }catch(error){
             next(error);
         }
