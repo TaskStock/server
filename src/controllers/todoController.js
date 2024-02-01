@@ -237,6 +237,22 @@ module.exports = {
                     await valueModel.updateValue(user_id, value_id, start, end, updateLow, updateHigh);
                 }
             }
+
+            // 종목 업데이트
+            const resultUtc = transdate.getSettlementTimeInUTC(region);
+            const previousDayUtc = transdate.minusOneDay(resultUtc, region);
+
+            if(todo.stockitem_id !== null && todo.date >= previousDayUtc && todo.date < resultUtc){
+                let updated_stockitem;
+                if(todo.check === true){
+                    updated_stockitem = await stockitemModel.decreaseTwocount(todo.stockitem_id);
+                }else if(todo.check === false){
+                    updated_stockitem = await stockitemModel.decreaseTakecount(todo.stockitem_id);
+                }
+                const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                const sttime = transdate.getSettlementTimeInUTC(region);
+                await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
+            }
         }catch(error){
             next(error);
         }
