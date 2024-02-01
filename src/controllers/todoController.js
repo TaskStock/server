@@ -11,7 +11,6 @@ const calculate = require('../service/calculateService.js');
 module.exports = {
     newTodo: async(req, res, next) =>{
         const {content, level, project_id, nowUTC, stockitem_id} = req.body;
-        // 현재는 오늘 날짜만 todo를 생성할 수 있음
         const user_id = req.user.user_id; // passport를 통과한 유저객체에서 user_id를 받아옴
         const region = req.user.region;
 
@@ -48,10 +47,14 @@ module.exports = {
 
             // 종목 정보 업데이트
             if(stockitem_id !== null){
-                const updated_stockitem = await stockitemModel.increaseTakecount(stockitem_id);
-                const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
-                const sttime = transdate.getSettlementTimeInUTC(region);
-                await sivalueModel.updateSuccessrate(stockitem_id, sttime, success_rate);
+                const resultUtc = transdate.getSettlementTimeInUTC(region).toISOString();
+                const previousDayUtc = transdate.minusOneDay(resultUtc, region).toISOString();
+                if(nowUTC >= previousDayUtc && nowUTC < resultUtc){ // 오늘 추가한 todo만
+                    const updated_stockitem = await stockitemModel.increaseTakecount(stockitem_id);
+                    const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                    const sttime = transdate.getSettlementTimeInUTC(region);
+                    await sivalueModel.updateSuccessrate(stockitem_id, sttime, success_rate);
+                }
             }
 
         }catch(error){
@@ -239,19 +242,20 @@ module.exports = {
             }
 
             // 종목 업데이트
-            const resultUtc = transdate.getSettlementTimeInUTC(region);
-            const previousDayUtc = transdate.minusOneDay(resultUtc, region);
-
-            if(todo.stockitem_id !== null && todo.date >= previousDayUtc && todo.date < resultUtc){
-                let updated_stockitem;
-                if(todo.check === true){
-                    updated_stockitem = await stockitemModel.decreaseTwocount(todo.stockitem_id);
-                }else if(todo.check === false){
-                    updated_stockitem = await stockitemModel.decreaseTakecount(todo.stockitem_id);
+            if(todo.stockitem_id !== null){
+                const resultUtc = transdate.getSettlementTimeInUTC(region);
+                const previousDayUtc = transdate.minusOneDay(resultUtc, region);
+                if(todo.date >= previousDayUtc && todo.date < resultUtc){   // 오늘 날짜의 todo만
+                    let updated_stockitem;
+                    if(todo.check === true){
+                        updated_stockitem = await stockitemModel.decreaseTwocount(todo.stockitem_id);
+                    }else if(todo.check === false){
+                        updated_stockitem = await stockitemModel.decreaseTakecount(todo.stockitem_id);
+                    }
+                    const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                    const sttime = transdate.getSettlementTimeInUTC(region);
+                    await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
                 }
-                const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
-                const sttime = transdate.getSettlementTimeInUTC(region);
-                await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
             }
         }catch(error){
             next(error);
