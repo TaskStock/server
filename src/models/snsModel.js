@@ -163,11 +163,11 @@ module.exports = {
                 user_id: following_id, 
                 follower_id: follower_id,
                 type: 'sns',
-                isFollowingYou: isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
-                isFollowingMe: isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
-                followingPending: followingPending, // 팔로우 당한 사람 입장 조회 pending
+                isFollowingYou: isFollowingYou, // 상대 입장 isFollowingYou
+                isFollowingMe: isFollowingMe, // 상대 입장 isFollowingMe
+                followingPending: followingPending, // 상대 입장 조회 pending
                 followerPending: followerPending,
-                private: followerPrivate // 팔로우 한 사람 입장 private
+                private: followerPrivate // 내 입장 private
             };
             await processNotice(predata);
 
@@ -219,30 +219,31 @@ module.exports = {
         // TODO isFollowingMe, isFollowingYou를 pending까지 검사해서 true/false로 반환
         const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
+            // 검색 대상의 정보 넘겨야 함
             const query = `
             SELECT  
-                U.user_id, U.image, U.user_name, U.cumulative_value, U.strategy, U.private,
+                U1.user_id, U1.image, U1.user_name, U1.cumulative_value, U1.strategy, U1.private,
                 CASE
-                    WHEN F2.pending is NOT NULL THEN F2.pending
-                    ELSE false
-                END AS "pending",
-                CASE 
-                    WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
+                    WHEN F1.following_id IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
                 END AS "isFollowingYou",
-                CASE 
-                    WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                CASE
+                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
-                END AS "isFollowingMe"
-            FROM "User" U
-            LEFT JOIN "FollowMap" F1 ON (U.user_id = F1.following_id AND F1.follower_id = $2)
-            LEFT JOIN "FollowMap" F2 ON (U.user_id = F2.follower_id AND F2.following_id = $2)
+                END AS "isFollowingMe",
+                CASE
+                    WHEN F1.pending IS NOT NULL THEN F1.peding
+                    ELSE false
+                END AS "pending"
+            FROM "User" U1
+            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.follower_id = $2
+            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F1.following_id = $2
             WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
             `
+            // 상대 사용자($1) 로그인한 사용자($2)
             try {
-                // 로그인한 사용자 = user_id, queryTarget = 검색어
-                const {rows} = await db.query(query, [queryTarget, user_id]);
-                return rows;
+                const {rows: result} = await db.query(query, [queryTarget, user_id]);
+                return result;
             } catch (e) {
                 console.log(e.stack);
                 return [];
@@ -344,7 +345,9 @@ module.exports = {
             CASE 
                 WHEN FM.pending = false THEN true
                 ELSE false
-            END AS "isFollowingYou"
+            END AS "isFollowingYou",
+            CASE
+                WEHN 
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
