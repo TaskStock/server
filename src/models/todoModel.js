@@ -1,9 +1,9 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    insertTodo: async(content, level, user_id, project_id, date, index)=>{
-        const query = "insert into \"Todo\" (content, date, level, user_id, project_id, index) VALUES ($1, $2, $3, $4, $5, $6) RETURNING todo_id, index";
-        const values = [content, date, level, user_id, project_id, index];
+    insertTodo: async(content, level, user_id, project_id, date, index, stockitem_id)=>{
+        const query = "insert into \"Todo\" (content, date, level, user_id, project_id, index, stockitem_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING todo_id, index";
+        const values = [content, date, level, user_id, project_id, index, stockitem_id];
 
         const insert_result = await db.query(query, values)
             .then(res => {
