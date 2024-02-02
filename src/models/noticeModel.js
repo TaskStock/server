@@ -63,12 +63,25 @@ module.exports = {
             throw err;
         }
     },
-    getFCMToken: async () => {
+    getFCMToken: async (user_id) => {
         const query = 'SELECT fcm_token FROM "UserSetting" WHERE user_id = $1';
         try {
-            await db.query(query, [user_id]);
+            const {rows} = await db.query(query, [user_id]);
+            const token = rows[0].fcm_token
+            return token
         } catch(err) {
             console.log('getFCMToken ERROR : ', err);
+            throw err
+        }
+    },
+    getAllFCMTokens: async (user_id_list) => {
+        const query = 'SELECt fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
+        try {
+            const {rows} = await db.query(query, [user_id_list]); 
+            const tokens = rows.map(row => row.fcm_token);
+            return tokens
+        } catch(err) {
+            console.log('getAllFCMTokens ERROR : ', err)
             throw err
         }
     },
