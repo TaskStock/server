@@ -53,9 +53,10 @@ module.exports = {
     saveFCMToken: async(req, res) => {
         try {
             const FCMToken = req.body.FCMToken;
+            const isPushOn = req.body.isPushOn;
             const user_id = req.user.user_id;
 
-            await noticeModel.saveFCMToken(user_id, FCMToken);
+            await noticeModel.saveFCMToken(user_id, isPushOn, FCMToken);
             return res.status(200).json({
                 result: "success",
                 message: "FCM 토큰 저장 완료"
