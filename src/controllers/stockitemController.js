@@ -1,5 +1,6 @@
 const stockitemModel = require('../models/stockitemModel.js');
 const sivalueModel = require('../models/sivalueModel.js');
+const sistatisticsModel = require('../models/sistatisticsModel.js');
 
 const transdate = require('../service/transdateService.js');
 
@@ -12,6 +13,9 @@ module.exports = {
 
             const sttime = transdate.getSettlementTimeInUTC(region);
             await sivalueModel.createSivalue(stockitem_id, sttime);
+
+            // 새로운 종목 생성 시 통계 테이블 자동 생성
+            await sistatisticsModel.createSistatistics(stockitem_id);
         }catch(error){
             next(error);
         }
