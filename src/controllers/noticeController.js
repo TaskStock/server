@@ -41,7 +41,6 @@ module.exports = {
             await noticeModel.changeNoticeSetting(user_id, isPushOn);
             return res.status(200).json({
                 result: "success",
-                message: "알림 설정 변경 완료"
             });
         } catch (e) {
             console.log('changeNoticeSetting ERROR : ', e);
@@ -59,7 +58,6 @@ module.exports = {
             await noticeModel.saveFCMToken(user_id, isPushOn, FCMToken);
             return res.status(200).json({
                 result: "success",
-                message: "FCM 토큰 저장 완료"
             }); 
     } catch (e) {
             console.log('saveFCMToken ERROR : ', e);
@@ -76,7 +74,6 @@ module.exports = {
             await noticeModel.updateFCMToken(user_id, FCMToken);
             return res.json.status({
                 result: "success",
-                message: "FCM 토큰 저장 완료"
             });
         } catch (err) {
             console.log('updateFCMToken ERROR : ', err);

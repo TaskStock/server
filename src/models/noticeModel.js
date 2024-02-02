@@ -71,7 +71,7 @@ module.exports = {
             console.log('updateFCMToken ERROR : ', err);
             throw err;
         }
-    }
+    },
     getFCMToken: async (user_id) => {
         const query = 'SELECT fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id = $1';
         try {
