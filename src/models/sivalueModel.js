@@ -1,7 +1,7 @@
 const db = require('../config/db.js');
 
 module.exports = {
-    createSivalue: async(stockitem_id, date)=>{
+    createSivalue: async(db, stockitem_id, date)=>{
         const query = 'insert into "SIValue" (stockitem_id, date) VALUES ($1, $2)';
         const values = [stockitem_id, date];
 
