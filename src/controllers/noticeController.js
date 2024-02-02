@@ -72,13 +72,15 @@ module.exports = {
         try {
             const user_id = req.user.user_id;
             const content = req.body.content
+            const email = req.body.email;
 
-            await noticeModel.saveCustomerSuggestion(user_id, content);
+            await noticeModel.saveCustomerSuggestion(user_id, content, email);
 
             const noticeData = {
                 type: 'customer.suggestion',
                 user_id: user_id,
-                content: content
+                content: content,
+                email: email
             }
             await noticeService.sendSlack(noticeData);
             return res.status(200).json({

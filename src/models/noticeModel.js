@@ -85,10 +85,10 @@ module.exports = {
             throw err
         }
     },
-    saveCustomerSuggestion: async (user_id, content) => {
-        const query = 'INSERT INTO "CustomerService" (user_id, content) VALUES ($1, $2)';
+    saveCustomerSuggestion: async (user_id, content, email) => {
+        const query = 'INSERT INTO "CustomerService" (user_id, content, email) VALUES ($1, $2, $3)';
         try {
-            await db.query(query, [user_id, content]);
+            await db.query(query, [user_id, content, email]);
         } catch (err) {
             console.log('saveCustomerSuggestion ERROR : ', err);
             throw err;

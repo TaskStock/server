@@ -50,6 +50,7 @@ module.exports = {
         let { user_id, content, type, info } = noticeData;
         const queryResult = await accountModel.getUserById(user_id);
         const userData = queryResult[0]
+
         const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
         if (token.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
@@ -122,8 +123,9 @@ module.exports = {
             if (noticeData.type === 'customer.suggestion') {
                 const user_name = await accountModel.getUserNameById(noticeData.user_id);
                 const content = noticeData.content;
+                const email = noticeData.email;
                 message = `
-                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}\n\nuser_id = ${noticeData.user_id}
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}\n\n유저 아이디: user_id ${noticeData.user_id}\n유저 이메일: ${email}
                 `;
 
                 await slackClient.chat.postMessage({
