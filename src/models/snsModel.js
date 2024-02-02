@@ -170,7 +170,7 @@ module.exports = {
                 private: followerPrivate // 내 입장 private
             };
             await processNotice(predata);
-            await sendPush(noticeData);
+            await sendPush(predata);
 
             return true;
         } catch (e) {
