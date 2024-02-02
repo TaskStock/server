@@ -232,13 +232,13 @@ module.exports = {
                     ELSE false
                 END AS "isFollowingMe",
                 CASE
-                    WHEN F1.pending IS NOT NULL THEN F1.peding
+                    WHEN F1.pending IS NOT NULL THEN F1.pending
                     ELSE false
                 END AS "pending"
             FROM "User" U1
-            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.follower_id = $2
-            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F1.following_id = $2
-            WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
+            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.following_id = $2
+            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F2.follower_id = $2
+            WHERE (U1.user_name LIKE $1 OR U1.email LIKE $1) AND U1.user_id != $2
             `
             // 상대 사용자($1) 로그인한 사용자($2)
             try {
