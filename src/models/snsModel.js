@@ -348,7 +348,7 @@ module.exports = {
             CASE 
                 WHEN FM.pending = false THEN true
                 ELSE false
-            END AS "isFollowingYou",
+            END AS "isFollowingYou"
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
