@@ -133,13 +133,24 @@ function mainScheduler(timezone){
     const nextSettlement = transdate.getSettlementTimeInUTC(timezone);
     const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timezone);
     
-    // const test = new Date();
-    // test.setTime(test.getTime()+3000);
+    const test = new Date();
+    test.setTime(test.getTime()+3000);
 
-    schedule.scheduleJob(nextSettlement, async function() {
-        // await settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement);
-        await stockitemJobManager(timezone, tommorowSettlement);
-        
+    schedule.scheduleJob(test, async function() {
+        // 비동기로 각 스케쥴러 작업 실행
+
+        await Promise.allSettled([
+            settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement),
+            stockitemJobManager(timezone, tommorowSettlement)
+        ])
+        .then((results)=>{
+            results.forEach((result, index)=>{
+                if(result.status !== 'fulfilled'){
+                    console.log(`${index}번째 스케쥴러 실패:`, result.reason);
+                }
+            });
+        });
+
         mainScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
     });
 }

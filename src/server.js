@@ -93,8 +93,8 @@ app.use(async (err, req, res, next) => {
 });
 
 // 스케쥴러
-// const scheduler = require("./service/scheduler.js");
-// scheduler.scheduling();
+const scheduler = require("./service/scheduler.js");
+scheduler.scheduling();
 
 app.listen(app.get('port'), ()=>{
     console.log(app.get('port'), '번 포트에서 대기 중')
