@@ -47,7 +47,7 @@ module.exports = {
     },
     // TODO : FCM 푸시 알림 전송
     sendPush: async (noticeData) => {
-        const { user_id, content, type, info } = noticeData;
+        let { user_id, content, type, info } = noticeData;
         const queryResult = await accountModel.getUserById(user_id);
         const userData = queryResult[0]
         const targetToken = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
@@ -75,7 +75,42 @@ module.exports = {
             .catch(function (err) {
                 console.log('Error Sending message!!! : ', err)
             })
+    },
+    // TODO : 여러 사용자에게 FCM 푸시 알림 전송
+    sendMultiPush: async(noticeData) => {
+        let {user_id_list, title, body} = noticeData 
+        const tokens = await noticeModel.getAllFCMTokens(user_id_list);
 
+        if (tokens.length == 0) {
+            console.log('FCM토큰이 0개일 경우 알림 발송 안함')
+            return
+        } else {
+            const tokenChuncks = [];
+            for (let i=0; i<tokens.length; i +=499) {
+                tokenChuncks.push(tokens.slice(i, i+499))
+            }
+        }
+        
+        // 각 chunk를 순회하면서 메시지 전송
+        for (let chunk of tokenChuncks) {
+            let message = {
+                notification: {
+                    title: '전체 알림 title',
+                    body: '전체 알림 body'
+                },
+                tokens: chunk, // 여러 토큰 지정
+            };
+            // 메시지 전송
+            admin
+                .messaging()
+                .sendEach(message)
+                .then(function (response) {
+                    console.log('Successfully sent message(all): : ', response)
+                })
+                .catch(function (err) {
+                    console.log('Error Sending message!!! : ', err)
+                })
+        }
     },
     // TODO : 타입에 따라 슬랙 메세지 전송
     sendSlack: async (noticeData) => {
