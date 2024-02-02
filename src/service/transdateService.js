@@ -1,5 +1,5 @@
 const { zonedTimeToUtc, utcToZonedTime } = require('date-fns-tz');
-const { startOfDay, startOfMonth, addHours, addMonths, addDays } = require('date-fns');
+const { startOfDay, startOfMonth, addHours, addMonths, addDays, format } = require('date-fns');
 
 module.exports = {
     // 오늘 value의 정산시간을 utc로 반환
@@ -81,9 +81,27 @@ module.exports = {
     },
     minusOneDay: (date, timezone) =>{
         const zonedDate = utcToZonedTime(date, timezone);
-        const nextDay = addDays(zonedDate, -1);
-        const nextDayUTC = zonedTimeToUtc(nextDay, timezone);
+        const previousDay = addDays(zonedDate, -1);
+        const previousDayUTC = zonedTimeToUtc(previousDay, timezone);
 
-        return nextDayUTC;
+        return previousDayUTC;
     },
+    // 스케쥴링에서 사용
+    // 오늘 무슨 요일인지 반환
+    // 스케쥴링은 정산시간에 실행되므로 하루 빼줘야함
+    getDayoftheweek: (timezone) =>{
+        const now = utcToZonedTime(new Date(), timezone);
+        const previousDay = addDays(now, -1);
+
+        const dayOfWeek = parseInt(format(previousDay, 'i', { timeZone: timezone }), 10);
+        // 0 : 일요일
+        // 1 : 월요일
+        // 2 : 화요일
+        // 3 : 수요일
+        // 4 : 목요일
+        // 5 : 금요일
+        // 6 : 토요일
+
+        return dayOfWeek;
+    }
 }

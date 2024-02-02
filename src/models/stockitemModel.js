@@ -79,18 +79,20 @@ module.exports = {
     },
     updateStockitemInScheduler: async(stockitem_id)=>{
         // y_take_count, y_success_count 에 오늘 값을 먼저 넣은 후 오늘 값들은 0으로 설정
-        const query = 'update "Stockitem" set y_take_count=take_count, y_success_count=success_count, take_count=0, success_count=0 where stockitem_id=$1';
+        const query = 'update "Stockitem" set y_take_count=take_count, y_success_count=success_count, take_count=0, success_count=0 where stockitem_id=$1 returning y_take_count, y_success_count';
         const values = [stockitem_id];
 
-        await db.query(query, values)
+        const stockitem = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows[0]);
+                return res.rows[0];
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
+        return stockitem;
     },
     increaseTakecount: async(stockitem_id)=>{
         const query = 'update "Stockitem" set take_count=take_count+1 where stockitem_id=$1 returning take_count, success_count';

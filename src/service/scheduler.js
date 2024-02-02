@@ -9,6 +9,7 @@ const todoModel = require('../models/todoModel.js');
 
 const stockitemModel = require('../models/stockitemModel.js');
 const sivalueModel = require('../models/sivalueModel.js');
+const sistatisticsModel = require('../models/sistatisticsModel.js');
 
 // 정산 작업
 // 1. 각 타임존에 대해 다음 정산시간에 대한 스케쥴러를 설정
@@ -101,15 +102,19 @@ async function settlementJobManager(timezone, startTime, sttime, tommorowsttime)
 // 3. 새로운 SIValue 생성
 // 4. 통계에 대한 추가 스케쥴링 작업
 
-async function stockitemJob(stockitem_id, sttime, tommorowsttime){
+async function stockitemJob(stockitem_id, tommorowsttime, timezone){
     // 2. Stockitem의 take_count, success_count를 y_take_count, y_success_count로 옮기고 0으로 초기화
-    await stockitemModel.updateStockitemInScheduler(stockitem_id);
+    const updated_stockitem = await stockitemModel.updateStockitemInScheduler(stockitem_id);
 
     // 3. 새로운 SIValue 생성
     await sivalueModel.createSivalue(stockitem_id, tommorowsttime);
+
+    // 4. 통계에 대한 추가 작업
+    const dayOfWeek = transdate.getDayoftheweek(timezone);
+    await sistatisticsModel.updateSistatistics(stockitem_id, updated_stockitem.y_take_count, updated_stockitem.y_success_count, dayOfWeek);
 }
 
-async function stockitemJobManager(timezone, sttime, tommorowsttime){
+async function stockitemJobManager(timezone, tommorowsttime){
     const stockitems = await stockitemModel.getStockitemsWithRegion(timezone);
     
     if(stockitems.length===0){
@@ -118,7 +123,7 @@ async function stockitemJobManager(timezone, sttime, tommorowsttime){
 
     await Promise.all(
         stockitems.map(si => 
-            stockitemJob(si.stockitem_id, sttime, tommorowsttime)
+            stockitemJob(si.stockitem_id, tommorowsttime, timezone)
         )
     );
 }
@@ -129,11 +134,11 @@ function mainScheduler(timezone){
     const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timezone);
     
     // const test = new Date();
-    // test.setTime(test.getTime()+10000);
+    // test.setTime(test.getTime()+3000);
 
     schedule.scheduleJob(nextSettlement, async function() {
-        await settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement);
-        await stockitemJobManager(timezone, nextSettlement, tommorowSettlement);
+        // await settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement);
+        await stockitemJobManager(timezone, tommorowSettlement);
         
         mainScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
     });
