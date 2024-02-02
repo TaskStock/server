@@ -313,8 +313,11 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            F2.pending,
             U.strategy,
+            CASE
+                WHEN F2.pending IS NOT NULL THEN F2.pending
+                ELSE false
+            END AS "pending",
             CASE
                 WHEN FM.pending = false THEN true
                 ELSE false
@@ -336,7 +339,7 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            F2.pending,
+            FM.pending,
             U.strategy,
             CASE
                 WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
@@ -346,8 +349,6 @@ module.exports = {
                 WHEN FM.pending = false THEN true
                 ELSE false
             END AS "isFollowingYou",
-            CASE
-                WEHN 
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
@@ -355,7 +356,6 @@ module.exports = {
         `;
         
         try {
-            console.log(user_id)
             const {rows: followerList} = await db.query(followerQuery, [user_id]);
             const {rows: followingList} = await db.query(followingQuery, [user_id]);
             return [followerList, followingList]

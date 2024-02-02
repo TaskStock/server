@@ -65,7 +65,6 @@ module.exports = {
             data: {
                 title: '테스트 데이터 발송',
                 body: 'notification과 data의 차이가 뭐지?',
-                style: '굳굳',
             },
             token: token,
         }
