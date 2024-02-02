@@ -15,7 +15,7 @@ module.exports = {
         let displayAccept;
         
         if (noticeData.type === 'sns') {
-            follower_name = await accountModel.getUserNameById(predata.follower_id);
+            let follower_name = await accountModel.getUserNameById(predata.follower_id);
             if (predata.followerPending === false) { // 팔로우 당한 사람이 공개 계정일 때
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
                 displayAccept = false;
@@ -34,38 +34,48 @@ module.exports = {
         }
 
         if (noticeData.type === 'general') {
-            following_name = await accountModel.getUserNameById(predata.following_id);
+            let following_name = await accountModel.getUserNameById(predata.following_id);
             noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
 
             noticeData.info = JSON.stringify({
                 target_id: predata.following_id
             });
         }
-
-        // ! 알림 DB에 추가
         await noticeModel.createNotice(noticeData);
     },
     // TODO : FCM 푸시 알림 전송
     sendPush: async (noticeData) => {
-        let { user_id, content, type, info } = noticeData;
-        const queryResult = await accountModel.getUserById(user_id);
-        const userData = queryResult[0]
-
+        const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
+        
         const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
         if (token.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
+        
         }
-
+        let title = '\uD83D\uDCC8 TASKSTOCK';
+        let body = '';
+        let target_id;
+        if (noticeData.type === 'sns') {
+            let follower_name = await accountModel.getUserNameById(noticeData.follower_id)
+            target_id = noticeData.follower_id
+            if (noticeData.followerPending === false) { // 팔로우 당한 사람이 공개 계정
+                body = `${follower_name}님이 팔로우를 시작했습니다.`;
+            } else { // 상대가 비공개 계정일 때
+                body = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
+            }
+        } else if (notification.type = 'general') {
+            let following_name = await accountModel.getUserNameById(noticeData.following_id)
+            target_id = noticeData.following_id;
+            body = `${following_name}님이 팔로우 요청을 수락했습니다.`
+        }
         let message = {
             notification: {
-                title: '새 메시지가 도착했습니다',
-                body: '여기에 메시지 내용을 넣으세요'
+                title: title,
+                body: body
             },
-            
             data: {
-                title: '테스트 데이터 발송',
-                body: 'notification과 data의 차이가 뭐지?',
+                target_id: target_id
             },
             token: token,
         }
@@ -77,7 +87,7 @@ module.exports = {
                 console.log('Successfully sent message: : ', response)
             })
             .catch(function (err) {
-                console.log('Error Sending message!!! : ', err)
+                console.log('Error Sending message : ', err)
             })
     },
     // TODO : 여러 사용자에게 FCM 푸시 알림 전송

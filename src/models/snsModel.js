@@ -1,6 +1,6 @@
 const db = require('../config/db.js');
 const fs = require('fs');
-const { processNotice } = require('../service/noticeService.js')
+const { processNotice, sendPush } = require('../service/noticeService.js')
 
 module.exports = {
     changePrivate: async(user_id, private) => {
@@ -170,6 +170,7 @@ module.exports = {
                 private: followerPrivate // 내 입장 private
             };
             await processNotice(predata);
+            await sendPush(noticeData);
 
             return true;
         } catch (e) {
@@ -419,6 +420,7 @@ module.exports = {
                 type: 'general' // 알림 타입
             };
             await processNotice(predata);
+            await sendPush(predata);
 
             return true;
         } catch (e) {
