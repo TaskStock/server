@@ -59,10 +59,19 @@ module.exports = {
         try {
             await db.query(query, [FCMToken, isPushOn, user_id]);
         } catch (err) {
-            console.log('saveRefreshToken ERROR : ', err);
+            console.log('saveFCMToken ERROR : ', err);
             throw err;
         }
     },
+    updateFCMToken: async(user_id, FCMToken) => {
+        const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
+        try {
+            await db.query(query, [FCMToken, user_id]);
+        } catch(err) {
+            console.log('updateFCMToken ERROR : ', err);
+            throw err;
+        }
+    }
     getFCMToken: async (user_id) => {
         const query = 'SELECT fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id = $1';
         try {

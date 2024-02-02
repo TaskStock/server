@@ -68,6 +68,23 @@ module.exports = {
             });
         }
     },
+    updateFCMToken: async(req, res) => {
+        try {
+            const user_id = req.user.user_id
+            const FCMToken = req.body.FCMToken;
+
+            await noticeModel.updateFCMToken(user_id, FCMToken);
+            return res.json.status({
+                result: "success",
+                message: "FCM 토큰 저장 완료"
+            });
+        } catch (err) {
+            console.log('updateFCMToken ERROR : ', err);
+            return res.status(500).json({
+                message: "서버 내부 오류"
+            });
+        }
+    },
     sendCustomerSuggestion: async(req, res) => {
         try {
             const user_id = req.user.user_id;
