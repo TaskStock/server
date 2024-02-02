@@ -48,6 +48,7 @@ module.exports = {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
         const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
+        
         if (token.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
