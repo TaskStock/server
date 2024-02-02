@@ -54,13 +54,22 @@ module.exports = {
             throw err;
         }
     },
-    saveRefreshToken: async (user_id, FCMToken) => {
+    saveFCMToken: async (user_id, FCMToken) => {
         const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
         try {
             await db.query(query, [FCMToken, user_id]);
         } catch (err) {
             console.log('saveRefreshToken ERROR : ', err);
             throw err;
+        }
+    },
+    getFCMToken: async () => {
+        const query = 'SELECT fcm_token FROM "UserSetting" WHERE user_id = $1';
+        try {
+            await db.query(query, [user_id]);
+        } catch(err) {
+            console.log('getFCMToken ERROR : ', err);
+            throw err
         }
     },
     saveCustomerSuggestion: async (user_id, content) => {
