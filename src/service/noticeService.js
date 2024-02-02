@@ -48,18 +48,17 @@ module.exports = {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
         const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
-        
+
         if (token.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
-        
         }
         let title = '\uD83D\uDCC8 TASKSTOCK';
         let body = '';
         let target_id;
         if (noticeData.type === 'sns') {
             let follower_name = await accountModel.getUserNameById(noticeData.follower_id)
-            target_id = toString(noticeData.follower_id)
+            target_id = noticeData.follower_id.toString()
             if (noticeData.followerPending === false) { // 팔로우 당한 사람이 공개 계정
                 body = `${follower_name}님이 팔로우를 시작했습니다.`;
             } else { // 상대가 비공개 계정일 때
@@ -67,9 +66,10 @@ module.exports = {
             }
         } else if (notification.type = 'general') {
             let following_name = await accountModel.getUserNameById(noticeData.following_id)
-            target_id = toString(noticeData.following_id);
+            target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
         }
+        console.log(target_id);
         let message = {
             notification: {
                 title: title,
@@ -91,9 +91,10 @@ module.exports = {
                 console.log('Error Sending message : ', err)
             })
     },
-    // TODO : 여러 사용자에게 FCM 푸시 알림 전송
+    // TODO : 여러 사용자에게 같은 내용의 FCM 푸시 알림 전송
+    // ! @params: noticeData = {user_id_list: [user_id, user_id, ...]}
     sendMultiPush: async(noticeData) => {
-        let {user_id_list, title, body} = noticeData 
+        let {user_id_list} = noticeData //user_id_list: 알림을 보낼 사용자 목록 user_id 리스트
         const tokens = await noticeModel.getAllFCMTokens(user_id_list);
 
         if (tokens.length == 0) {
@@ -101,17 +102,19 @@ module.exports = {
             return
         } else {
             const tokenChuncks = [];
-            for (let i=0; i<tokens.length; i +=499) {
+            for (let i=0; i<tokens.length; i +=499) { //최대 500개 까지 전송 가능해서 499개씩 끊어서 보냄
                 tokenChuncks.push(tokens.slice(i, i+499))
             }
         }
+        let title = '\uD83D\uDCC8 TASKSTOCK';
+        let body = '장 마감 한 시간 전입니다! 오늘의 가치를 확인해주세요'
         
         // 각 chunk를 순회하면서 메시지 전송
         for (let chunk of tokenChuncks) {
             let message = {
                 notification: {
-                    title: '전체 알림 title',
-                    body: '전체 알림 body'
+                    title: title,
+                    body: body
                 },
                 tokens: chunk, // 여러 토큰 지정
             };

@@ -91,8 +91,12 @@ module.exports = {
         const query = 'SELECt fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
         try {
             const {rows} = await db.query(query, [user_id_list]); 
-            const tokens = rows.map(row => row.fcm_token);
-            return tokens
+            if (rows.length === 0) {
+                return []
+            } else {
+                const tokens = rows.map(row => row.fcm_token);
+                return tokens
+            }
         } catch(err) {
             console.log('getAllFCMTokens ERROR : ', err)
             throw err
