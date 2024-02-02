@@ -15,7 +15,7 @@ module.exports = {
                 throw e;
             });
     },
-    updateSistatistics: async(stockitem_id, total_count, success_count, dayOfWeek)=>{
+    updateSistatistics: async(db, stockitem_id, total_count, success_count, dayOfWeek)=>{
         // 0 : 일요일, 1 : 월요일, 2 : 화요일, 3 : 수요일, 4 : 목요일, 5 : 금요일, 6 : 토요일
         let query;
         if(dayOfWeek === 0){

@@ -31,7 +31,7 @@ module.exports = {
             });
         return value;
     },
-    createByExistUser: async(user_id, date, start, end, low, high)=>{
+    createByExistUser: async(db, user_id, date, start, end, low, high)=>{
         const query = "insert into \"Value\" (user_id, date, start, \"end\", low, high) VALUES ($1, $2, $3, $4, $5, $6) returning *";
         const values = [user_id, date, start, end, low, high];
 
@@ -95,7 +95,7 @@ module.exports = {
             });
     },
     // 스케쥴러에 사용
-    getValueOne: async(user_id, date)=>{
+    getValueOne: async(db, user_id, date)=>{
         const query = "select * from \"Value\" where user_id=$1 and date=$2";
         const q_values = [user_id, date];
 
@@ -111,7 +111,7 @@ module.exports = {
             });
         return value;
     },
-    updateValueEnd: async(value_id, end)=>{
+    updateValueEnd: async(db, value_id, end)=>{
         const query = 'update "Value" set "end"=$1 where value_id=$2 returning *';
         const q_values = [end, value_id];
 
@@ -128,7 +128,7 @@ module.exports = {
         
         return value;
     },
-    updateValueForMakedTodos: async(value_id, end, low, high)=>{
+    updateValueForMakedTodos: async(db, value_id, end, low, high)=>{
         const query = 'update "Value" set "end"=$1, low=$2, high=$3 where value_id=$4';
         const q_values = [end, low, high, value_id];
 

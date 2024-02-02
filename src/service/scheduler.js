@@ -11,6 +11,8 @@ const stockitemModel = require('../models/stockitemModel.js');
 const sivalueModel = require('../models/sivalueModel.js');
 const sistatisticsModel = require('../models/sistatisticsModel.js');
 
+const db = require('../config/db.js');
+
 // 정산 작업
 // 1. 각 타임존에 대해 다음 정산시간에 대한 스케쥴러를 설정
 // 1-1. timezone의 다음 정산시간을 transdate에서 받아온다.
@@ -30,18 +32,18 @@ const sistatisticsModel = require('../models/sistatisticsModel.js');
 // 5. 다음 스케쥴러 설정
 // 5-1. 모든 유저의 작업이 끝났다면 timezone에 대해 다음 스케쥴러를 설정한다.
 
-async function settlementJob(user_id, startTime, sttime, tommorowsttime){
-    let value = await valueModel.getValueOne(user_id, sttime);
+async function settlementJob(cn, user_id, startTime, sttime, tommorowsttime){
+    let value = await valueModel.getValueOne(cn, user_id, sttime);
 
     if(value === undefined){    // 해당되는 날짜의 value가 없는 경우
         return;
     }
 
     // check==false인 todo만 가져와서 value에 반영
-    const todos = await todoModel.readTodoForSchedulerWithCheckFalse(user_id, startTime, sttime);
+    const todos = await todoModel.readTodoForSchedulerWithCheckFalse(cn, user_id, startTime, sttime);
     for(let i=0;i<todos.length;i++){
         const end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
-        value = await valueModel.updateValueEnd(value.value_id, end);
+        value = await valueModel.updateValueEnd(cn, value.value_id, end);
     }
 
     // 3. 다음 날짜의 value 생성
@@ -50,10 +52,10 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
     const low = start;
     const high = start;
 
-    let tommorowValue = await valueModel.createByExistUser(user_id, tommorowsttime, start, end, low, high);
+    let tommorowValue = await valueModel.createByExistUser(cn, user_id, tommorowsttime, start, end, low, high);
 
     // 4. 미리 만들어진 todo 반영
-    const maked_todos = await todoModel.readTodoForScheduler(user_id, sttime, tommorowsttime);
+    const maked_todos = await todoModel.readTodoForScheduler(cn, user_id, sttime, tommorowsttime);
 
     const tv_start = tommorowValue.start;
     let tv_end = tommorowValue.end;
@@ -71,25 +73,38 @@ async function settlementJob(user_id, startTime, sttime, tommorowsttime){
 
     }
 
-    await valueModel.updateValueForMakedTodos(tommorowValue.value_id, tv_end, tv_low, tv_high);
+    await valueModel.updateValueForMakedTodos(cn, tommorowValue.value_id, tv_end, tv_low, tv_high);
 
     // 4-2. user의 value 필드 업데이트
     const percentage = calculateService.rateOfIncrease(tv_start, tv_end);
-    await accountModel.updateValueField(user_id, tv_end, percentage);
+    await accountModel.updateValueField(cn, user_id, tv_end, percentage);
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
-    const user_ids = await accountModel.getUsersIdByRegion(timezone);
-    
-    if(user_ids === undefined){
-        return;
-    }    
+    const cn = await db.connect();
 
-    await Promise.all(
-        user_ids.map(user => 
-            settlementJob(user.user_id, startTime, sttime, tommorowsttime)
-        )
-    );
+    try{
+        await cn.query('BEGIN');
+
+		const user_ids = await accountModel.getUsersIdByRegion(cn, timezone);
+    
+        if(user_ids === undefined){
+            return;
+        }    
+
+        await Promise.all(
+            user_ids.map(user => 
+                settlementJob(cn, user.user_id, startTime, sttime, tommorowsttime)
+            )
+        );
+
+        await cn.query('COMMIT');
+    } catch(error){
+        await cn.query('ROLLBACK');
+        console.log('error : ', error);
+    }finally{
+        cn.release();
+    }
 }
 
 // 시장 종목에 대한 정산 작업
@@ -102,30 +117,44 @@ async function settlementJobManager(timezone, startTime, sttime, tommorowsttime)
 // 3. 새로운 SIValue 생성
 // 4. 통계에 대한 추가 스케쥴링 작업
 
-async function stockitemJob(stockitem_id, tommorowsttime, timezone){
+async function stockitemJob(cn, stockitem_id, tommorowsttime, timezone){
     // 2. Stockitem의 take_count, success_count를 y_take_count, y_success_count로 옮기고 0으로 초기화
-    const updated_stockitem = await stockitemModel.updateStockitemInScheduler(stockitem_id);
+    const updated_stockitem = await stockitemModel.updateStockitemInScheduler(cn, stockitem_id);
 
     // 3. 새로운 SIValue 생성
-    await sivalueModel.createSivalue(stockitem_id, tommorowsttime);
+    await sivalueModel.createSivalue(cn, stockitem_id, tommorowsttime);
 
     // 4. 통계에 대한 추가 작업
     const dayOfWeek = transdate.getDayoftheweek(timezone);
-    await sistatisticsModel.updateSistatistics(stockitem_id, updated_stockitem.y_take_count, updated_stockitem.y_success_count, dayOfWeek);
+    await sistatisticsModel.updateSistatistics(cn, stockitem_id, updated_stockitem.y_take_count, updated_stockitem.y_success_count, dayOfWeek);
 }
 
 async function stockitemJobManager(timezone, tommorowsttime){
-    const stockitems = await stockitemModel.getStockitemsWithRegion(timezone);
-    
-    if(stockitems.length===0){
-        return;
-    }    
+    const cn = await db.connect();
 
-    await Promise.all(
-        stockitems.map(si => 
-            stockitemJob(si.stockitem_id, tommorowsttime, timezone)
-        )
-    );
+    try{
+        await cn.query('BEGIN');
+
+        const stockitems = await stockitemModel.getStockitemsWithRegion(cn, timezone);
+    
+        if(stockitems.length===0){
+            // console.log('stockitem length : 0');
+            return;
+        }    
+    
+        await Promise.all(
+            stockitems.map(si => 
+                stockitemJob(cn, si.stockitem_id, tommorowsttime, timezone)
+            )
+        );
+
+        await cn.query('COMMIT');
+    } catch(error){
+        await cn.query('ROLLBACK');
+        console.log('error : ', error);
+    }finally{
+        cn.release();
+    }
 }
 
 function mainScheduler(timezone){
@@ -137,15 +166,27 @@ function mainScheduler(timezone){
     // test.setTime(test.getTime()+3000);
 
     schedule.scheduleJob(nextSettlement, async function() {
-        // await settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement);
-        await stockitemJobManager(timezone, tommorowSettlement);
-        
+        // 비동기로 각 스케쥴러 작업 실행
+
+        await Promise.allSettled([
+            settlementJobManager(timezone, startTime, nextSettlement, tommorowSettlement),
+            stockitemJobManager(timezone, tommorowSettlement)
+        ])
+        .then((results)=>{
+            results.forEach((result, index)=>{
+                if(result.status !== 'fulfilled'){
+                    console.log(`${index}번째 스케쥴러 실패:`, result.reason);
+                }
+            });
+        });
+
         mainScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
     });
 }
 
 module.exports = {
     scheduling: () => {
+        // const timeZones = ['Asia/Seoul']; // 타임존 목록
         const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
         timeZones.forEach(tz => mainScheduler(tz)); // 각 타임존에 대해 함수 호출
     }
