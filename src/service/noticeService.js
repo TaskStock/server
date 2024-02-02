@@ -50,8 +50,12 @@ module.exports = {
         let { user_id, content, type, info } = noticeData;
         const queryResult = await accountModel.getUserById(user_id);
         const userData = queryResult[0]
-        const targetToken = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
-    
+        const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
+        if (token.length == 0) {
+            console.log('FCM토큰이 0개일 경우 알림 발송 안함')
+            return
+        }
+
         let message = {
             notification: {
                 title: '새 메시지가 도착했습니다',
@@ -63,7 +67,7 @@ module.exports = {
                 body: 'notification과 data의 차이가 뭐지?',
                 style: '굳굳',
             },
-            token: targetToken,
+            token: token,
         }
 
         admin
