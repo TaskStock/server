@@ -58,7 +58,7 @@ module.exports = {
         let target_id;
         if (noticeData.type === 'sns') {
             let follower_name = await accountModel.getUserNameById(noticeData.follower_id)
-            target_id = noticeData.follower_id
+            target_id = toString(noticeData.follower_id)
             if (noticeData.followerPending === false) { // 팔로우 당한 사람이 공개 계정
                 body = `${follower_name}님이 팔로우를 시작했습니다.`;
             } else { // 상대가 비공개 계정일 때
@@ -66,7 +66,7 @@ module.exports = {
             }
         } else if (notification.type = 'general') {
             let following_name = await accountModel.getUserNameById(noticeData.following_id)
-            target_id = noticeData.following_id;
+            target_id = toString(noticeData.following_id);
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
         }
         let message = {
