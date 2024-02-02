@@ -151,7 +151,7 @@ module.exports = {
     },
     getUserById: async(user_id) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
         const query = `
-        SELECT "User".*, "UserSetting".theme, "UserSetting".language 
+        SELECT "User".*, "UserSetting".theme, "UserSetting".language, "UserSetting".is_push_on
         FROM "User" 
         INNER JOIN "UserSetting" 
         ON "User".user_id = "UserSetting".user_id 
