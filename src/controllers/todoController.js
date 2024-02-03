@@ -201,6 +201,13 @@ module.exports = {
                 const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                 const sttime = transdate.getSettlementTimeInUTC(region);
                 await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
+
+                // SIMap 업데이트
+                if(check === true){
+                    await simapModel.increaseSuccesscount(user_id, todo.stockitem_id);
+                }else if(check === false){
+                    await simapModel.decreaseSuccesscount(user_id, todo.stockitem_id);
+                }
             }
 
         }catch(error){
@@ -264,6 +271,13 @@ module.exports = {
                     const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                     const sttime = transdate.getSettlementTimeInUTC(region);
                     await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
+
+                    // SIMap 업데이트
+                    if(todo.check === true){
+                        await simapModel.decreaseTwocount(user_id, todo.stockitem_id);
+                    }else if(todo.check === false){
+                        await simapModel.decreaseTakecount(user_id, todo.stockitem_id);
+                    }
                 }
             }
         }catch(error){
