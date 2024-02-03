@@ -51,17 +51,20 @@ module.exports = {
                 const resultUtc = transdate.getSettlementTimeInUTC(region).toISOString();
                 const previousDayUtc = transdate.minusOneDay(resultUtc, region).toISOString();
                 if(nowUTC >= previousDayUtc && nowUTC < resultUtc){ // 오늘 추가한 todo만
-                    const updated_stockitem = await stockitemModel.increaseTakecount(stockitem_id);
-                    const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                     const sttime = transdate.getSettlementTimeInUTC(region);
-                    await sivalueModel.updateSuccessrateWithUserlist(stockitem_id, user_id, sttime, success_rate, 'append');
-
-                    // SIMap 업데이트
-                    const simap = await simapModel.getSimapid(user_id, stockitem_id);
-                    if(simap === undefined){
-                        await simapModel.createSimap(user_id, stockitem_id);
-                    }else{
-                        await simapModel.increaseTakecount(simap.simap_id);
+                    const isHaveStockitem = await sivalueModel.isAlreadyStockitem(stockitem_id, sttime, user_id);
+                    if(isHaveStockitem.length === 0){   // 이미 가져온 종목이 아니라면
+                        const updated_stockitem = await stockitemModel.increaseTakecount(stockitem_id);
+                        const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                        await sivalueModel.updateSuccessrateWithUserlist(stockitem_id, user_id, sttime, success_rate, 'append');
+    
+                        // SIMap 업데이트
+                        const simap = await simapModel.getSimapid(user_id, stockitem_id);
+                        if(simap === undefined){
+                            await simapModel.createSimap(user_id, stockitem_id);
+                        }else{
+                            await simapModel.increaseTakecount(simap.simap_id);
+                        }
                     }
                 }
             }

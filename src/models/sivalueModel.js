@@ -48,6 +48,22 @@ module.exports = {
                 throw e;
             });
     },
+    isAlreadyStockitem: async(stockitem_id, date, user_id)=>{
+        const query = 'select user_id from "SIValue" where stockitem_id=$1 and date=$2 and $3=any(user_id)';
+        const values = [stockitem_id, date, user_id];
+
+        const result = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return result;
+    },
     // 스케쥴러에 사용
     // getSivalueOne: async(stockitem_id, date)=>{
     //     const query = 'select * from "SIValue" where stockitem_id=$1 and date=$2';
