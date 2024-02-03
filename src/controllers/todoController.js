@@ -4,6 +4,7 @@ const accountModel = require('../models/accountModel.js');
 
 const stockitemModel = require('../models/stockitemModel.js');
 const sivalueModel = require('../models/sivalueModel.js');
+const simapModel = require('../models/simapModel.js');
 
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
@@ -54,6 +55,14 @@ module.exports = {
                     const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                     const sttime = transdate.getSettlementTimeInUTC(region);
                     await sivalueModel.updateSuccessrate(stockitem_id, sttime, success_rate);
+
+                    // SIMap 업데이트
+                    const simap = await simapModel.getSimapid(user_id, stockitem_id);
+                    if(simap === undefined){
+                        await simapModel.createSimap(user_id, stockitem_id);
+                    }else{
+                        await simapModel.increaseTakecount(simap.simap_id);
+                    }
                 }
             }
 
