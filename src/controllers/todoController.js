@@ -54,7 +54,7 @@ module.exports = {
                     const updated_stockitem = await stockitemModel.increaseTakecount(stockitem_id);
                     const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                     const sttime = transdate.getSettlementTimeInUTC(region);
-                    await sivalueModel.updateSuccessrate(stockitem_id, sttime, success_rate);
+                    await sivalueModel.updateSuccessrateWithUserlist(stockitem_id, user_id, sttime, success_rate, 'append');
 
                     // SIMap 업데이트
                     const simap = await simapModel.getSimapid(user_id, stockitem_id);
@@ -270,7 +270,7 @@ module.exports = {
                     }
                     const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                     const sttime = transdate.getSettlementTimeInUTC(region);
-                    await sivalueModel.updateSuccessrate(todo.stockitem_id, sttime, success_rate);
+                    await sivalueModel.updateSuccessrateWithUserlist(todo.stockitem_id, user_id, sttime, success_rate, 'remove');
 
                     // SIMap 업데이트
                     if(todo.check === true){
