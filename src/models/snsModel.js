@@ -386,7 +386,7 @@ module.exports = {
         try {
             const {rows} = await db.query(checkQuery, [user_id]);
             const oldImagePath = rows[0].image;
-            if (oldImagePath !== 'public/images/ic_profile.png') {
+            if (oldImagePath !== '') { // 기본 이미지가 아닐 경우
                 try {
                     await fs.promises.unlink(oldImagePath);
                     console.log('기존 이미지 삭제 성공');

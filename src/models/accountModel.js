@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 
 module.exports = {
     saveCode: async(db, authCode) => {
@@ -212,12 +213,13 @@ module.exports = {
     },
     deleteUser: async(db, user_id) => {
         try {
-            const query = 'DELETE FROM "User" WHERE user_id = $1';
-            const {rowCount} = await db.query(query, [user_id])
-                                .catch(e => {
-                                    console.error(e.stack);
-                                });
-            if (rowCount === 1) {
+            const query = 'DELETE FROM "User" WHERE user_id = $1 RETURNING image, strategy';
+            const queryResult = await db.query(query, [user_id])
+            const {image, strategy} = queryResult.rows[0];
+            if (strategy === 'local' && image !== '') {
+                fs.promises.unlink(image)
+            }
+            if (queryResult.rowCount === 1) {
                 return true;
             } else {
                 return false;        

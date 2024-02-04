@@ -457,7 +457,7 @@ module.exports = {
             }
         } catch (error) {
             console.log(error);
-            res.status(500).json({ 
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
