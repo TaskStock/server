@@ -436,7 +436,7 @@ module.exports = {
     changeDefaultImage: async(db, user_id) => {
         const query = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         try {
-            await db.query(query, ['public/images/ic_profile.png', user_id]);
+            await db.query(query, ['', user_id]);
             return true;
         } catch (e) {
             console.log(e.stack);
