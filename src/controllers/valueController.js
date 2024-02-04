@@ -8,25 +8,32 @@ module.exports = {
         const region = req.user.region;
         // 생성할 때는 로컬 기준 정산시간(06시) 를 utc로 변환하여 저장
         
+        const db = req.dbClient;
         try{
             const settlementTime = transdate.getSettlementTimeInUTC(region);
 
-            await valueModel.createByNewUser(user_id, settlementTime);
-            res.json({result: "success"});
+            await valueModel.createByNewUser(db, user_id, settlementTime);
+
+            await db.query('COMMIT');
+            return res.json({result: "success"});
         }catch(error){
+            await db.query('ROLLBACK');
             if(error.code === '23505'){ // 중복으로 인한 오류
                 res.status(409).json({result: "fail", message: "이미 해당 날짜의 value가 존재합니다."});
             }else{
                 next(error);
             }
+        }finally{
+            db.release();
         }
     },
     createByExistUser: async(req, res, next) =>{
         const user_id = req.user.user_id;
         const region = req.user.region;
         
+        const db = req.dbClient;
         try{
-            const recentValue = await valueModel.getRecentValue(user_id);
+            const recentValue = await valueModel.getRecentValue(db, user_id);
             const start = recentValue.end;
             const end = start;
             const low = start;
@@ -34,14 +41,19 @@ module.exports = {
 
             const settlementTime = transdate.getSettlementTimeInUTC(region);
 
-            await valueModel.createByExistUser(user_id, settlementTime, start, end, low, high);
-            res.json({result: "success"});
+            await valueModel.createByExistUser(db, user_id, settlementTime, start, end, low, high);
+
+            await db.query('COMMIT');
+            return res.json({result: "success"});
         }catch(error){
+            await db.query('ROLLBACK');
             if(error.code === '23505'){ // 중복으로 인한 오류
                 res.status(409).json({result: "fail", message: "이미 해당 날짜의 value가 존재합니다."});
             }else{
                 next(error);
             }
+        }finally{
+            db.release();
         }
     },
     getValues: async(req, res, next) =>{
@@ -60,12 +72,17 @@ module.exports = {
             return res.status(400).json({result: "fail", message: "잘못된 타임존입니다."});
         }
         
+        const db = req.dbClient;
         try{
-            const values = await valueModel.getValues(user_id, trans_start_date, trans_end_date);
+            const values = await valueModel.getValues(db, user_id, trans_start_date, trans_end_date);
 
-            res.json({values: values});
+            await db.query('COMMIT');
+            return res.json({values: values});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
     },
 }

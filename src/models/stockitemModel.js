@@ -1,7 +1,5 @@
-const db = require('../config/db.js');
-
 module.exports = {
-    insertStockitem: async(name, level, region)=>{
+    insertStockitem: async(db, name, level, region)=>{
         const query = 'insert into "Stockitem" (name, level, region) VALUES ($1, $2, $3) returning stockitem_id';
         const values = [name, level, region];
 
@@ -17,7 +15,7 @@ module.exports = {
             });
         return stockitem_id;
     },
-    updateStockitem: async(stockitem_id, name, level)=>{
+    updateStockitem: async(db, stockitem_id, name, level)=>{
         const query = 'update "Stockitem" set name=$1, level=$2 where stockitem_id=$3';
         const values = [name, level, stockitem_id];
 
@@ -31,7 +29,7 @@ module.exports = {
                 throw e;
             });
     },
-    deleteStockitem: async(stockitem_id)=>{
+    deleteStockitem: async(db, stockitem_id)=>{
         const query = 'delete from "Stockitem" where stockitem_id=$1';
         const values = [stockitem_id];
 
@@ -45,7 +43,7 @@ module.exports = {
                 throw e;
             });
     },
-    getStockitems: async()=>{
+    getStockitems: async(db)=>{
         const query = 'select * from "Stockitem"';
         const values = [];
 
@@ -94,7 +92,7 @@ module.exports = {
             });
         return stockitem;
     },
-    increaseTakecount: async(stockitem_id)=>{
+    increaseTakecount: async(db, stockitem_id)=>{
         const query = 'update "Stockitem" set take_count=take_count+1 where stockitem_id=$1 returning take_count, success_count';
         const values = [stockitem_id];
 
@@ -110,7 +108,7 @@ module.exports = {
             });
         return stockitem;
     },
-    increaseSuccesscount: async(stockitem_id)=>{
+    increaseSuccesscount: async(db, stockitem_id)=>{
         const query = 'update "Stockitem" set success_count=success_count+1 where stockitem_id=$1 returning take_count, success_count';
         const values = [stockitem_id];
 
@@ -126,7 +124,7 @@ module.exports = {
             });
         return stockitem;
     },
-    decreaseSuccesscount: async(stockitem_id)=>{
+    decreaseSuccesscount: async(db, stockitem_id)=>{
         const query = 'update "Stockitem" set success_count=success_count-1 where stockitem_id=$1 returning take_count, success_count';
         const values = [stockitem_id];
 
@@ -142,7 +140,7 @@ module.exports = {
             });
         return stockitem;
     },
-    decreaseTakecount: async(stockitem_id)=>{
+    decreaseTakecount: async(db, stockitem_id)=>{
         const query = 'update "Stockitem" set take_count=take_count-1 where stockitem_id=$1 returning take_count, success_count';
         const values = [stockitem_id];
 
@@ -158,7 +156,7 @@ module.exports = {
             });
         return stockitem;
     },
-    decreaseTwocount: async(stockitem_id)=>{
+    decreaseTwocount: async(db, stockitem_id)=>{
         const query = 'update "Stockitem" set take_count=take_count-1, success_count=success_count-1 where stockitem_id=$1 returning take_count, success_count';
         const values = [stockitem_id];
 

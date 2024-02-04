@@ -1,7 +1,5 @@
-const db = require('../config/db.js');
-
 module.exports = {
-    createByNewUser: async(user_id, date)=>{
+    createByNewUser: async(db, user_id, date)=>{
         const query = "insert into \"Value\" (user_id, date) VALUES ($1, $2)";
         const values = [user_id, date];
 
@@ -15,7 +13,7 @@ module.exports = {
                 throw e;
             });
     },
-    getRecentValue: async(user_id)=>{
+    getRecentValue: async(db, user_id)=>{
         const query = "select * from \"Value\" where user_id=$1 order by date desc limit 1";
         const values = [user_id];
 
@@ -47,7 +45,7 @@ module.exports = {
             });
         return value;
     },
-    getValues: async(user_id, start_date, end_date)=>{
+    getValues: async(db, user_id, start_date, end_date)=>{
         const query = "select * from \"Value\" where user_id=$1 and date>=$2 and date<$3 order by date";
         const q_values = [user_id, start_date, end_date];
 
@@ -63,7 +61,7 @@ module.exports = {
             });
         return values;
     },
-    updateValueBecauseTodoComplete: async(user_id, change_amount, date)=>{
+    updateValueBecauseTodoComplete: async(db, user_id, change_amount, date)=>{
         // 정산기준으로 value 는 하루에 하나만 있어야한다.
         const query = 'update "Value" set "end"="end"+$1 where user_id=$2 and date=$3 returning start, "end"';
         const q_values = [change_amount, user_id, date];
@@ -80,7 +78,7 @@ module.exports = {
             });
         return value;
     },
-    updateValue: async(user_id, value_id, start, end, low, high)=>{
+    updateValue: async(db, user_id, value_id, start, end, low, high)=>{
         const query = "update \"Value\" set start=$1, \"end\"=$2, low=$3, high=$4 where user_id=$5 and value_id=$6";
         const values = [start, end, low, high, user_id, value_id];
 

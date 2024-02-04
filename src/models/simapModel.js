@@ -1,7 +1,5 @@
-const db = require('../config/db.js');
-
 module.exports = {
-    getSimapid: async(user_id, stockitem_id)=>{
+    getSimapid: async(db, user_id, stockitem_id)=>{
         const query = 'select simap_id from "SIMap" where user_id=$1 and stockitem_id=$2';
         const values = [user_id, stockitem_id];
 
@@ -17,7 +15,7 @@ module.exports = {
             });
         return simap_id;
     },
-    createSimap: async(user_id, stockitem_id)=>{
+    createSimap: async(db, user_id, stockitem_id)=>{
         const query = 'insert into "SIMap" (user_id, stockitem_id) VALUES ($1, $2)';
         const values = [user_id, stockitem_id];
 
@@ -31,7 +29,7 @@ module.exports = {
                 throw e;
             });
     },
-    increaseTakecount: async(simap_id)=>{
+    increaseTakecount: async(db, simap_id)=>{
         const query = 'update "SIMap" set take_count=take_count+1 where simap_id=$1';
         const values = [simap_id];
 
@@ -45,7 +43,7 @@ module.exports = {
                 throw e;
             });
     },
-    decreaseTakecount: async(simap_id)=>{
+    decreaseTakecount: async(db, simap_id)=>{
         const query = 'update "SIMap" set take_count=take_count-1 where simap_id=$1';
         const values = [simap_id];
 
@@ -59,7 +57,7 @@ module.exports = {
                 throw e;
             });
     },
-    increaseSuccesscount: async(user_id, stockitem_id)=>{
+    increaseSuccesscount: async(db, user_id, stockitem_id)=>{
         const query = 'update "SIMap" set success_count=success_count+1 where user_id=$1 and stockitem_id=$2';
         const values = [user_id, stockitem_id];
 
@@ -73,7 +71,7 @@ module.exports = {
                 throw e;
             });
     },
-    decreaseSuccesscount: async(user_id, stockitem_id)=>{
+    decreaseSuccesscount: async(db, user_id, stockitem_id)=>{
         const query = 'update "SIMap" set success_count=success_count-1 where user_id=$1 and stockitem_id=$2';
         const values = [user_id, stockitem_id];
 
@@ -87,7 +85,7 @@ module.exports = {
                 throw e;
             });
     },
-    decreaseTwocount: async(user_id, stockitem_id)=>{
+    decreaseTwocount: async(db, user_id, stockitem_id)=>{
         const query = 'update "SIMap" set take_count=take_count-1, success_count=success_count-1 where user_id=$1 and stockitem_id=$2';
         const values = [user_id, stockitem_id];
 

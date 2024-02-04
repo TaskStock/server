@@ -1,7 +1,5 @@
-const db = require('../config/db.js');
-
 module.exports = {
-    createSistatistics: async(stockitem_id)=>{
+    createSistatistics: async(db, stockitem_id)=>{
         const query = 'insert into "SIStatistics" (stockitem_id) VALUES ($1)';
         const values = [stockitem_id];
 
