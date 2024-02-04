@@ -11,6 +11,7 @@ require("dotenv").config();
 
 //db랑 소통하기 위한 accountModel
 const accountModel = require('../models/accountModel.js');
+const db = require('../config/db.js');
 
 //이메일 로그인을 위한 local strategy
 passport.use(new LocalStrategy({
@@ -19,7 +20,7 @@ passport.use(new LocalStrategy({
 },
     async (email, password, done) => {
         try {
-            const userData = await accountModel.getUserByEmail(email);
+            const userData = await accountModel.getUserByEmail(email, db);
             if (userData === null) {
                 return done(null, false, { message: '가입 정보가 없습니다.' }); //done(error, user, info)
             } else if (userData.strategy != 'local') {
