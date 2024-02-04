@@ -45,8 +45,8 @@ module.exports = {
     },
     //인증코드 확인
     checkCode: async (req, res) => {
+        const cn = await db.connect();
         try {
-            const cn = await db.connect();
             await cn.query('BEGIN');
 
             const inputData = req.body;
@@ -88,8 +88,8 @@ module.exports = {
     },
     //이메일 회원가입
     register: async (req, res) => {
+        const cn = await db.connect();
         try {
-            const cn = await db.connect();
             await cn.query('BEGIN');
 
             const email = req.body.email;
@@ -168,8 +168,8 @@ module.exports = {
     }, 
     //소셜 로그인
     loginSocial: async (req, res) => {
+        const cn = await db.connect();
         try {
-            const cn = await db.connect();
             await cn.query('BEGIN');
             const userData = req.body;
             
@@ -235,6 +235,7 @@ module.exports = {
                 });
             }
         } catch (error) {
+            await cn.query('ROLLBACK');
             console.log(error);
             return res.status(500).json({ 
                 result: "error", 
