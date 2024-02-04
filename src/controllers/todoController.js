@@ -5,6 +5,7 @@ const accountModel = require('../models/accountModel.js');
 const stockitemModel = require('../models/stockitemModel.js');
 const sivalueModel = require('../models/sivalueModel.js');
 const simapModel = require('../models/simapModel.js');
+const sivaluemapModel = require('../models/sivaluemapModel.js');
 
 const transdate = require('../service/transdateService.js');
 const calculate = require('../service/calculateService.js');
@@ -59,11 +60,15 @@ module.exports = {
                 const previousDayUtc = transdate.minusOneDay(resultUtc, region).toISOString();
                 if(nowUTC >= previousDayUtc && nowUTC < resultUtc){ // 오늘 추가한 todo만
                     const sttime = transdate.getSettlementTimeInUTC(region);
-                    const isHaveStockitem = await sivalueModel.isAlreadyStockitem(cn, stockitem_id, sttime, user_id);
+                    const isHaveStockitem = await sivaluemapModel.getMapping(cn, stockitem_id, sttime, user_id);
                     if(isHaveStockitem.length === 0){   // 이미 가져온 종목이 아니라면
                         const updated_stockitem = await stockitemModel.increaseTakecount(cn, stockitem_id);
                         const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
-                        await sivalueModel.updateSuccessrateWithUserlist(cn, stockitem_id, user_id, sttime, success_rate, 'append');
+
+                        // 성공률 업데이트하고 해당 종목 등록한 리스트에 유저 추가
+                        const sivalue_id = await sivalueModel.updateSuccessrate(cn, stockitem_id, sttime, success_rate);
+                        // sivaluemap 업데이트
+                        await sivaluemapModel.insertMapping(cn, user_id, sivalue_id);
     
                         // SIMap 업데이트
                         const simap = await simapModel.getSimapid(cn, user_id, stockitem_id);
@@ -306,7 +311,10 @@ module.exports = {
                     }
                     const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
                     const sttime = transdate.getSettlementTimeInUTC(region);
-                    await sivalueModel.updateSuccessrateWithUserlist(cn, todo.stockitem_id, user_id, sttime, success_rate, 'remove');
+
+                    const sivalue_id = await sivalueModel.updateSuccessrate(cn, todo.stockitem_id, sttime, success_rate);
+                    // sivaluemap 업데이트
+                    await sivaluemapModel.deleteMapping(cn, user_id, sivalue_id);
 
                     // SIMap 업데이트
                     if(todo.check === true){
