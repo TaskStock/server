@@ -438,17 +438,21 @@ module.exports = {
     },
     //회원탈퇴
     unregister: async (req, res) => {
+        cn = await db.connect();
         try {
+            await cn.query('BEGIN');
             const user_id = req.user.user_id;
             const deleteResult = await accountModel.deleteUser(db, user_id);
 
             if (deleteResult) {
+                await cn.query('COMMIT');
                 console.log("회원탈퇴 성공")
                 return res.status(200).json({ 
                     result: "success", 
                     message: "회원탈퇴 성공" 
                 });
             } else {
+                await cn.query('ROLLBACK');
                 console.log("회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
@@ -457,10 +461,13 @@ module.exports = {
             }
         } catch (error) {
             console.log(error);
+            await cn.query('ROLLBACK');
             return res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
+        } finally {
+            cn.release();
         }
     },
     changeTheme: async (req, res) => {
