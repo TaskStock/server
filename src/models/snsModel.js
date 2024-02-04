@@ -223,32 +223,32 @@ module.exports = {
             // 검색 대상의 정보 넘겨야 함
             const query = `
             SELECT  
-                U1.user_id, 
-                U1.image, 
-                U1.user_name, 
-                U1.cumulative_value, 
-                U1.strategy, 
-                U1.private,
+                U.user_id, 
+                U.image, 
+                U.user_name, 
+                U.cumulative_value, 
+                U.strategy, 
+                U.private,
                 CASE 
-                    WHEN F1.pending IS NOT NULL THEN F1.pending
+                    WHEN FM.following_id IS NOT NULL AND FM.pending = false THEN true
                     ELSE false
-                END AS "pending",
+                END AS "isFollowingYou",
                 CASE
-                    WHEN F2.following_id = $2 AND F2.pending = false THEN true
+                    WHEN FM2.follower_id IS NOT NULL AND FM2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
-                CASE
-                    WHEN F1.follower_id = $2 AND F1.pending = false THEN true
+                CASE 
+                    WHEN FM.following_id IS NOT NULL AND FM.pending = true THEN true
                     ELSE false
-                END AS "isFollowingYou"
-            FROM "User" U1
-            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.following_id = $2
-            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F2.follower_id = $2
-            WHERE (U1.user_name LIKE $1 OR U1.email LIKE $1) AND U1.user_id != $2
+                END AS "pending"
+            FROM "User" U
+            LEFT JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
+            LEFT JOIN "FollowMap" FM2 ON U.user_id = FM2.follower_id AND FM2.following_id = $1
+            WHERE (U.user_name LIKE $2 OR U.email LIKE $2) AND U.user_id = $1
             `
             // 상대 사용자($1) 로그인한 사용자($2)
             try {
-                const {rows: result} = await db.query(query, [queryTarget, user_id]);
+                const {rows: result} = await db.query(query, [user_id, queryTarget]);
                 return result;
             } catch (e) {
                 console.log(e.stack);
