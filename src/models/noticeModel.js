@@ -54,19 +54,58 @@ module.exports = {
             throw err;
         }
     },
-    saveRefreshToken: async (user_id, FCMToken) => {
-        const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
+    saveFCMToken: async (user_id, isPushOn ,FCMToken) => {
+        const query = 'UPDATE "UserSetting" SET fcm_token = $1, is_push_on = $2 WHERE user_id = $3';
         try {
-            await db.query(query, [FCMToken, user_id]);
+            await db.query(query, [FCMToken, isPushOn, user_id]);
         } catch (err) {
-            console.log('saveRefreshToken ERROR : ', err);
+            console.log('saveFCMToken ERROR : ', err);
             throw err;
         }
     },
-    saveCustomerSuggestion: async (user_id, content) => {
-        const query = 'INSERT INTO "CustomerService" (user_id, content) VALUES ($1, $2)';
+    updateFCMToken: async(user_id, FCMToken) => {
+        const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
         try {
-            await db.query(query, [user_id, content]);
+            await db.query(query, [FCMToken, user_id]);
+        } catch(err) {
+            console.log('updateFCMToken ERROR : ', err);
+            throw err;
+        }
+    },
+    getFCMToken: async (user_id) => {
+        const query = 'SELECT fcm_token FROM "UserSetting" WHERE is_push_on = true AND fcm_token IS NOT NULL AND user_id = $1';
+        try {
+            const {rows} = await db.query(query, [user_id]);
+            if (rows.length === 0) {
+                return []
+            } else {
+                const token = rows[0].fcm_token
+                return token
+            }
+        } catch(err) {
+            console.log('getFCMToken ERROR : ', err);
+            throw err
+        }
+    },
+    getAllFCMTokens: async (user_id_list) => {
+        const query = 'SELECt fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
+        try {
+            const {rows} = await db.query(query, [user_id_list]); 
+            if (rows.length === 0) {
+                return []
+            } else {
+                const tokens = rows.map(row => row.fcm_token);
+                return tokens
+            }
+        } catch(err) {
+            console.log('getAllFCMTokens ERROR : ', err)
+            throw err
+        }
+    },
+    saveCustomerSuggestion: async (user_id, content, email) => {
+        const query = 'INSERT INTO "CustomerService" (user_id, content, email) VALUES ($1, $2, $3)';
+        try {
+            await db.query(query, [user_id, content, email]);
         } catch (err) {
             console.log('saveCustomerSuggestion ERROR : ', err);
             throw err;

@@ -41,7 +41,6 @@ module.exports = {
             await noticeModel.changeNoticeSetting(user_id, isPushOn);
             return res.status(200).json({
                 result: "success",
-                message: "알림 설정 변경 완료"
             });
         } catch (e) {
             console.log('changeNoticeSetting ERROR : ', e);
@@ -53,15 +52,31 @@ module.exports = {
     saveFCMToken: async(req, res) => {
         try {
             const FCMToken = req.body.FCMToken;
+            const isPushOn = req.body.isPushOn;
             const user_id = req.user.user_id;
 
-            await noticeModel.saveFCMToken(user_id, FCMToken);
+            await noticeModel.saveFCMToken(user_id, isPushOn, FCMToken);
             return res.status(200).json({
                 result: "success",
-                message: "FCM 토큰 저장 완료"
             }); 
     } catch (e) {
             console.log('saveFCMToken ERROR : ', e);
+            return res.status(500).json({
+                message: "서버 내부 오류"
+            });
+        }
+    },
+    updateFCMToken: async(req, res) => {
+        try {
+            const user_id = req.user.user_id
+            const FCMToken = req.body.FCMToken;
+
+            await noticeModel.updateFCMToken(user_id, FCMToken);
+            return res.json.status({
+                result: "success",
+            });
+        } catch (err) {
+            console.log('updateFCMToken ERROR : ', err);
             return res.status(500).json({
                 message: "서버 내부 오류"
             });
@@ -71,13 +86,15 @@ module.exports = {
         try {
             const user_id = req.user.user_id;
             const content = req.body.content
+            const email = req.body.email;
 
-            await noticeModel.saveCustomerSuggestion(user_id, content);
+            await noticeModel.saveCustomerSuggestion(user_id, content, email);
 
             const noticeData = {
                 type: 'customer.suggestion',
                 user_id: user_id,
-                content: content
+                content: content,
+                email: email
             }
             await noticeService.sendSlack(noticeData);
             return res.status(200).json({

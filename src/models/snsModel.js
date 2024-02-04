@@ -1,6 +1,6 @@
 const db = require('../config/db.js');
 const fs = require('fs');
-const { processNotice } = require('../service/noticeService.js')
+const { processNotice, sendPush } = require('../service/noticeService.js')
 
 module.exports = {
     changePrivate: async(user_id, private) => {
@@ -170,6 +170,7 @@ module.exports = {
                 private: followerPrivate // 내 입장 private
             };
             await processNotice(predata);
+            await sendPush(predata);
 
             return true;
         } catch (e) {
@@ -232,13 +233,13 @@ module.exports = {
                     ELSE false
                 END AS "isFollowingMe",
                 CASE
-                    WHEN F1.pending IS NOT NULL THEN F1.peding
+                    WHEN F1.pending IS NOT NULL THEN F1.pending
                     ELSE false
                 END AS "pending"
             FROM "User" U1
-            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.follower_id = $2
-            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F1.following_id = $2
-            WHERE (U.user_name LIKE $1 OR U.email LIKE $1) AND U.user_id != $2
+            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.following_id = $2
+            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F2.follower_id = $2
+            WHERE (U1.user_name LIKE $1 OR U1.email LIKE $1) AND U1.user_id != $2
             `
             // 상대 사용자($1) 로그인한 사용자($2)
             try {
@@ -313,8 +314,11 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            F2.pending,
             U.strategy,
+            CASE
+                WHEN F2.pending IS NOT NULL THEN F2.pending
+                ELSE false
+            END AS "pending",
             CASE
                 WHEN FM.pending = false THEN true
                 ELSE false
@@ -336,7 +340,7 @@ module.exports = {
             U.user_name, 
             U.cumulative_value, 
             U.private, 
-            F2.pending,
+            FM.pending,
             U.strategy,
             CASE
                 WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
@@ -345,9 +349,7 @@ module.exports = {
             CASE 
                 WHEN FM.pending = false THEN true
                 ELSE false
-            END AS "isFollowingYou",
-            CASE
-                WEHN 
+            END AS "isFollowingYou"
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
@@ -355,7 +357,6 @@ module.exports = {
         `;
         
         try {
-            console.log(user_id)
             const {rows: followerList} = await db.query(followerQuery, [user_id]);
             const {rows: followingList} = await db.query(followingQuery, [user_id]);
             return [followerList, followingList]
@@ -419,6 +420,7 @@ module.exports = {
                 type: 'general' // 알림 타입
             };
             await processNotice(predata);
+            await sendPush(predata);
 
             return true;
         } catch (e) {
