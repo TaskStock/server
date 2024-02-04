@@ -236,7 +236,7 @@ module.exports = {
                 CASE
                     WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
-                END AS "isFollowingME",
+                END AS "isFollowingMe",
                 CASE
                     WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
