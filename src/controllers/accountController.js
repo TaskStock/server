@@ -442,7 +442,7 @@ module.exports = {
         try {
             await cn.query('BEGIN');
             const user_id = req.user.user_id;
-            const deleteResult = await accountModel.deleteUser(db, user_id);
+            const deleteResult = await accountModel.deleteUser(cn, user_id);
 
             if (deleteResult) {
                 await cn.query('COMMIT');
