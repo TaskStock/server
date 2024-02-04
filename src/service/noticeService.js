@@ -65,7 +65,7 @@ module.exports = {
             } else { // 상대가 비공개 계정일 때
                 body = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
             }
-        } else if (notification.type = 'general') {
+        } else if (noticeData.type = 'general') {
             let following_name = await accountModel.getUserNameById(db, noticeData.following_id)
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
