@@ -77,4 +77,21 @@ module.exports = {
             db.release();
         }
     },
+    getItem: async(req, res, next) =>{
+        const stockitem_id = req.params.stockitem_id;
+        const user_id = req.user.user_id;
+
+        const db = req.dbClient;
+        try{
+            const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id);
+
+            await db.query('COMMIT');
+            return res.json({stockitem: stockitem});
+        }catch(error){
+            await db.query('ROLLBACK');
+            next(error);
+        }finally{
+            db.release();
+        }
+    },
 }

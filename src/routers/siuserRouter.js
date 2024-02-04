@@ -7,5 +7,6 @@ router.get('/myinterest', siuserController.getItemsMyinterest);
 router.get('/todaypopular', siuserController.getItemsTodaypopular);
 router.get('/todayrecommend', siuserController.getItemsTodayrecommend);
 router.get('/all', siuserController.getItemsAll);
+router.get('/detail/:stockitem_id', siuserController.getItem);
 
 module.exports = router;
