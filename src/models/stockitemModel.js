@@ -172,4 +172,29 @@ module.exports = {
             });
         return stockitem;
     },
+    // 나의 관심종목 가져오기
+    getMyinterest: async(db, user_id)=>{
+        const query = `
+        select * 
+        from "Stockitem" s 
+            inner join "SIMap" m
+            on s.stockitem_id = m.stockitem_id
+        where m.user_id=$1 
+        order by m.take_count desc
+        limit 15
+        `;
+        const values = [user_id];
+
+        const simap_id = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return simap_id;
+    },
 }
