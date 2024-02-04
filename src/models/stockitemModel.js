@@ -231,4 +231,27 @@ module.exports = {
             });
         return stockitems;
     },
+    // 전체 종목 리스트 조회
+    getAll: async(db, date)=>{
+        const query = `
+        select s.*, v.success_rate, v.user_id
+        from "Stockitem" s
+            inner join "SIValue" v
+            on s.stockitem_id = v.stockitem_id
+        where v.date=$1
+        `;
+        const values = [date];
+
+        const stockitems = await db.query(query, values)
+            .then(res => {
+                console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return stockitems;
+    },
 }

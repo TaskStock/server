@@ -50,4 +50,31 @@ module.exports = {
             db.release();
         }
     },
+    getItemsAll: async(req, res, next) =>{
+        const user_id = req.user.user_id;
+        const region = req.user.region;
+
+        const db = req.dbClient;
+        try{
+            const sttime = transdate.getSettlementTimeInUTC(region);
+
+            const stockitems = await stockitemModel.getAll(db, sttime);
+
+            for(let i=0;i<stockitems.length;i++){
+                if(stockitems[i].user_id === null){
+                    stockitems[i].is_add_today = false;
+                    continue;
+                }
+                stockitems[i].is_add_today=stockitems[i].user_id.includes(user_id);
+            }
+
+            await db.query('COMMIT');
+            return res.json({stockitems: stockitems});
+        }catch(error){
+            await db.query('ROLLBACK');
+            next(error);
+        }finally{
+            db.release();
+        }
+    },
 }
