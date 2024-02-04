@@ -232,11 +232,11 @@ module.exports = {
                 CASE 
                     WHEN F2.pending IS NOT NULL THEN F2.pending
                     ELSE false
-                END AS "pending"
+                END AS "pending",
                 CASE
                     WHEN F2.pending IS NOT NULL AND F2.pending = false THEN true
                     ELSE false
-                END AS "isFollowingME"
+                END AS "isFollowingME",
                 CASE
                     WHEN F1.pending IS NOT NULL AND F1.pending = false THEN true
                     ELSE false
