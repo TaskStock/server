@@ -244,7 +244,7 @@ module.exports = {
             FROM "User" U
             LEFT JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
             LEFT JOIN "FollowMap" FM2 ON U.user_id = FM2.follower_id AND FM2.following_id = $1
-            WHERE (U.user_name LIKE $2 OR U.email LIKE $2) AND U.user_id = $1
+            WHERE (U.user_name LIKE $2 OR U.email LIKE $2) AND U.user_id != $1
             `
             // 상대 사용자($1) 로그인한 사용자($2)
             try {
