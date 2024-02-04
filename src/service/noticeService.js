@@ -16,7 +16,7 @@ module.exports = {
         let displayAccept;
         
         if (noticeData.type === 'sns') {
-            let follower_name = await accountModel.getUserNameById(predata.follower_id, db);
+            let follower_name = await accountModel.getUserNameById(db, predata.follower_id);
             if (predata.followerPending === false) { // 팔로우 당한 사람이 공개 계정일 때
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
                 displayAccept = false;
@@ -35,7 +35,7 @@ module.exports = {
         }
 
         if (noticeData.type === 'general') {
-            let following_name = await accountModel.getUserNameById(predata.following_id, db);
+            let following_name = await accountModel.getUserNameById(db, predata.following_id);
             noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
 
             noticeData.info = JSON.stringify({
@@ -58,7 +58,7 @@ module.exports = {
         let body = '';
         let target_id;
         if (noticeData.type === 'sns') {
-            let follower_name = await accountModel.getUserNameById(noticeData.follower_id, db)
+            let follower_name = await accountModel.getUserNameById(db, noticeData.follower_id)
             target_id = noticeData.follower_id.toString()
             if (noticeData.followerPending === false) { // 팔로우 당한 사람이 공개 계정
                 body = `${follower_name}님이 팔로우를 시작했습니다.`;
@@ -66,7 +66,7 @@ module.exports = {
                 body = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
             }
         } else if (notification.type = 'general') {
-            let following_name = await accountModel.getUserNameById(noticeData.following_id, db)
+            let following_name = await accountModel.getUserNameById(db, noticeData.following_id)
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
         }
@@ -136,7 +136,7 @@ module.exports = {
         try {
             let message = "";
             if (noticeData.type === 'customer.suggestion') {
-                const user_name = await accountModel.getUserNameById(noticeData.user_id, db);
+                const user_name = await accountModel.getUserNameById(db, noticeData.user_id);
                 const content = noticeData.content;
                 const email = noticeData.email;
                 message = `

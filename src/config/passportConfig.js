@@ -20,7 +20,7 @@ passport.use(new LocalStrategy({
 },
     async (email, password, done) => {
         try {
-            const userData = await accountModel.getUserByEmail(email, db);
+            const userData = await accountModel.getUserByEmail(db, email);
             if (userData === null) {
                 return done(null, false, { message: '가입 정보가 없습니다.' }); //done(error, user, info)
             } else if (userData.strategy != 'local') {
