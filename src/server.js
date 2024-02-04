@@ -76,7 +76,7 @@ async function transaction(req, res, next){
 }
 
 app.use("/account", accountRouter);
-app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
+app.use("/todo", passport.authenticate('jwt', { session: false }), transaction, todoRouter);
 app.use("/sns", passport.authenticate('jwt', { session: false }), snsRouter);
 app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
 app.use("/value", passport.authenticate('jwt', { session: false }), transaction, valueRouter);
