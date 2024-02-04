@@ -46,14 +46,6 @@ module.exports = {
 
             const stockitems = await stockitemModel.getAll(db, sttime, user_id);
 
-            for(let i=0;i<stockitems.length;i++){
-                if(stockitems[i].user_id === null){
-                    stockitems[i].is_add_today = false;
-                }else{
-                    stockitems[i].is_add_today = true;
-                }
-            }
-
             return res.json({stockitems: stockitems});
         }catch(error){
             next(error);
