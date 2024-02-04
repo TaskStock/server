@@ -1,24 +1,24 @@
 const bcrypt = require('bcrypt');
 
 module.exports = {
-    saveCode: async(authCode, db) => {
+    saveCode: async(cn, authCode) => {
         try {
             const query = 'INSERT INTO "Code" (auth_code) VALUES ($1) RETURNING code_id';
             const code = authCode;
-            const {rows} = await db.query(query, [code]); 
+            const {rows} = await cn.query(query, [code]); 
             const codeId = rows[0].code_id; 
-            console.log("코드 db에 저장 완료");
+            console.log("코드 cn에 저장 완료");
             return codeId 
         } catch (e) {
             console.log(e.stack);
             throw e;
         }
     },
-    checkCode: async(inputData, db) => {
+    checkCode: async(cn, inputData) => {
         try {
             const query = 'SELECT auth_code FROM "Code" WHERE code_id = $1';
             const codeId = inputData.codeId;    
-            const {rows} = await db.query(query, [codeId]);
+            const {rows} = await cn.query(query, [codeId]);
             if (rows.length === 0) {
                 return false;
             }
@@ -36,11 +36,11 @@ module.exports = {
             throw e;
         }
     },
-    deleteCode: async(inputData, db) => {
+    deleteCode: async(cn, inputData) => {
         const query = 'DELETE FROM "Code" WHERE code_id = $1';
         const code = inputData.codeId;
         try {
-            const deleteResult = await db.query(query, [code]);
+            const deleteResult = await cn.query(query, [code]);
             
             if (deleteResult.rowCount === 1) {
                 return true;
@@ -52,7 +52,7 @@ module.exports = {
             return false;
         }
     },
-    register: async(registerData, db) => {
+    register: async(db, registerData) => {
         try {
             let {email, userName, password, isAgree, strategy, userPicture, theme, language} = registerData; 
             let defaultImage = 'public/images/ic_profile.png'
@@ -63,7 +63,7 @@ module.exports = {
                 if (userPicture === null) {
                     userPicture = defaultImage;
                 }
-                const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
+                const {rows: _rows} = await cn.query(query, [email, userName, strategy, userPicture])
                     .catch(e => {
                         console.error(e.stack);
                     });
@@ -74,7 +74,7 @@ module.exports = {
                 const hashedPassword = await bcrypt.hash(password, 10);
                 
                 const query = 'INSERT INTO "User" (email, password, user_name, image) VALUES ($1, $2, $3, $4) RETURNING *';
-                const {rows: _rows} = await db.query(query, [email, hashedPassword, userName, defaultImage])
+                const {rows: _rows} = await cn.query(query, [email, hashedPassword, userName, defaultImage])
                     .catch(e => {
                         console.error(e.stack);
                     });
@@ -85,7 +85,7 @@ module.exports = {
             const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
             const defaultSet = [userData.user_id, isAgree, theme, language];
 
-            await db.query(settingQuery, defaultSet)
+            await cn.query(settingQuery, defaultSet)
                 .catch(e => {
                     console.error(e.stack);
                 });
@@ -96,19 +96,19 @@ module.exports = {
             throw e;
         }
     },
-    saveRefreshToken: async(user_id, refreshToken, device_id, db) => {
+    saveRefreshToken: async(cn, user_id, refreshToken, device_id) => {
         try {
         const selectQuery = 'SELECT * FROM "Token" WHERE user_id = $1 and device_id = $2';
-        const {rowCount} = await db.query(selectQuery, [user_id, device_id]);
+        const {rowCount} = await cn.query(selectQuery, [user_id, device_id]);
         if (rowCount === 0) {
             const insertQuery = 'INSERT INTO "Token" (user_id, refresh_token, device_id) VALUES ($1, $2, $3)';
-            await db.query(insertQuery, [user_id, refreshToken, device_id])
+            await cn.query(insertQuery, [user_id, refreshToken, device_id])
                 .catch(e => {
                     console.error(e.stack);
                 });
         } else {
             const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE user_id = $2 and device_id = $3';
-            await db.query(updateQuery, [refreshToken, user_id, device_id])
+            await cn.query(updateQuery, [refreshToken, user_id, device_id])
                 .catch(e => {
                     console.error(e.stack);
                 });
@@ -118,10 +118,10 @@ module.exports = {
         throw e;
     }
     },
-    getUserByEmail: async(email, db) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
+    getUserByEmail: async(cn, email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         try {
             const query = 'SELECT * FROM "User" WHERE email = $1';
-            const {rows} = await db.query(query, [email]);
+            const {rows} = await cn.query(query, [email]);
             const userData = rows[0];
 
             if (userData === undefined) {
@@ -134,10 +134,10 @@ module.exports = {
             throw e;
         }
     },
-    deleteRefreshToken: async(user_id, device_id, db) => {
+    deleteRefreshToken: async(cn, user_id, device_id) => {
         const query = 'DELETE FROM "Token" WHERE user_id = $1 and device_id = $2';
         try {
-            const {rowCount} = await db.query(query, [user_id, device_id])
+            const {rowCount} = await cn.query(query, [user_id, device_id])
             if (rowCount === 1) {
                 return true;
             } else {
@@ -148,7 +148,7 @@ module.exports = {
             return false;
         }
     },
-    getUserById: async(user_id, db) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
+    getUserById: async(user_id, cn) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
         const query = `
         SELECT "User".*, "UserSetting".theme, "UserSetting".language, "UserSetting".is_push_on
         FROM "User" 
@@ -156,33 +156,33 @@ module.exports = {
         ON "User".user_id = "UserSetting".user_id 
         WHERE "User".user_id = $1`;
         try {
-            const {rows} = await db.query(query, [user_id])
+            const {rows} = await cn.query(query, [user_id])
             return rows;
         } catch (e) {
             console.log(e.stack);
         }
     },
-    getUserNameById: async(user_id, db) => { //user_id로 유저 이름 가져오기
+    getUserNameById: async(cn, user_id) => { //user_id로 유저 이름 가져오기
         const query = 'SELECT user_name FROM "User" WHERE user_id = $1';
         try {
-            const {rows} = await db.query(query, [user_id])
+            const {rows} = await cn.query(query, [user_id])
             return rows[0].user_name;
         } catch (e) {
             console.log(e.stack);
             return 
         }
     },
-    checkRefreshToken: async(user_id, refreshToken, device_id, db) => {
+    checkRefreshToken: async(cn, user_id, refreshToken, device_id) => {
         try {
             const query = 'SELECT refresh_token FROM "Token" WHERE user_id = $1 and device_id = $2';
-            const {rows} = await db.query(query, [user_id, device_id]);
+            const {rows} = await cn.query(query, [user_id, device_id]);
             if (rows.length === 0) {
                 return 'noToken';
             }
-            const dbRefreshToken = rows[0].refresh_token; // db에 저장된 refreshToken
+            const cnRefreshToken = rows[0].refresh_token; // cn에 저장된 refreshToken
             const inputRefreshToken = refreshToken; // 사용자가 입력한 refreshToken
 
-            if (dbRefreshToken === inputRefreshToken) {
+            if (cnRefreshToken === inputRefreshToken) {
                 return true;
             } else {
                 return false;
@@ -193,13 +193,13 @@ module.exports = {
             return false;
         }
     },
-    changePasword: async(inputData, db) => {
+    changePasword: async(cn, inputData) => {
         try {
             const query = 'UPDATE "User" SET password = $1 WHERE email = $2';
             const {email, password} = inputData;
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            const {rowCount} = await db.query(query, [hashedPassword, email]);
+            const {rowCount} = await cn.query(query, [hashedPassword, email]);
             if (rowCount === 1) {
                 return true;
             } else {
@@ -210,10 +210,10 @@ module.exports = {
             throw e;
         }
     },
-    deleteUser: async(user_id, db) => {
+    deleteUser: async(user_id, cn) => {
         try {
             const query = 'DELETE FROM "User" WHERE user_id = $1';
-            const {rowCount} = await db.query(query, [user_id])
+            const {rowCount} = await cn.query(query, [user_id])
                                 .catch(e => {
                                     console.error(e.stack);
                                 });
@@ -228,11 +228,11 @@ module.exports = {
         }
     }, 
     // 스케쥴러 위한 모델
-    getUsersIdByRegion: async(db, region) => {
+    getUsersIdByRegion: async(cn, region) => {
         const query = 'select user_id from "User" where region = $1';
         const values = [region];
 
-        const user_ids = await db.query(query, values)
+        const user_ids = await cn.query(query, values)
             .then(res => {
                 // console.log(res.rows);
                 return res.rows;
@@ -245,11 +245,11 @@ module.exports = {
         return user_ids;
     },
     // 현재 value 가치, value 상승률 업데이트
-    updateValueField: async(db, user_id, cumulative_value, value_yesterday_ago)=>{
+    updateValueField: async(cn, user_id, cumulative_value, value_yesterday_ago)=>{
         const query = 'update "User" set cumulative_value=$1, value_yesterday_ago=$2 where user_id=$3';
         const values = [cumulative_value, value_yesterday_ago, user_id];
 
-        await db.query(query, values)
+        await cn.query(query, values)
             .then(res => {
                 // console.log(res.rows[0]);
             })
@@ -259,19 +259,19 @@ module.exports = {
                 throw e;
             });
     },
-    changeTheme: async(user_id, theme, db) => {
+    changeTheme: async(cn, user_id, theme) => {
         const query = 'UPDATE "UserSetting" SET theme = $1 WHERE user_id = $2';
         try {
-            await db.query(query, [theme, user_id])
+            await cn.query(query, [theme, user_id])
         } catch (e) {
             console.log(e.stack);
             throw e;
         }
     },
-    getPasswordById: async(user_id, db) => {
+    getPasswordById: async(cn, user_id) => {
         const query = 'SELECT password FROM "User" WHERE user_id = $1';
         try {
-            const {rows} = await db.query(query, [user_id])
+            const {rows} = await cn.query(query, [user_id])
             return rows[0].password;
         } catch (e) {
             console.log(e.stack);

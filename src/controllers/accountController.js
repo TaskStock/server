@@ -15,7 +15,7 @@ module.exports = {
     sendMailForRegister: async (req, res) => {
         try {
             const email = req.body.email;
-            const userData = await accountModel.getUserByEmail(email, db); //이메일로 유저 정보 가져오기
+            const userData = await accountModel.getUserByEmail(db, email); //이메일로 유저 정보 가져오기
 
             const availible = (userData === null) ? true : false;
             if (!availible) {
@@ -28,7 +28,7 @@ module.exports = {
                 const authCode = generateAuthCode();
                 const mailResult = await mailer(email, authCode, 'register');
                 if (mailResult) {
-                    const codeId = await accountModel.saveCode(authCode, db);
+                    const codeId = await accountModel.saveCode(db, authCode);
                     return res.status(200).json({ 
                         result: "success", 
                         codeId: codeId
@@ -50,11 +50,11 @@ module.exports = {
             await cn.query('BEGIN');
 
             const inputData = req.body;
-            const checkResult = await accountModel.checkCode(inputData, db);    
+            const checkResult = await accountModel.checkCode(cn, inputData);    
             
             if (checkResult) {
                 
-                const wellDeleted = await accountModel.deleteCode(inputData, db);
+                const wellDeleted = await accountModel.deleteCode(cn, inputData);
 
                 if (!wellDeleted) {
                     console.log("인증 성공, 코드 삭제 실패");
@@ -96,7 +96,7 @@ module.exports = {
             const userDevice = req.body.device_id;
 
             //앞에서 확인하긴 했는데 공격에 대비해서 한번 더 확인
-            const queryResult = await accountModel.getUserByEmail(email, db); //이메일로 유저 정보 가져오기
+            const queryResult = await accountModel.getUserByEmail(cn, email); //이메일로 유저 정보 가져오기
             if (queryResult !== null) {
                 await cn.query('ROLLBACK');
                 return res.status(200).json({
@@ -106,18 +106,18 @@ module.exports = {
             }
 
             const registerData = req.body; 
-            const userData = await accountModel.register(registerData, db);
+            const userData = await accountModel.register(cn, registerData);
             userData.device_id = userDevice;
             //accessToken 처리
-            const [accessToken, accessExp] = generateAccessToken(userData, db);
+            const [accessToken, accessExp] = generateAccessToken(userData);
 
             // refreshToken 처리
-            const [refreshToken, refreshExp] = generateRefreshToken(userData, db);
-            await accountModel.saveRefreshToken(userData.user_id, refreshToken, userDevice, db); // refreshToken DB에 저장(decive_id가 PK)
+            const [refreshToken, refreshExp] = generateRefreshToken(userData);
+            await accountModel.saveRefreshToken(cn, userData.user_id, refreshToken, userDevice); // refreshToken DB에 저장(decive_id가 PK)
 
             // 회원가입 후 자동으로 value 생성
             const settlementTime = transdate.getSettlementTimeInUTC(userData.region);
-            await valueModel.createByNewUser(userData.user_id, settlementTime, db);
+            await valueModel.createByNewUser(cn, userData.user_id, settlementTime);
             await cn.query('COMMIT');
             return res.status(200).json({ 
                 result: "success",
@@ -148,7 +148,7 @@ module.exports = {
             
             const [accessToken, accessExp] = generateAccessToken(userData);
             const [refreshToken, refreshExp] = generateRefreshToken(userData);
-            await accountModel.saveRefreshToken(userData.user_id, refreshToken, userDevice, db);
+            await accountModel.saveRefreshToken(db, userData.user_id, refreshToken, userDevice);
 
             console.log("로그인 성공");
             return res.status(200).json({ 
@@ -174,11 +174,11 @@ module.exports = {
             const userData = req.body;
             
             //이미 존재하는지 체크 - 애플은 이메일
-            existingUser = await accountModel.getUserByEmail(userData.email, db);
+            existingUser = await accountModel.getUserByEmail(cn, userData.email);
 
             if (existingUser === null) { //존재하지 않으면 회원가입
                 userData.password = null;
-                const registeredUser = await accountModel.register(userData, db);
+                const registeredUser = await accountModel.register(cn, userData);
                 registeredUser.device_id = userData.device_id;
                 
                 //accessToken 처리
@@ -186,13 +186,13 @@ module.exports = {
 
                 // refreshToken 처리
                 const [refreshToken, refreshExp] = generateRefreshToken(registeredUser);
-                await accountModel.saveRefreshToken(registeredUser.user_id, refreshToken, userData.device_id, db); 
+                await accountModel.saveRefreshToken(cn, registeredUser.user_id, refreshToken, userData.device_id, db); 
 
                 console.log("회원가입 성공");
 
                 // 회원가입 후 자동으로 value 생성
                 const settlementTime = transdate.getSettlementTimeInUTC(registeredUser.region);
-                await valueModel.createByNewUser(registeredUser.user_id, settlementTime, db);
+                await valueModel.createByNewUser(cn, registeredUser.user_id, settlementTime);
 
                 await cn.query('COMMIT');
 
@@ -210,7 +210,7 @@ module.exports = {
 
                 const [accessToken, accessExp] = generateAccessToken(existingUser);
                 const [refreshToken, refreshExp] = generateRefreshToken(existingUser);
-                await accountModel.saveRefreshToken(existingUser.user_id, refreshToken, userDevice, db);
+                await accountModel.saveRefreshToken(cn, existingUser.user_id, refreshToken, userDevice);
 
                 console.log("로그인 성공");
 
@@ -250,7 +250,7 @@ module.exports = {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; 
             const userDevice = req.user.device_id;
-            const deleteResult = await accountModel.deleteRefreshToken(user_id, userDevice, db);
+            const deleteResult = await accountModel.deleteRefreshToken(db, user_id, userDevice);
             
             if (deleteResult) {
                 console.log("로그아웃 성공");
@@ -289,7 +289,7 @@ module.exports = {
             const user_id = decoded.user_id;
             const device_id = decoded.device_id;
 
-            const certified = await accountModel.checkRefreshToken(user_id, refreshToken, device_id, db);
+            const certified = await accountModel.checkRefreshToken(db, user_id, refreshToken, device_id);
             if (certified === 'noToken') {
                 console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
                 return res.status(401).json({
@@ -334,7 +334,7 @@ module.exports = {
     getUserInfo: async (req, res) => {
         try {
             const user_id = req.user.user_id;
-            const queryResult = await accountModel.getUserById(user_id, db);
+            const queryResult = await accountModel.getUserById(db, user_id);
             const {password, ...userData} = queryResult[0]
 
             res.status(200).json({
@@ -353,7 +353,7 @@ module.exports = {
     sendMailForFindPassword: async (req, res) => {
         try {
             const email = req.body.email;
-            const userData = await accountModel.getUserByEmail(email, db); //이메일로 유저 정보 가져오기
+            const userData = await accountModel.getUserByEmail(db, email); //이메일로 유저 정보 가져오기
             if (userData === null) {
                 return res.status(200).json({ 
                     result: "fail" ,
@@ -384,7 +384,7 @@ module.exports = {
     changePassowrd: async (req, res) => {
         try {
             const inputData = req.body
-            const changeResult = await accountModel.changePasword(inputData, db);
+            const changeResult = await accountModel.changePasword(db, inputData);
             if (changeResult) {
                 console.log("비밀번호 변경 성공")
                 return res.status(200).json({ 
@@ -412,7 +412,7 @@ module.exports = {
             const inputPW = req.body.inputPW;
             
             const user_id = req.user.user_id;
-            const savedPW = await accountModel.getPasswordById(user_id, db);
+            const savedPW = await accountModel.getPasswordById(db, user_id);
 
             if (await bcrypt.compare(inputPW, savedPW)) {
                 console.log("비밀번호 확인 통과")
@@ -439,7 +439,7 @@ module.exports = {
     unregister: async (req, res) => {
         try {
             const user_id = req.user.user_id;
-            const deleteResult = await accountModel.deleteUser(user_id, db);
+            const deleteResult = await accountModel.deleteUser(db, user_id);
 
             if (deleteResult) {
                 console.log("회원탈퇴 성공")
@@ -467,7 +467,7 @@ module.exports = {
             const theme = req.body.theme;
             const user_id = req.user.user_id;
 
-            await accountModel.changeTheme(user_id, theme, db);
+            await accountModel.changeTheme(db, user_id, theme);
             return res.status(200).json({
                 result: "success",
                 message: "테마 변경 성공"
