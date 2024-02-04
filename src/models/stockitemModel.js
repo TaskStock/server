@@ -185,16 +185,16 @@ module.exports = {
         `;
         const values = [user_id];
 
-        const simap_id = await db.query(query, values)
+        const stockitems = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows[0]);
-                return res.rows[0];
+                return res.rows;
             })
             .catch(e => {
                 console.error(e.stack);
 
                 throw e;
             });
-        return simap_id;
+        return stockitems;
     },
 }
