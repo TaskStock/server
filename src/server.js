@@ -80,11 +80,11 @@ app.use("/todo", passport.authenticate('jwt', { session: false }), transaction, 
 app.use("/sns", passport.authenticate('jwt', { session: false }), snsRouter);
 app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
 app.use("/value", passport.authenticate('jwt', { session: false }), transaction, valueRouter);
-app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
+app.use("/project", passport.authenticate('jwt', { session: false }), transaction, projectRouter);
 app.use("/notice", passport.authenticate('jwt', { session: false }), noticeRouter);
-app.use("/retrospect", passport.authenticate('jwt', { session: false }), retrospectRouter);
-app.use("/stockitem", stockitemRouter);
-app.use("/sivalue", passport.authenticate('jwt', { session: false }), sivalueRouter);
+app.use("/retrospect", passport.authenticate('jwt', { session: false }), transaction, retrospectRouter);
+app.use("/stockitem", transaction, stockitemRouter);
+app.use("/sivalue", passport.authenticate('jwt', { session: false }), transaction, sivalueRouter);
 
 // 오류 처리 미들웨어
 app.use(async (err, req, res, next) => {
