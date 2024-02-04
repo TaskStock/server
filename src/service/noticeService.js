@@ -42,13 +42,13 @@ module.exports = {
                 target_id: predata.following_id
             });
         }
-        await noticeModel.createNotice(noticeData);
+        await noticeModel.createNotice(db, noticeData);
     },
     // TODO : FCM 푸시 알림 전송
     sendPush: async (noticeData) => {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
-        const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
+        const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
 
         if (token.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
@@ -96,7 +96,7 @@ module.exports = {
     // ! @params: noticeData = {user_id_list: [user_id, user_id, ...]}
     sendMultiPush: async(noticeData) => {
         let {user_id_list} = noticeData //user_id_list: 알림을 보낼 사용자 목록 user_id 리스트
-        const tokens = await noticeModel.getAllFCMTokens(user_id_list);
+        const tokens = await noticeModel.getAllFCMTokens(db, user_id_list);
 
         if (tokens.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
