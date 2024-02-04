@@ -5,56 +5,42 @@ const sistatisticsModel = require('../models/sistatisticsModel.js');
 
 const transdate = require('../service/transdateService.js');
 
+const db = require('../config/db.js');
+
 module.exports = {
     getItemsMyinterest: async(req, res, next) =>{
         const user_id = req.user.user_id;
 
-        const db = req.dbClient;
         try{
             const stockitems = await stockitemModel.getMyinterest(db, user_id);
 
-            await db.query('COMMIT');
             return res.json({stockitems: stockitems});
         }catch(error){
-            await db.query('ROLLBACK');
             next(error);
-        }finally{
-            db.release();
         }
     },
     getItemsTodaypopular: async(req, res, next) =>{
-        const db = req.dbClient;
         try{
             const stockitems = await stockitemModel.getTodaypopular(db);
 
-            await db.query('COMMIT');
             return res.json({stockitems: stockitems});
         }catch(error){
-            await db.query('ROLLBACK');
             next(error);
-        }finally{
-            db.release();
         }
     },
     getItemsTodayrecommend: async(req, res, next) =>{
-        const db = req.dbClient;
         try{
             const stockitems = await stockitemModel.getTodayrecommend(db);
 
-            await db.query('COMMIT');
             return res.json({stockitems: stockitems});
         }catch(error){
-            await db.query('ROLLBACK');
             next(error);
-        }finally{
-            db.release();
         }
     },
     getItemsAll: async(req, res, next) =>{
         const user_id = req.user.user_id;
         const region = req.user.region;
 
-        const db = req.dbClient;
         try{
             const sttime = transdate.getSettlementTimeInUTC(region);
 
@@ -68,30 +54,21 @@ module.exports = {
                 stockitems[i].is_add_today=stockitems[i].user_id.includes(user_id);
             }
 
-            await db.query('COMMIT');
             return res.json({stockitems: stockitems});
         }catch(error){
-            await db.query('ROLLBACK');
             next(error);
-        }finally{
-            db.release();
         }
     },
     getItem: async(req, res, next) =>{
         const stockitem_id = req.params.stockitem_id;
         const user_id = req.user.user_id;
 
-        const db = req.dbClient;
         try{
             const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id);
 
-            await db.query('COMMIT');
             return res.json({stockitem: stockitem});
         }catch(error){
-            await db.query('ROLLBACK');
             next(error);
-        }finally{
-            db.release();
         }
     },
 }
