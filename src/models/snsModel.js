@@ -169,7 +169,7 @@ module.exports = {
                 followerPending: followerPending,
                 private: followerPrivate // 내 입장 private
             };
-            await processNotice(predata);
+            await processNotice(db, predata);
             await sendPush(predata);
 
             return true;
