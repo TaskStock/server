@@ -232,15 +232,18 @@ module.exports = {
         return stockitems;
     },
     // 전체 종목 리스트 조회
-    getAll: async(db, date)=>{
+    getAll: async(db, date, user_id)=>{
         const query = `
-        select s.*, v.success_rate, v.user_id
+        select s.*, v.success_rate, svm.user_id
         from "Stockitem" s
             inner join "SIValue" v
             on s.stockitem_id = v.stockitem_id
+            left join
+                (select sivalue_id, user_id from "SIValueMap" where user_id = $2) as svm
+            on v.sivalue_id = svm.sivalue_id
         where v.date=$1
         `;
-        const values = [date];
+        const values = [date, user_id];
 
         const stockitems = await db.query(query, values)
             .then(res => {

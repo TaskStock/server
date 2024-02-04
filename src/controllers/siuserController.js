@@ -44,14 +44,14 @@ module.exports = {
         try{
             const sttime = transdate.getSettlementTimeInUTC(region);
 
-            const stockitems = await stockitemModel.getAll(db, sttime);
+            const stockitems = await stockitemModel.getAll(db, sttime, user_id);
 
             for(let i=0;i<stockitems.length;i++){
                 if(stockitems[i].user_id === null){
                     stockitems[i].is_add_today = false;
-                    continue;
+                }else{
+                    stockitems[i].is_add_today = true;
                 }
-                stockitems[i].is_add_today=stockitems[i].user_id.includes(user_id);
             }
 
             return res.json({stockitems: stockitems});
