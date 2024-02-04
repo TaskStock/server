@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 
 module.exports = {
     saveCode: async(db, authCode) => {
@@ -212,12 +213,22 @@ module.exports = {
     },
     deleteUser: async(db, user_id) => {
         try {
-            const query = 'DELETE FROM "User" WHERE user_id = $1';
-            const {rowCount} = await db.query(query, [user_id])
-                                .catch(e => {
-                                    console.error(e.stack);
-                                });
-            if (rowCount === 1) {
+            const query = 'DELETE FROM "User" WHERE user_id = $1 RETURNING image, strategy';
+            const queryResult = await db.query(query, [user_id])
+            const {image, strategy} = queryResult.rows[0];
+
+            if (queryResult.rowCount === 1) { // 삭제 성공
+                // 팔로우, 팔로잉 관계에 있는 사람들 카운트 조절
+                const followingQuery = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id IN (SELECT follower_id FROM "FollowMap" WHERE following_id = $1)';
+                const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
+                await db.query(followingQuery, [user_id]);
+                await db.query(followerQuery, [user_id]);
+
+                // 서버에서 프로필 이미지 삭제
+                if (strategy === 'local' && image !== '') {
+                    fs.promises.unlink(image)
+                }
+
                 return true;
             } else {
                 return false;        

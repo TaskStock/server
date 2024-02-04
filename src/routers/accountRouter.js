@@ -15,6 +15,7 @@ router.post('/login/email', passport.authenticate('local', { session: false }), 
 router.delete('/logout', passport.authenticate('jwt', { session: false }), accountController.logout);
 // router.post('/createSetting', accountController.createSetting);
 router.get('/getUserInfo', passport.authenticate('jwt', { session: false }), accountController.getUserInfo);
+router.delete('/unregister', passport.authenticate('jwt', { session: false }), accountController.unregister);
 
 // //구글 로그인 관련
 // router.get('/login/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

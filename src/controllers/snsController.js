@@ -220,7 +220,7 @@ module.exports = {
         if (changeResult) {
             return es.status(200).json({
                 result: "success",
-                imagePath: 'public/images/ic_profile.png'
+                imagePath: ''
             });
         } else {
             return res.status(500).json({
