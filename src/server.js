@@ -45,6 +45,7 @@ const noticeRouter = require("./routers/noticeRouter.js");
 const retrospectRouter = require("./routers/retrospectRouter.js");
 const stockitemRouter = require("./routers/stockitemRouter.js");
 const sivalueRouter = require("./routers/sivalueRouter.js");
+const siuserRouter = require("./routers/siuserRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -85,6 +86,7 @@ app.use("/notice", passport.authenticate('jwt', { session: false }), noticeRoute
 app.use("/retrospect", passport.authenticate('jwt', { session: false }), transaction, retrospectRouter);
 app.use("/stockitem", transaction, stockitemRouter);
 app.use("/sivalue", passport.authenticate('jwt', { session: false }), transaction, sivalueRouter);
+app.use("/siuser", passport.authenticate('jwt', { session: false }), transaction, siuserRouter);
 
 // 오류 처리 미들웨어
 app.use(async (err, req, res, next) => {

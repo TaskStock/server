@@ -36,6 +36,7 @@ module.exports = {
                 const value = await valueModel.getRecentValue(db, user_id);
                 
                 if(value === undefined){
+                    await db.query('ROLLBACK');
                     return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
                 }else if(value.date.toISOString() === sttime){
                     const value_id = value.value_id;
@@ -67,6 +68,9 @@ module.exports = {
                         }else{
                             await simapModel.increaseTakecount(db, simap.simap_id);
                         }
+                    }else{
+                        await db.query('ROLLBACK');
+                        return res.status(400).json({result: "fail", message: "이미 가져온 종목입니다."});
                     }
                 }
             }
@@ -157,8 +161,10 @@ module.exports = {
                 const value = await valueModel.getRecentValue(db, user_id);
                 
                 if(value === undefined){
+                    await db.query('ROLLBACK');
                     return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
                 }else if(value.date.toISOString() !== sttime){
+                    await db.query('ROLLBACK');
                     return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 존재하지 않습니다."});
                 }else{
                     const value_id = value.value_id;
@@ -200,6 +206,7 @@ module.exports = {
             const previousDayUtc = transdate.minusOneDay(resultUtc, region);
 
             if(todo === undefined){
+                await db.query('ROLLBACK');
                 return res.status(400).json({result: "fail", message: "해당 todo는 존재하지 않습니다."});
             }
 
@@ -258,6 +265,7 @@ module.exports = {
             const todo = await todoModel.readTodoUsingTodoId(db, todo_id, user_id);
 
             if(todo === undefined){
+                await db.query('ROLLBACK');
                 return res.status(400).json({result: "fail", message: "todo가 존재하지 않습니다."});
             }
 
@@ -268,8 +276,10 @@ module.exports = {
                 const value = await valueModel.getRecentValue(db, user_id);
                 
                 if(value === undefined){
+                    await db.query('ROLLBACK');
                     return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
                 }else if(value.date.toISOString() !== sttime){
+                    await db.query('ROLLBACK');
                     return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 아닙니다."});
                 }else{
                     const value_id = value.value_id;
@@ -329,8 +339,10 @@ module.exports = {
         try{
             const todo = await todoModel.readTodoUsingTodoId(db, todo_id, user_id);
             if(todo === undefined){
+                await db.query('ROLLBACK');
                 return res.status(400).json({result: "fail", message: "todo가 존재하지 않습니다."});
             }else if(todo.check === true){
+                await db.query('ROLLBACK');
                 return res.status(400).json({result: "fail", message: "완료되지 않은 todo만 미룰 수 있습니다."});
             }else{
                 if(todo.level !== 0){
@@ -338,7 +350,11 @@ module.exports = {
                     const value = await valueModel.getRecentValue(db, user_id);
                     
                     if(value === undefined){
+                        await db.query('ROLLBACK');
                         return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
+                    }else if(value.date.toISOString() > sttime){
+                        await db.query('ROLLBACK');
+                        return res.status(400).json({result: "fail", message: "아직 정산되지 않은 todo만 미룰 수 있습니다."});
                     }else if(value.date.toISOString() === sttime){
                         const value_id = value.value_id;
                         const start = value.start;
@@ -347,8 +363,6 @@ module.exports = {
                         const updateHigh = value.high + calculate.changeLevelForHigh(todo.level, 0);
         
                         await valueModel.updateValue(db, user_id, value_id, start, end, updateLow, updateHigh);
-                    }else if(value.date.toISOString() > sttime){
-                        return res.status(400).json({result: "fail", message: "아직 정산되지 않은 todo만 미룰 수 있습니다."});
                     }
                 }
 

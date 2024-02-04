@@ -69,6 +69,7 @@ module.exports = {
         const trans_end_date = transdate.getSettlementTime(end_date, region);
 
         if (isNaN(trans_start_date.getTime()) || isNaN(trans_end_date.getTime())) {
+            await db.query('ROLLBACK');
             return res.status(400).json({result: "fail", message: "잘못된 타임존입니다."});
         }
         
