@@ -5,7 +5,7 @@ const uploader = require('../config/multerConfig.js');
 const snsController = require('../controllers/snsController.js');
 
 router.patch('/private', snsController.changePrivate);
-router.get('/users', snsController.showRanking);
+// router.get('/users', snsController.showRanking);
 router.post('/follow', snsController.followUser);
 router.delete('/unfollow', snsController.unfollowUser);
 router.get('/users/search', snsController.searchUser);

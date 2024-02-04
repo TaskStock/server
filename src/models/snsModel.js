@@ -1,9 +1,9 @@
-const db = require('../config/db.js');
 const fs = require('fs');
 const { processNotice, sendPush } = require('../service/noticeService.js')
 
+
 module.exports = {
-    changePrivate: async(user_id, private) => {
+    changePrivate: async(db, user_id, private) => {
         const query = 'UPDATE "User" SET Private = $1 WHERE User_id = $2';
         try {
             await db.query(query, [private, user_id])
@@ -13,45 +13,45 @@ module.exports = {
             return false;
         }
     },
-    showRanking: async(user_id) => {
-        const entireQuery = `
-        SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
-        FROM "User"
-        ORDER BY rank
-        LIMIT 100
-        `;
-        const followerQuery = `
-        SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
-        FROM "User" U
-        JOIN "FollowMap" F
-        ON U.user_id = F.follower_id
-        WHERE F.following_id = $1
-        `
-        const followingQuery = `
-        SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
-        FROM "User" U
-        JOIN "FollowMap" F
-        ON U.user_id = F.following_id
-        WHERE F.follower_id = $1
-        `;
-        try {
-            const entireRes = await db.query(entireQuery)
-            const followerRes = await db.query(followerQuery, [user_id])
-            const followingRes = await db.query(followingQuery, [user_id])
+    // showRanking: async(user_id) => {
+    //     const entireQuery = `
+    //     SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+    //     FROM "User"
+    //     ORDER BY rank
+    //     LIMIT 100
+    //     `;
+    //     const followerQuery = `
+    //     SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+    //     FROM "User" U
+    //     JOIN "FollowMap" F
+    //     ON U.user_id = F.follower_id
+    //     WHERE F.following_id = $1
+    //     `
+    //     const followingQuery = `
+    //     SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
+    //     FROM "User" U
+    //     JOIN "FollowMap" F
+    //     ON U.user_id = F.following_id
+    //     WHERE F.follower_id = $1
+    //     `;
+    //     try {
+    //         const entireRes = await db.query(entireQuery)
+    //         const followerRes = await db.query(followerQuery, [user_id])
+    //         const followingRes = await db.query(followingQuery, [user_id])
 
-            const rankingAll = entireRes.rows
-            const rankingFollower = followerRes.rows
-            const rankingFollowing = followingRes.rows
+    //         const rankingAll = entireRes.rows
+    //         const rankingFollower = followerRes.rows
+    //         const rankingFollowing = followingRes.rows
 
-            return [rankingAll, rankingFollower, rankingFollowing];
+    //         return [rankingAll, rankingFollower, rankingFollowing];
 
-        } catch (e) {
-            console.log(e.stack);
-            return
-        }
+    //     } catch (e) {
+    //         console.log(e.stack);
+    //         return
+    //     }
         
-    },
-    followUser: async(follower_id, following_id, notice_id) => {
+    // },
+    followUser: async(db, follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
             console.log('자기 자신을 팔로우할 수 없습니다.');
             return false;
@@ -178,7 +178,7 @@ module.exports = {
             return false;
         }
     },
-    unfollowUser: async(follower_id, unfollowing_id, notice_id) => {
+    unfollowUser: async(db, follower_id, unfollowing_id, notice_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE Follower_id = $1 AND Following_id = $2';
         const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id = $1';
         const updateQuery2 = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id = $1';
@@ -216,34 +216,39 @@ module.exports = {
             return false;
         }
     },
-    searchUser: async(searchTarget, searchScope, user_id) => {
+    searchUser: async(db, searchTarget, searchScope, user_id) => {
         // TODO isFollowingMe, isFollowingYou를 pending까지 검사해서 true/false로 반환
         const queryTarget = '%' + searchTarget + '%'
         if (searchScope == 'global') { //전체
             // 검색 대상의 정보 넘겨야 함
             const query = `
             SELECT  
-                U1.user_id, U1.image, U1.user_name, U1.cumulative_value, U1.strategy, U1.private,
-                CASE
-                    WHEN F1.following_id IS NOT NULL AND F1.pending = false THEN true
+                U.user_id, 
+                U.image, 
+                U.user_name, 
+                U.cumulative_value, 
+                U.strategy, 
+                U.private,
+                CASE 
+                    WHEN FM.following_id IS NOT NULL AND FM.pending = false THEN true
                     ELSE false
                 END AS "isFollowingYou",
                 CASE
-                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
+                    WHEN FM2.follower_id IS NOT NULL AND FM2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
-                CASE
-                    WHEN F1.pending IS NOT NULL THEN F1.pending
+                CASE 
+                    WHEN FM.following_id IS NOT NULL AND FM.pending = true THEN true
                     ELSE false
                 END AS "pending"
-            FROM "User" U1
-            LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.following_id = $2
-            LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F2.follower_id = $2
-            WHERE (U1.user_name LIKE $1 OR U1.email LIKE $1) AND U1.user_id != $2
+            FROM "User" U
+            LEFT JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
+            LEFT JOIN "FollowMap" FM2 ON U.user_id = FM2.follower_id AND FM2.following_id = $1
+            WHERE (U.user_name LIKE $2 OR U.email LIKE $2) AND U.user_id != $1
             `
             // 상대 사용자($1) 로그인한 사용자($2)
             try {
-                const {rows: result} = await db.query(query, [queryTarget, user_id]);
+                const {rows: result} = await db.query(query, [user_id, queryTarget]);
                 return result;
             } catch (e) {
                 console.log(e.stack);
@@ -305,7 +310,7 @@ module.exports = {
             return [];
         }
     },
-    showFollowList: async(user_id) => {
+    showFollowList: async(db, user_id) => {
         //나를 팔로우하는 사람들 (F.following_id = user_id)
         const followerQuery = `
         SELECT 
@@ -365,7 +370,7 @@ module.exports = {
             return false;
         }
     },
-    editUserInfo: async(user_id, user_name, introduce) => {
+    editUserInfo: async(db, user_id, user_name, introduce) => {
         const query = 'UPDATE "User" SET user_name = $1, introduce = $2 WHERE user_id = $3';
         try {
             await db.query(query, [user_name, introduce, user_id]);
@@ -375,7 +380,7 @@ module.exports = {
             return false;
         }
     },
-    editUserImage: async(user_id, image_path) => {
+    editUserImage: async(db, user_id, image_path) => {
         const checkQuery = 'SELECT image FROM "User" WHERE user_id = $1';
         const updateQuery = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         try {
@@ -397,7 +402,7 @@ module.exports = {
             return false;
         }
     },
-    acceptPending: async(follower_id, following_id, notice_id) => {
+    acceptPending: async(db, follower_id, following_id, notice_id) => {
         const pendingQuery = 'UPDATE "FollowMap" SET pending = false WHERE follower_id = $1 AND following_id = $2';
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
@@ -428,7 +433,7 @@ module.exports = {
             return false;
         }
     },
-    changeDefaultImage: async(user_id) => {
+    changeDefaultImage: async(db, user_id) => {
         const query = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         try {
             await db.query(query, ['public/images/ic_profile.png', user_id]);
@@ -439,7 +444,7 @@ module.exports = {
         }
     },
     //팔로우 요청 취소
-    cancelFollow: async(follower_id, following_id, notice_id) => {
+    cancelFollow: async(db, follower_id, following_id, notice_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2 RETURNING pending';
         try {
             const {rows} = await db.query(query, [follower_id, following_id]);
@@ -499,7 +504,7 @@ module.exports = {
             return false;
         }
     },
-    userDetail: async(my_id, target_id) => {
+    userDetail: async(db, my_id, target_id) => {
         const userQuery = `
         SELECT
             U.user_id,

@@ -2,6 +2,7 @@ const noticeModel = require('../models/noticeModel.js');
 const accountModel = require('../models/accountModel.js');
 const admin = require('../config/FCMconfig.js');
 const slackClient = require('../config/slackConfig.js');
+const db = require('../config/db.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
@@ -15,7 +16,7 @@ module.exports = {
         let displayAccept;
         
         if (noticeData.type === 'sns') {
-            let follower_name = await accountModel.getUserNameById(predata.follower_id);
+            let follower_name = await accountModel.getUserNameById(db, predata.follower_id);
             if (predata.followerPending === false) { // 팔로우 당한 사람이 공개 계정일 때
                 noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
                 displayAccept = false;
@@ -34,20 +35,20 @@ module.exports = {
         }
 
         if (noticeData.type === 'general') {
-            let following_name = await accountModel.getUserNameById(predata.following_id);
+            let following_name = await accountModel.getUserNameById(db, predata.following_id);
             noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
 
             noticeData.info = JSON.stringify({
                 target_id: predata.following_id
             });
         }
-        await noticeModel.createNotice(noticeData);
+        await noticeModel.createNotice(db, noticeData);
     },
     // TODO : FCM 푸시 알림 전송
     sendPush: async (noticeData) => {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
-        const token = await noticeModel.getFCMToken(user_id); // 푸시메세지를 받을 유저의 FCM 토큰
+        const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
 
         if (token.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
@@ -57,7 +58,7 @@ module.exports = {
         let body = '';
         let target_id;
         if (noticeData.type === 'sns') {
-            let follower_name = await accountModel.getUserNameById(noticeData.follower_id)
+            let follower_name = await accountModel.getUserNameById(db, noticeData.follower_id)
             target_id = noticeData.follower_id.toString()
             if (noticeData.followerPending === false) { // 팔로우 당한 사람이 공개 계정
                 body = `${follower_name}님이 팔로우를 시작했습니다.`;
@@ -65,7 +66,7 @@ module.exports = {
                 body = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
             }
         } else if (notification.type = 'general') {
-            let following_name = await accountModel.getUserNameById(noticeData.following_id)
+            let following_name = await accountModel.getUserNameById(db, noticeData.following_id)
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
         }
@@ -95,7 +96,7 @@ module.exports = {
     // ! @params: noticeData = {user_id_list: [user_id, user_id, ...]}
     sendMultiPush: async(noticeData) => {
         let {user_id_list} = noticeData //user_id_list: 알림을 보낼 사용자 목록 user_id 리스트
-        const tokens = await noticeModel.getAllFCMTokens(user_id_list);
+        const tokens = await noticeModel.getAllFCMTokens(db, user_id_list);
 
         if (tokens.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
@@ -135,7 +136,7 @@ module.exports = {
         try {
             let message = "";
             if (noticeData.type === 'customer.suggestion') {
-                const user_name = await accountModel.getUserNameById(noticeData.user_id);
+                const user_name = await accountModel.getUserNameById(db, noticeData.user_id);
                 const content = noticeData.content;
                 const email = noticeData.email;
                 message = `

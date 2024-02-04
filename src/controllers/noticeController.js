@@ -1,12 +1,13 @@
 const noticeModel = require('../models/noticeModel');
 const noticeService = require('../service/noticeService');
+const db = require('../config/db.js');
 
 module.exports = {
     getAllNotice: async (req, res, next) => {
         try {
             const user_id = req.user.user_id;
             console.log('user_id : ', user_id);
-            const noticeList = await noticeModel.getAllNotice(user_id);
+            const noticeList = await noticeModel.getAllNotice(db, user_id);
             return res.status(200).json({
                 noticeList: noticeList
         });
@@ -23,7 +24,7 @@ module.exports = {
     getNoticeById: async (req, res) => {
         try {
             const notice_id = req.params.notice_id;
-            const noticeData = await noticeModel.getNoticeById(notice_id);
+            const noticeData = await noticeModel.getNoticeById(db, notice_id);
             return res.status(200).json({
                 noticeData: noticeData
             });
@@ -38,7 +39,7 @@ module.exports = {
         try {
             const user_id = req.user.user_id;
             const isPushOn = req.body.isPushOn;
-            await noticeModel.changeNoticeSetting(user_id, isPushOn);
+            await noticeModel.changeNoticeSetting(db, user_id, isPushOn);
             return res.status(200).json({
                 result: "success",
             });
@@ -55,7 +56,7 @@ module.exports = {
             const isPushOn = req.body.isPushOn;
             const user_id = req.user.user_id;
 
-            await noticeModel.saveFCMToken(user_id, isPushOn, FCMToken);
+            await noticeModel.saveFCMToken(db, user_id, isPushOn, FCMToken);
             return res.status(200).json({
                 result: "success",
             }); 
@@ -71,7 +72,7 @@ module.exports = {
             const user_id = req.user.user_id
             const FCMToken = req.body.FCMToken;
 
-            await noticeModel.updateFCMToken(user_id, FCMToken);
+            await noticeModel.updateFCMToken(db, user_id, FCMToken);
             return res.json.status({
                 result: "success",
             });
@@ -88,7 +89,7 @@ module.exports = {
             const content = req.body.content
             const email = req.body.email;
 
-            await noticeModel.saveCustomerSuggestion(user_id, content, email);
+            await noticeModel.saveCustomerSuggestion(db, user_id, content, email);
 
             const noticeData = {
                 type: 'customer.suggestion',

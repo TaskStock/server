@@ -1,7 +1,5 @@
-const db = require('../config/db.js');
-
 module.exports = {
-    createNotice: async (noticeData) => {
+    createNotice: async (db, noticeData) => {
         const query = 'INSERT INTO "Notice" (user_id, content, type, info) VALUES ($1, $2, $3, $4)';
         try {
             await db.query(query, [noticeData.user_id, noticeData.content, noticeData.type, noticeData.info]);
@@ -11,7 +9,7 @@ module.exports = {
             throw err;
         }
     },
-    getAllNotice: async (user_id) => {
+    getAllNotice: async (db, user_id) => {
         const query = `
             SELECT notice_id, content, type, info, is_read, created_time 
             FROM "Notice" 
@@ -32,7 +30,7 @@ module.exports = {
             throw(err);
         }
     },
-    getNoticeById: async (notice_id) => {
+    getNoticeById: async (db, notice_id) => {
         const query = 'SELECT content, type, info, is_read, created_time, image FROM "AdminNotice" WHERE notice_id = $1';
         try {
             const {rows} = await db.query(query, [notice_id]);
@@ -44,7 +42,7 @@ module.exports = {
             throw err;
     }
     },
-    changeNoticeSetting: async (user_id, isPushOn) => {
+    changeNoticeSetting: async (db, user_id, isPushOn) => {
         try {
             const query = 'UPDATE "UserSetting" SET is_push_on = $1 WHERE user_id = $2';
             console.log('changeNoticeSetting : ', user_id, isPushOn);
@@ -54,7 +52,7 @@ module.exports = {
             throw err;
         }
     },
-    saveFCMToken: async (user_id, isPushOn ,FCMToken) => {
+    saveFCMToken: async (db, user_id, isPushOn ,FCMToken) => {
         const query = 'UPDATE "UserSetting" SET fcm_token = $1, is_push_on = $2 WHERE user_id = $3';
         try {
             await db.query(query, [FCMToken, isPushOn, user_id]);
@@ -63,7 +61,7 @@ module.exports = {
             throw err;
         }
     },
-    updateFCMToken: async(user_id, FCMToken) => {
+    updateFCMToken: async(db, user_id, FCMToken) => {
         const query = 'UPDATE "UserSetting" SET fcm_token = $1 WHERE user_id = $2';
         try {
             await db.query(query, [FCMToken, user_id]);
@@ -72,7 +70,7 @@ module.exports = {
             throw err;
         }
     },
-    getFCMToken: async (user_id) => {
+    getFCMToken: async (db, user_id) => {
         const query = 'SELECT fcm_token FROM "UserSetting" WHERE is_push_on = true AND fcm_token IS NOT NULL AND user_id = $1';
         try {
             const {rows} = await db.query(query, [user_id]);
@@ -87,7 +85,7 @@ module.exports = {
             throw err
         }
     },
-    getAllFCMTokens: async (user_id_list) => {
+    getAllFCMTokens: async (db, user_id_list) => {
         const query = 'SELECt fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
         try {
             const {rows} = await db.query(query, [user_id_list]); 
@@ -102,7 +100,7 @@ module.exports = {
             throw err
         }
     },
-    saveCustomerSuggestion: async (user_id, content, email) => {
+    saveCustomerSuggestion: async (db, user_id, content, email) => {
         const query = 'INSERT INTO "CustomerService" (user_id, content, email) VALUES ($1, $2, $3)';
         try {
             await db.query(query, [user_id, content, email]);
