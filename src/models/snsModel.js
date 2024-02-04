@@ -230,15 +230,15 @@ module.exports = {
                 U1.strategy, 
                 U1.private,
                 CASE 
-                    WHEN F2.pending IS NOT NULL THEN F2.pending
+                    WHEN F1.pending IS NOT NULL THEN F1.pending
                     ELSE false
                 END AS "pending",
                 CASE
-                    WHEN F2.following_id IS NOT NULL AND F2.pending = false THEN true
+                    WHEN F2.following_id = $2 AND F2.pending = false THEN true
                     ELSE false
                 END AS "isFollowingMe",
                 CASE
-                    WHEN F1.follower_id IS NOT NULL AND F1.pending = false THEN true
+                    WHEN F1.follower_id = $2 AND F1.pending = false THEN true
                     ELSE false
                 END AS "isFollowingYou"
             FROM "User" U1
