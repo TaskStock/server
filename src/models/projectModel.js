@@ -1,7 +1,5 @@
-const db = require('../config/db.js');
-
 module.exports = {
-    insertProject: async(user_id, name, public_range)=>{
+    insertProject: async(db, user_id, name, public_range)=>{
         const query = "insert into \"Project\" (user_id, name, public_range) VALUES ($1, $2, $3)";
         const values = [user_id, name, public_range];
 
@@ -15,7 +13,7 @@ module.exports = {
                 throw e;
             });
     },
-    updateProject: async(project_id, user_id, name, public_range, finished)=>{
+    updateProject: async(db, project_id, user_id, name, public_range, finished)=>{
         const query = "update \"Project\" set name=$1, public_range=$2, finished=$3 where user_id=$4 and project_id=$5";
         const values = [name, public_range, finished, user_id, project_id];
 
@@ -29,7 +27,7 @@ module.exports = {
                 throw e;
             });
     },
-    readProject: async(project_id, user_id)=>{
+    readProject: async(db, project_id, user_id)=>{
         const query = "select * from \"Project\" where user_id=$1 and project_id=$2";
         const values = [user_id, project_id];
 
@@ -45,7 +43,7 @@ module.exports = {
             });
         return project;
     },
-    readAllProjects: async(user_id)=>{
+    readAllProjects: async(db, user_id)=>{
         // 서브쿼리할때 Todo와 Retrospect 테이블에 인덱스 추가해서 성능 높일 수 있을듯
         const query = `
         select *,
@@ -72,7 +70,7 @@ module.exports = {
             });
         return projects;
     },
-    deleteProject: async(project_id, user_id)=>{
+    deleteProject: async(db, project_id, user_id)=>{
         const query = "delete from \"Project\" where user_id=$1 and project_id=$2";
         const values = [user_id, project_id];
 

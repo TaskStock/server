@@ -58,16 +58,33 @@ const printReq = (req, res, next) => {
 };
 app.use(printReq);
 
+// 트랜잭션 처리 미들웨어
+const db = require('./config/db.js');
+
+async function transaction(req, res, next){
+    try{
+        const connection = await db.connect();
+        await connection.query('BEGIN');
+        req.dbClient = connection;
+
+        next();
+    } catch(error){
+        await connection.query('ROLLBACK');
+        connection.release();
+        next(error);
+    }
+}
+
 app.use("/account", accountRouter);
-app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
+app.use("/todo", passport.authenticate('jwt', { session: false }), transaction, todoRouter);
 app.use("/sns", passport.authenticate('jwt', { session: false }), snsRouter);
 app.use("/group", passport.authenticate('jwt', { session: false }), groupRouter);
-app.use("/value", passport.authenticate('jwt', { session: false }), valueRouter);
-app.use("/project", passport.authenticate('jwt', { session: false }), projectRouter);
+app.use("/value", passport.authenticate('jwt', { session: false }), transaction, valueRouter);
+app.use("/project", passport.authenticate('jwt', { session: false }), transaction, projectRouter);
 app.use("/notice", passport.authenticate('jwt', { session: false }), noticeRouter);
-app.use("/retrospect", passport.authenticate('jwt', { session: false }), retrospectRouter);
-app.use("/stockitem", stockitemRouter);
-app.use("/sivalue", passport.authenticate('jwt', { session: false }), sivalueRouter);
+app.use("/retrospect", passport.authenticate('jwt', { session: false }), transaction, retrospectRouter);
+app.use("/stockitem", transaction, stockitemRouter);
+app.use("/sivalue", passport.authenticate('jwt', { session: false }), transaction, sivalueRouter);
 
 // 오류 처리 미들웨어
 app.use(async (err, req, res, next) => {

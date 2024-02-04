@@ -26,37 +26,52 @@ module.exports = {
         const {project_id, content} = req.body;
         const user_id = req.user.user_id;
         
+        const db = req.dbClient;
         try{
-            await retrospectModel.insertRetrospect(project_id, content, user_id);
+            await retrospectModel.insertRetrospect(db, project_id, content, user_id);
+
+            await db.query('COMMIT');
+			return res.json({result: "success"});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
-    
-        res.json({result: "success"});
     },
     updateRetrospect: async(req, res, next) =>{
         const {retrospect_id, project_id, content} = req.body;
         const user_id = req.user.user_id;
         
+        const db = req.dbClient;
         try{
-            await retrospectModel.updateRetrospect(retrospect_id, project_id, user_id, content);
+            await retrospectModel.updateRetrospect(db, retrospect_id, project_id, user_id, content);
+
+            await db.query('COMMIT');
+			return res.json({result: "success"});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
-    
-        res.json({result: "success"});
     },
     deleteRetrospect: async(req, res, next) =>{
         const {retrospect_id} = req.body;
         const user_id = req.user.user_id;
         
+        const db = req.dbClient;
         try{
-            await retrospectModel.deleteRestrospect(retrospect_id, user_id);
+            await retrospectModel.deleteRestrospect(db, retrospect_id, user_id);
+
+            await db.query('COMMIT');
+			return res.json({result: "success"});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
-    
-        res.json({result: "success"});
     },
     getRetrospectsWithMonth: async(req, res, next) =>{
         const date = req.query.date;
@@ -64,18 +79,21 @@ module.exports = {
         const user_id = req.user.user_id;
         const region = req.user.region;
         
+        const db = req.dbClient;
         try{
             const start_date = transdate.getStartOfMonthTime(date, region);
             const end_date = transdate.getNextMonthTime(date, region);
 
-            const retrospects = await retrospectModel.getRetrospectsWithMonth(user_id, start_date, end_date);
+            const retrospects = await retrospectModel.getRetrospectsWithMonth(db, user_id, start_date, end_date);
 
+            await db.query('COMMIT');
             return res.json({retrospects: retrospects});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
-    
-        res.json({result: "success"});
     },
     getRetrospectsAll: async(req, res, next) =>{
         const offset = req.query.offset;
@@ -85,17 +103,20 @@ module.exports = {
 
         const user_id = req.user.user_id;
         
+        const db = req.dbClient;
         try{
             filter = filtering(filter);
             search = searching(search);
-            const retrospects = await retrospectModel.getRetrospectsAll(user_id, offset, limit, filter, search);
+            const retrospects = await retrospectModel.getRetrospectsAll(db, user_id, offset, limit, filter, search);
 
+            await db.query('COMMIT');
             return res.json({retrospects: retrospects});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
-    
-        res.json({result: "success"});
     },
     getRetrospectsWithProject: async(req, res, next) =>{
         const project_id = req.params.project_id;
@@ -106,18 +127,21 @@ module.exports = {
 
         const user_id = req.user.user_id;
         
+        const db = req.dbClient;
         try{
             // 필터는 정해진 규격에 맞게 변환해주고 검색은 그대로 모델로 전달
             filter = filtering(filter);
             search = searching(search);
 
-            const retrospects = await retrospectModel.getRetrospectsWithProject(user_id, project_id, offset, limit, filter, search);
+            const retrospects = await retrospectModel.getRetrospectsWithProject(db, user_id, project_id, offset, limit, filter, search);
 
+            await db.query('COMMIT');
             return res.json({retrospects: retrospects});
         }catch(error){
+            await db.query('ROLLBACK');
             next(error);
+        }finally{
+            db.release();
         }
-    
-        res.json({result: "success"});
     }
 }
