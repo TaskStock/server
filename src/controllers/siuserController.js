@@ -22,4 +22,32 @@ module.exports = {
             db.release();
         }
     },
+    getItemsTodaypopular: async(req, res, next) =>{
+        const db = req.dbClient;
+        try{
+            const stockitems = await stockitemModel.getTodaypopular(db);
+
+            await db.query('COMMIT');
+            return res.json({stockitems: stockitems});
+        }catch(error){
+            await db.query('ROLLBACK');
+            next(error);
+        }finally{
+            db.release();
+        }
+    },
+    getItemsTodayrecommend: async(req, res, next) =>{
+        const db = req.dbClient;
+        try{
+            const stockitems = await stockitemModel.getTodayrecommend(db);
+
+            await db.query('COMMIT');
+            return res.json({stockitems: stockitems});
+        }catch(error){
+            await db.query('ROLLBACK');
+            next(error);
+        }finally{
+            db.release();
+        }
+    },
 }

@@ -197,4 +197,38 @@ module.exports = {
             });
         return stockitems;
     },
+    // 오늘의 인기종목
+    getTodaypopular: async(db)=>{
+        const query = 'select * from "Stockitem" order by take_count desc limit 5';
+        const values = [];
+
+        const stockitems = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return stockitems;
+    },
+    // 오늘의 추천종목
+    getTodayrecommend: async(db)=>{
+        const query = 'select * from "Stockitem" order by take_count limit 10';
+        const values = [];
+
+        const stockitems = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return stockitems;
+    },
 }
