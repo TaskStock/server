@@ -223,19 +223,24 @@ module.exports = {
             // 검색 대상의 정보 넘겨야 함
             const query = `
             SELECT  
-                U1.user_id, U1.image, U1.user_name, U1.cumulative_value, U1.strategy, U1.private,
-                CASE
-                    WHEN F1.following_id IS NOT NULL AND F1.pending = false THEN true
-                    ELSE false
-                END AS "isFollowingYou",
-                CASE
-                    WHEN F2.follower_id IS NOT NULL AND F2.pending = false THEN true
-                    ELSE false
-                END AS "isFollowingMe",
-                CASE
-                    WHEN F1.pending IS NOT NULL THEN F1.pending
+                U1.user_id, 
+                U1.image, 
+                U1.user_name, 
+                U1.cumulative_value, 
+                U1.strategy, 
+                U1.private,
+                CASE 
+                    WHEN F2.pending IS NOT NULL THEN F2.pending
                     ELSE false
                 END AS "pending"
+                CASE
+                    WHEN F2.pending IS NOT NULL AND F2.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingME"
+                CASE
+                    WHEN F1.pending IS NOT NULL AND F1.pending = false THEN true
+                    ELSE false
+                END AS "isFollowingYou"
             FROM "User" U1
             LEFT JOIN "FollowMap" F1 ON U1.user_id = F1.follower_id AND F1.following_id = $2
             LEFT JOIN "FollowMap" F2 ON U1.user_id = F2.following_id AND F2.follower_id = $2
