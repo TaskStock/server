@@ -43,4 +43,32 @@ module.exports = {
             });
         return wishlist;
     },
+    increaseLike: async(db, wishlist_id)=>{
+        const query = 'update "WishList" set like_count=like_count+1 where wishlist_id=$1';
+        const values = [wishlist_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
+    decreaseLike: async(db, wishlist_id)=>{
+        const query = 'update "WishList" set like_count=like_count-1 where wishlist_id=$1';
+        const values = [wishlist_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+    },
 }
