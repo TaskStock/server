@@ -46,10 +46,12 @@ module.exports = {
         const limit = req.query.limit;
         let filter = req.query.filter;
 
+        const user_id = req.user.user_id;
+
         try{
             filter = filtering(filter);
 
-            const wishlist = await wishlistModel.getWishlist(db, offset, limit, filter);
+            const wishlist = await wishlistModel.getWishlist(db, offset, limit, filter, user_id);
 
             return res.json({wishlist: wishlist});
         }catch(error){

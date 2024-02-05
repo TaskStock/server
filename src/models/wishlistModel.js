@@ -27,9 +27,21 @@ module.exports = {
                 throw e;
             });
     },
-    getWishlist: async(db, offset, limit, filter)=>{
-        const query = `select * from "WishList" order by ${filter} limit $1 offset $2`;
-        const values = [limit, offset];
+    getWishlist: async(db, offset, limit, filter, user_id)=>{
+        const query = `
+        select a.*, 
+            case
+                when b.user_id is null then false
+                else true
+            end as is_liked
+        from "WishList" a
+            left join 
+                (select * from "WishLike" where user_id=$3) b 
+                on a.wishlist_id=b.wishlist_id 
+        order by ${filter} 
+        limit $1 offset $2
+        `;
+        const values = [limit, offset, user_id];
 
         const wishlist = await db.query(query, values)
             .then(res => {
