@@ -143,17 +143,18 @@ module.exports = {
             // 상대 입장에서의 isFollowingYou 체크 
             const checkQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
             const {rows: checkRows} = await db.query(checkQuery, [following_id, follower_id]);
-            if (checkRows.length == 0) { // 상대가 나를 팔로우하지 않았을 때
+            if (checkRows.length !== 0 && checkRows[0].pending == false) { // 상대가 나를 팔로우하지 않았을 때
+                isFollowingYou = true; // 팔로우 당한 사람 입장
+            } else {
                 isFollowingYou = false; // 팔로우 당한 사람 입장
-                followingPending = false; // 팔로우 한 사람 입장
-            } else { // 상대가 나를 팔로우한 행이 있을 때
-                followingPending = checkRows[0].pending;
-                if (followingPending = false) {
-                    isFollowingYou = true
-                } else {
-                    isFollowingYou = false
-                }
             }
+            
+            if (checkRows.length !== 0) {
+                followingPending = checkRows[0].pending;
+            } else {
+                followingPending = false;
+            }
+
             // 상대 입장에서 isFollowingMe 체크
             const {rows: checkRows2} = await db.query(checkQuery, [follower_id, following_id]);
             if (checkRows2.length !== 0 && checkRows2[0].pending == false) {
