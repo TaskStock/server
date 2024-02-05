@@ -433,7 +433,7 @@ module.exports = {
                 `
             }
 
-            await db.query(noticeQuery, [notice_id, isFollowingYou])
+            await db.query(noticeQuery, [notice_id])
 
             // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
             const predata = {
