@@ -89,7 +89,7 @@ module.exports = {
         FROM inserted i
         JOIN "User" U ON i.follower_id = U.user_id;
         `;
-        
+
         try {
             if (notice_id != undefined) {
                 console.log('notice_id 있는 곳')
@@ -107,7 +107,7 @@ module.exports = {
                 WHERE notice_id = $1;
                 `
                 await db.query(noticeQuery, [notice_id])
-            } else if () {
+            } else {
                 console.log('notice_id 없는 곳 탐')
                 const noticeQuery2 = `
                 UPDATE "Notice"
