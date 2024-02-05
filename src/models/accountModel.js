@@ -114,6 +114,29 @@ module.exports = {
         throw e;
     }
     },
+    getUserByAppleToken: async(db, apple_token) => {
+        const query = `
+        SELECT * 
+        FROM "User" U
+        JOIN "AppleToken" A
+        ON U.user_id = A.user_id
+        WHERE apple_token = $1
+        `;
+        try {
+            const {rows} = await db.query(query, [apple_token]);
+            const userData = rows[0];
+
+            if (userData === undefined) {
+                return null;
+            } else {
+                return userData;
+            }
+
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
+    },
     getUserByEmail: async(db, email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         try {
             const query = 'SELECT * FROM "User" WHERE email = $1';
