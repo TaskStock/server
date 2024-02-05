@@ -232,18 +232,16 @@ module.exports = {
         return stockitems;
     },
     // 전체 종목 리스트 조회
-    getAll: async(db, date, user_id)=>{
+    getAll: async(db, date)=>{
+        console.log(date);
         const query = `
-        select s.*, v.success_rate, svm.user_id
+        select s.*, v.success_rate
         from "Stockitem" s
             inner join "SIValue" v
             on s.stockitem_id = v.stockitem_id
-            left join
-                (select sivalue_id, user_id from "SIValueMap" where user_id = $2) as svm
-            on v.sivalue_id = svm.sivalue_id
         where v.date=$1
         `;
-        const values = [date, user_id];
+        const values = [date];
 
         const stockitems = await db.query(query, values)
             .then(res => {
@@ -258,17 +256,28 @@ module.exports = {
         return stockitems;
     },
     // 종목 디테일 조회
-    getItemDetail: async(db, stockitem_id, user_id)=>{
+    getItemDetail: async(db, stockitem_id, user_id, date)=>{
         const query = `
-        select s.name, s.level, s.take_count, s.success_count, st.total_count, st.total_success_count, st.monday, st.tuesday, st.wednesday, st.thursday, st.friday, st.saturday, st.sunday, m.take_count my_take_count, m.success_count my_success_count 
+        select 
+            s.name, s.level, s.take_count, s.success_count, 
+            st.total_count, st.total_success_count, 
+            st.monday, st.tuesday, st.wednesday, st.thursday, st.friday, st.saturday, st.sunday, 
+            st.s_monday, st.s_tuesday, st.s_wednesday, st.s_thursday, st.s_friday, st.s_saturday, st.s_sunday, 
+            m.take_count my_take_count, m.success_count my_success_count, 
+            svm.user_id as is_add_today
         from "Stockitem" s
             inner join "SIStatistics" st
-            on s.stockitem_id = st.stockitem_id 
+                on s.stockitem_id = st.stockitem_id 
             left join "SIMap" m
-            on s.stockitem_id = m.stockitem_id
-        where s.stockitem_id=$1 and m.user_id = $2
+                on s.stockitem_id = m.stockitem_id
+            inner join "SIValue" v 
+                on s.stockitem_id = v.stockitem_id
+            left join
+                (select * from "SIValueMap" where user_id = $2) as svm
+                on v.sivalue_id = svm.sivalue_id
+        where s.stockitem_id=$1 and m.user_id=$2 and v.date=$3
         `;
-        const values = [stockitem_id, user_id];
+        const values = [stockitem_id, user_id, date];
 
         const stockitem = await db.query(query, values)
             .then(res => {
