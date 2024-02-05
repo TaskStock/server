@@ -409,11 +409,9 @@ module.exports = {
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
         
         const followCheckQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
-        const noticeQuery = `
-        UPDATE "Notice" 
-        SET info = info || '{"pending": false, "isFollowingMe": true, "displayAccept": false, "isFollowingYou": $2}'
-        WHERE notice_id = $1;
-        `
+        
+        let noticeQuery;
+
         try {
             await db.query(pendingQuery, [follower_id, following_id]);
             await db.query(followerCountQuery, [following_id]);
@@ -421,14 +419,18 @@ module.exports = {
 
             let isFollowingYou;
             const {rows: followCheckRows} = await db.query(followCheckQuery, [following_id, follower_id]);
-            if (followCheckRows.rowCount !== 0) {
-                if (followCheckRows[0].pending == false) {
-                    isFollowingYou = true;
-                } else {
-                    isFollowingYou = false;
-                }
+            if (followCheckRows.rowCount !== 0 && followCheckRows[0].pending == false) {
+                noticeQuery = `
+                UPDATE "Notice" 
+                SET info = info || '{"pending": false, "isFollowingMe": true, "displayAccept": false, "isFollowingYou": true}'
+                WHERE notice_id = $1;
+                `
             } else {
-                isFollowingYou = false;
+                noticeQuery = `
+                UPDATE "Notice" 
+                SET info = info || '{"pending": false, "isFollowingMe": true, "displayAccept": false, "isFollowingYou": false}'
+                WHERE notice_id = $1;
+                `
             }
 
             await db.query(noticeQuery, [notice_id, isFollowingYou])
