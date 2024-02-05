@@ -403,6 +403,7 @@ module.exports = {
             return false;
         }
     },
+    // 팔로워: 요청, 팔로잉: 수락
     acceptPending: async(db, follower_id, following_id, notice_id) => {
         const pendingQuery = 'UPDATE "FollowMap" SET pending = false WHERE follower_id = $1 AND following_id = $2';
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
@@ -410,30 +411,45 @@ module.exports = {
         
         const followCheckQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
         
-        let noticeQuery;
+        // 팔로잉 알림 수정
+        let acceptingNoticeQuery;
+        // 공지 주인 = 팔로잉 = following_id, target_id = follower_id
+
+        // 팔로워 알림 수정
+        let requestNoticeQuery;
+        // user_id = 공지 주인 = 팔로워 = follower_id, target_id = following_id
 
         try {
             await db.query(pendingQuery, [follower_id, following_id]);
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
 
-            let isFollowingYou;
             const {rows: followCheckRows} = await db.query(followCheckQuery, [following_id, follower_id]);
             if (followCheckRows.rowCount !== 0 && followCheckRows[0].pending == false) {
-                noticeQuery = `
+                acceptingNoticeQuery = `
                 UPDATE "Notice" 
                 SET info = info || '{"pending": false, "isFollowingMe": true, "displayAccept": false, "isFollowingYou": true}'
                 WHERE notice_id = $1;
                 `
+                requestNoticeQuery = `
+                UPDATE "Notice"
+                SET info = info || '{"pending": false, "isFollowingYou": true, "isFollowingMe": true}'
+                WHERE user_id = $1 AND info ->> 'pending' IS NOT NULL AND info ->> 'target_id' = $2
+                `
             } else {
-                noticeQuery = `
+                acceptingNoticeQuery = `
                 UPDATE "Notice" 
                 SET info = info || '{"pending": false, "isFollowingMe": true, "displayAccept": false, "isFollowingYou": false}'
                 WHERE notice_id = $1;
                 `
+                requestNoticeQuery = `
+                UPDATE "Notice"
+                SET info = info || '{"pending": false, "isFollowingYou": true, "isFollowingMe": false}'
+                WHERE user_id = $1 AND info ->> 'pending' IS NOT NULL AND info ->> 'target_id' = $2
+                `
             }
-
-            await db.query(noticeQuery, [notice_id])
+            await db.query(acceptingNoticeQuery, [notice_id])
+            await db.query(requestNoticeQuery, [follower_id, following_id])
 
             // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
             const predata = {

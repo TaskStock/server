@@ -181,7 +181,7 @@ module.exports = {
             });
         }
     },
-    acceptPenging: async(req, res) => {
+    acceptPending: async(req, res) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
