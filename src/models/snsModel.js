@@ -89,6 +89,7 @@ module.exports = {
         FROM inserted i
         JOIN "User" U ON i.follower_id = U.user_id;
         `;
+        
         try {
             if (notice_id != undefined) {
                 console.log('notice_id 있는 곳')
@@ -106,7 +107,7 @@ module.exports = {
                 WHERE notice_id = $1;
                 `
                 await db.query(noticeQuery, [notice_id])
-            } else {
+            } else if () {
                 console.log('notice_id 없는 곳 탐')
                 const noticeQuery2 = `
                 UPDATE "Notice"
@@ -119,13 +120,7 @@ module.exports = {
                                 '{isFollowingYou}', 
                                 ((NOT (info ->> 'private')::boolean)::text::jsonb)
                             )
-                WHERE notice_id IN (
-                    SELECT N.notice_id
-                    FROM "Notice" N
-                    JOIN "User" U
-                    ON (N.user_id = U.user_id)
-                    WHERE (N.user_id = $1 AND N.info ->> 'target_id' = $2)
-                );
+                WHERE user_id = $1 AND info ->> 'target_id' = $2
                 `
                 //user_id(팔로우 버튼 누른 주인 == 알림 주인)
                 await db.query(noticeQuery2, [follower_id, following_id])
