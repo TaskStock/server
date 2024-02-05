@@ -3,17 +3,33 @@ const db = require('../config/db.js');
 
 module.exports = {
     changePrivate: async(req, res) => {
-        user_id = req.user.user_id;
-        const private = req.body.private;
-        const changeResult = await snsModel.changePrivate(db, user_id, private);
-        if (changeResult) {
-            return res.status(200).json({
-                result: "success"
-            });
-        } else {
-            return res.status(400).json({
-                result: "fail"
-            });
+        const cn = await db.connect();
+        try {
+            cn.query('BEGIN');
+
+            user_id = req.user.user_id;
+            const private = req.body.private;
+            const changeResult = await snsModel.changePrivate(cn, user_id, private);
+            if (changeResult) {
+                await cn.query('COMMIT');
+                return res.status(200).json({
+                    result: "success"
+                });
+            } else {
+                await cn.query('ROLLBACK');
+                return res.status(400).json({
+                    result: "fail"
+                });
+            }
+        } catch (err) {
+            await cn.query('ROLLBACK');
+            console.log(err)
+            return res.status(500).json({
+                result: "fail",
+                message: "서버 내부 오류"
+            })
+        } finally {
+            cn.release();
         }
     },
     // showRanking: async(req, res) => {
