@@ -70,8 +70,7 @@ module.exports = {
             await cn.query('BEGIN');
             const follower_id = req.user.user_id;
             const unfollowing_id = req.body.unfollowing_id;
-            const notice_id = req.body.notice_id
-            const unfollowResult = await snsModel.unfollowUser(cn, follower_id, unfollowing_id, notice_id);
+            const unfollowResult = await snsModel.unfollowUser(cn, follower_id, unfollowing_id);
 
             if (unfollowResult) {
                 await cn.query('COMMIT');

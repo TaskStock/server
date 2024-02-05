@@ -179,37 +179,19 @@ module.exports = {
             return false;
         }
     },
-    unfollowUser: async(db, follower_id, unfollowing_id, notice_id) => {
+    unfollowUser: async(db, follower_id, unfollowing_id) => {
         const query = 'DELETE FROM "FollowMap" WHERE Follower_id = $1 AND Following_id = $2';
         const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id = $1';
         const updateQuery2 = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id = $1';
-
+        const noticeQuery = `
+        DELETE FROM "Notice"
+        WHERE user_id = $1 AND info ->> 'target_id' = $2
+        `
         try {
             await db.query(query, [follower_id, unfollowing_id]);
             await db.query(updateQuery1, [unfollowing_id])
             await db.query(updateQuery2, [follower_id]) 
-            if (notice_id != undefined) {
-                const noticeQuery = `
-                UPDATE "Notice"
-                SET info = info || '{"isFollowingYou" : false}'
-                WHERE notice_id = $1
-                `
-                await db.query(noticeQuery, [notice_id])
-            } else {
-                const noticeQuery2 = `
-                UPDATE "Notice"
-                SET info = info || '{"isFollowingYou" : false}'
-                WHERE notice_id IN (
-                    SELECT N.notice_id
-                    FROM "Notice" N
-                    JOIN "User" U
-                    ON (N.user_id = U.user_id)
-                    WHERE N.user_id = $1 AND N.info ->> 'target_id' = $2
-                )
-                `
-                // user_id는 공지주인 == follower_id
-                await db.query(noticeQuery2, [follower_id, unfollowing_id])
-            }
+            await db.query(noticeQuery, [follower_id, unfollowing_id])
 
             return true;
         } catch (e) {
