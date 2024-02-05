@@ -1,7 +1,4 @@
-const simapModel = require('../models/simapModel.js');
 const stockitemModel = require('../models/stockitemModel.js');
-const sivalueModel = require('../models/sivalueModel.js');
-const sistatisticsModel = require('../models/sistatisticsModel.js');
 
 const transdate = require('../service/transdateService.js');
 
