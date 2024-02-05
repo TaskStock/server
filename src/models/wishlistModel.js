@@ -28,7 +28,7 @@ module.exports = {
             });
     },
     getWishlist: async(db, offset, limit, filter)=>{
-        const query = 'select * from "WishList" limit $1 offset $2';
+        const query = `select * from "WishList" order by ${filter} limit $1 offset $2`;
         const values = [limit, offset];
 
         const wishlist = await db.query(query, values)

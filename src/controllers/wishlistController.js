@@ -2,6 +2,19 @@ const wishlistModel = require('../models/wishlistModel.js');
 
 const db = require('../config/db.js');
 
+function filtering(filter){
+    if(filter === undefined){   // default : 좋아요순
+        filter = "like_count desc";
+    }else if(filter === "like"){    // 좋아요순
+        filter = "like_count desc";
+    }else if(filter === "latest"){  // 최신순
+        filter = "created_date desc";
+    }else{
+        filter = "like_count desc";
+    }
+    return filter;
+}
+
 module.exports = {
     newWish: async(req, res, next) =>{
         const {name} = req.body;
@@ -30,9 +43,12 @@ module.exports = {
     getWishlist: async(req, res, next) =>{
         const offset = req.query.offset;
         const limit = req.query.limit;
+        let filter = req.query.filter;
 
         try{
-            const wishlist = await wishlistModel.getWishlist(db, offset, limit);
+            filter = filtering(filter);
+
+            const wishlist = await wishlistModel.getWishlist(db, offset, limit, filter);
 
             return res.json({wishlist: wishlist});
         }catch(error){
