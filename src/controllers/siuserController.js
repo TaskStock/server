@@ -6,13 +6,12 @@ const db = require('../config/db.js');
 
 module.exports = {
     getItemsAll: async(req, res, next) =>{
-        const user_id = req.user.user_id;
         const region = req.user.region;
 
         try{
             const sttime = transdate.getSettlementTimeInUTC(region);
 
-            const stockitems = await stockitemModel.getAll(db, sttime, user_id);
+            const stockitems = await stockitemModel.getAll(db, sttime);
 
             return res.json({stockitems: stockitems});
         }catch(error){
@@ -22,9 +21,18 @@ module.exports = {
     getItem: async(req, res, next) =>{
         const stockitem_id = req.params.stockitem_id;
         const user_id = req.user.user_id;
+        const region = req.user.region;
 
         try{
-            const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id);
+            const sttime = transdate.getSettlementTimeInUTC(region);
+
+            const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id, sttime);
+
+            if(stockitem.is_add_today === null){
+                stockitem.is_add_today = false
+            }else{
+                stockitem.is_add_today = true
+            }
 
             return res.json({stockitem: stockitem});
         }catch(error){
