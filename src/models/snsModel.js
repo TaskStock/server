@@ -155,7 +155,7 @@ module.exports = {
                 }
             }
             // 상대 입장에서 isFollowingMe 체크
-            const {rows: checkRows2} = await db.query(checkQuery, [follower_id, following_id]);
+            const {rows: checkRows2} = await db.query(checkQuery, [following_id, follower_id]);
             if (checkRows2.length !== 0 && checkRows2[0].pending == false) {
                 isFollowingMe = true;
             } else {
