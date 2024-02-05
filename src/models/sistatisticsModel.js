@@ -43,4 +43,20 @@ module.exports = {
                 throw e;
             });
     },
+    getSistatistics: async(db, stockitem_id)=>{
+        const query = 'select total_count, total_success_count, monday, tuesday, wednesday, thursday, friday, saturday, sunday, s_monday, s_tuesday, s_wednesday, s_thursday, s_friday, s_saturday, s_sunday from "SIStatistics" where stockitem_id=$1';
+        const values = [stockitem_id];
+
+        const statistics = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows[0];
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return statistics;
+    },
 }

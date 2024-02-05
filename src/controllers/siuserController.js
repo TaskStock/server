@@ -1,4 +1,5 @@
 const stockitemModel = require('../models/stockitemModel.js');
+const sistatisticsModel = require('../models/sistatisticsModel.js');
 
 const transdate = require('../service/transdateService.js');
 
@@ -23,10 +24,14 @@ module.exports = {
         const user_id = req.user.user_id;
         const region = req.user.region;
 
+        const cn = await db.connect();
         try{
+            await cn.query('BEGIN');
+
             const sttime = transdate.getSettlementTimeInUTC(region);
 
             const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id, sttime);
+            const statistics = await sistatisticsModel.getSistatistics(db, stockitem_id);
 
             if(stockitem.is_add_today === null){
                 stockitem.is_add_today = false
@@ -34,9 +39,13 @@ module.exports = {
                 stockitem.is_add_today = true
             }
 
-            return res.json({stockitem: stockitem});
+            await cn.query('COMMIT');
+            return res.json({stockitem: stockitem, statistics: statistics});
         }catch(error){
+            await cn.query('ROLLBACK');
             next(error);
+        }finally{
+            cn.release();
         }
     },
     getMarketInfo: async(req, res, next) =>{

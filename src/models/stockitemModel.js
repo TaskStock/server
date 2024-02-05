@@ -260,14 +260,9 @@ module.exports = {
         const query = `
         select 
             s.name, s.level, s.take_count, s.success_count, 
-            st.total_count, st.total_success_count, 
-            st.monday, st.tuesday, st.wednesday, st.thursday, st.friday, st.saturday, st.sunday, 
-            st.s_monday, st.s_tuesday, st.s_wednesday, st.s_thursday, st.s_friday, st.s_saturday, st.s_sunday, 
             m.take_count my_take_count, m.success_count my_success_count, 
             svm.user_id as is_add_today
         from "Stockitem" s
-            inner join "SIStatistics" st
-                on s.stockitem_id = st.stockitem_id 
             left join "SIMap" m
                 on s.stockitem_id = m.stockitem_id
             inner join "SIValue" v 
