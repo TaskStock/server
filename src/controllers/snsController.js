@@ -33,7 +33,7 @@ module.exports = {
     //     }
     // },
     followUser: async(req, res) => {
-        cn = await db.connect();
+        const cn = await db.connect();
         try {
             await cn.query('BEGIN');
             const follower_id = req.user.user_id;
@@ -65,7 +65,7 @@ module.exports = {
         }
     },
     unfollowUser: async(req, res) => {
-        const cn = db.connect();
+        const cn = await db.connect();
         try {
             await cn.query('BEGIN');
             const follower_id = req.user.user_id;
@@ -181,7 +181,7 @@ module.exports = {
             });
         }
     },
-    acceptPenging: async(req, res) => {
+    acceptPending: async(req, res) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');

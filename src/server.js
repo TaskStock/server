@@ -47,6 +47,7 @@ const stockitemRouter = require("./routers/stockitemRouter.js");
 const sivalueRouter = require("./routers/sivalueRouter.js");
 const siuserRouter = require("./routers/siuserRouter.js");
 const wishlistRouter = require("./routers/wishlistRouter.js");
+const badgeRouter = require("./routers/badgeRouter.js");
 
 app.get('/', (req, res) => {
     res.send('Hello, Express')
@@ -72,6 +73,7 @@ app.use("/stockitem", stockitemRouter);
 app.use("/sivalue", passport.authenticate('jwt', { session: false }), sivalueRouter);
 app.use("/siuser", passport.authenticate('jwt', { session: false }), siuserRouter);
 app.use("/wishlist", passport.authenticate('jwt', { session: false }), wishlistRouter);
+app.use("/badge", passport.authenticate('jwt', { session: false }), badgeRouter);
 
 // 오류 처리 미들웨어
 app.use(async (err, req, res, next) => {
