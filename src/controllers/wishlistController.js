@@ -28,8 +28,11 @@ module.exports = {
         }
     },
     getWishlist: async(req, res, next) =>{
+        const offset = req.query.offset;
+        const limit = req.query.limit;
+
         try{
-            const wishlist = await wishlistModel.getWishlist(db);
+            const wishlist = await wishlistModel.getWishlist(db, offset, limit);
 
             return res.json({wishlist: wishlist});
         }catch(error){
