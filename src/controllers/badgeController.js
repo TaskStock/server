@@ -3,8 +3,9 @@ const db = require('../config/db.js')
 
 module.exports = {
     giveBadge: async(req, res) => {
-        const cn = await db.connect();
+        const cn = await db.connect(); 
         try {
+            await cn.query('BEGIN');
             const user_id = req.user.user_id;
             const type = req.body.type;
 
@@ -12,9 +13,9 @@ module.exports = {
             const badges = await badgeModel.getBadges(cn, user_id);
 
             cn.query('COMMIT');
-            return res.json({
+            return res.status(200).json({
                 reuslt: 'success',
-                badges: badges
+                badges: badges,
             })
         } catch (err) {
             cn.query('ROLLBACK');

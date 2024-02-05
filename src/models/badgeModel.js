@@ -11,7 +11,7 @@ module.exports = {
         }
     },
     getBadges: async(db, user_id) => {
-        const selectQuery = 'SELECT type, created_time WHERE user_id = $1 ORDER BY created_time'
+        const selectQuery = 'SELECT type, created_time FROM "Badge" WHERE user_id = $1 ORDER BY created_time'
 
         try {
             const {rows} = await db.query(selectQuery, [user_id]);
