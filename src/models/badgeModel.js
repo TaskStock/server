@@ -1,4 +1,3 @@
-
 module.exports = {
     giveBadge: async(db, type, user_id) => {
         const insertQuery = 'INSERT INTO "Badge" (user_id, type) VALUES ($1, $2)';
@@ -14,8 +13,7 @@ module.exports = {
         const selectQuery = 'SELECT type, created_time FROM "Badge" WHERE user_id = $1 ORDER BY created_time'
 
         try {
-            const {rows} = await db.query(selectQuery, [user_id]);
-            const badges = rows.map(row => row.type);
+            const {rows: badges} = await db.query(selectQuery, [user_id]);
             return badges;
         } catch (err) {
             console.log('getBadges:', err);
