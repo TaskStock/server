@@ -173,9 +173,13 @@ module.exports = {
             await cn.query('BEGIN');
             const userData = req.body;
             
-            //이미 존재하는지 체크 - 애플은 이메일
+            let existingUser;
+            //이미 존재하는지 체크 - 애플은 별도로 처리
+            if (userData.strategy !== 'apple') {
             existingUser = await accountModel.getUserByEmail(cn, userData.email);
-
+            } else {
+                existingUser = await accountModel.getUserByAppleToken(cn, userData.apple_token);
+            }
             if (existingUser === null) { //존재하지 않으면 회원가입
                 userData.password = null;
                 const registeredUser = await accountModel.register(cn, userData);

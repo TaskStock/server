@@ -55,30 +55,28 @@ module.exports = {
     },
     register: async(db, registerData) => {
         try {
-            let {email, userName, password, isAgree, strategy, userPicture, theme, language} = registerData; 
-            let defaultImage = 'public/images/ic_profile.png'
+            let {email, userName, password, isAgree, strategy, userPicture, theme, language, apple_token} = registerData; 
             let rows;      
-            
+            let user_id;
             if (password === null) {    //소셜 로그인의 경우
-                const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
-                if (userPicture === null) {
-                    userPicture = defaultImage;
+                if (strategy === 'kakao' || strategy === 'google') {
+                    const kakaoGoogleQuery = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
+                    const {rows:_rows} = await db.query(kakaoGoogleQuery, [email, userName, strategy, userPicture])
+                } else if (strategy === 'apple') {
+                    const appleQuery = 'INSERT INTO "User" (email, user_name, strategy) VALUES ($1, $2, $3) RETURNING *';
+                    const {rows: _rows} = await db.query(appleQuery, [email, userName, strategy]);
+                    user_id = _rows[0].user_id;
+
+                    const tokenInsertQuery = 'INSERT INTO "AppleToken" (user_id, apple_token) VALUES ($1, $2)';
+                    await db.query(tokenInsertQuery, [user_id, apple_token]);
                 }
-                const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
-                    .catch(e => {
-                        console.error(e.stack);
-                    });
-                rows = _rows;
-            
             } else {    //로컬 로그인의 경우
                 // 비밀번호 암호화
                 const hashedPassword = await bcrypt.hash(password, 10);
                 
-                const query = 'INSERT INTO "User" (email, password, user_name, image) VALUES ($1, $2, $3, $4) RETURNING *';
-                const {rows: _rows} = await db.query(query, [email, hashedPassword, userName, defaultImage])
-                    .catch(e => {
-                        console.error(e.stack);
-                    });
+                const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
+                const {rows: _rows} = await db.query(query, [email, hashedPassword, userName])
+
                 rows = _rows;
             }
             const userData = rows[0];
@@ -87,9 +85,6 @@ module.exports = {
             const defaultSet = [userData.user_id, isAgree, theme, language];
 
             await db.query(settingQuery, defaultSet)
-                .catch(e => {
-                    console.error(e.stack);
-                });
 
             return userData;
         } catch (e) {
