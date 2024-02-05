@@ -5,35 +5,6 @@ const transdate = require('../service/transdateService.js');
 const db = require('../config/db.js');
 
 module.exports = {
-    getItemsMyinterest: async(req, res, next) =>{
-        const user_id = req.user.user_id;
-
-        try{
-            const stockitems = await stockitemModel.getMyinterest(db, user_id);
-
-            return res.json({stockitems: stockitems});
-        }catch(error){
-            next(error);
-        }
-    },
-    getItemsTodaypopular: async(req, res, next) =>{
-        try{
-            const stockitems = await stockitemModel.getTodaypopular(db);
-
-            return res.json({stockitems: stockitems});
-        }catch(error){
-            next(error);
-        }
-    },
-    getItemsTodayrecommend: async(req, res, next) =>{
-        try{
-            const stockitems = await stockitemModel.getTodayrecommend(db);
-
-            return res.json({stockitems: stockitems});
-        }catch(error){
-            next(error);
-        }
-    },
     getItemsAll: async(req, res, next) =>{
         const user_id = req.user.user_id;
         const region = req.user.region;
@@ -58,6 +29,29 @@ module.exports = {
             return res.json({stockitem: stockitem});
         }catch(error){
             next(error);
+        }
+    },
+    getMarketInfo: async(req, res, next) =>{
+        const user_id = req.user.user_id;
+
+        const cn = await db.connect();
+        try{
+            await cn.query('BEGIN');
+
+            // 나의 관심종목 조회
+            const myinterest = await stockitemModel.getMyinterest(cn, user_id);
+            // 오늘 인기종목 조회
+            const todaypopular = await stockitemModel.getTodaypopular(cn);
+            // 오늘 추천종목 조회
+            const todayrecommend = await stockitemModel.getTodayrecommend(cn);
+
+            await cn.query('COMMIT');
+            return res.json({myinterest:myinterest, todaypopular:todaypopular, todayrecommend:todayrecommend});
+        }catch(error){
+            await cn.query('ROLLBACK');
+            next(error);
+        }finally{
+            cn.release();
         }
     },
 }
