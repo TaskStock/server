@@ -51,6 +51,7 @@ module.exports = {
     //     }
         
     // },
+    // 비공개인 애가 공개인 애한테 팔로우를 걸었어, 알람에 뜸 - 공개인 애가 비공개인 애한테 팔로우 요청을 보냄
     followUser: async(db, follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
             console.log('자기 자신을 팔로우할 수 없습니다.');
@@ -407,16 +408,30 @@ module.exports = {
         const followerCountQuery = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
         const followingCountQuery = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
         
+        const followCheckQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
         const noticeQuery = `
         UPDATE "Notice" 
-        SET info = info || '{"isFollowingMe": true, "displayAccept": false}'
+        SET info = info || '{"pending": false, "isFollowingMe": true, "displayAccept": false, "isFollowingYou": $2}'
         WHERE notice_id = $1;
         `
         try {
             await db.query(pendingQuery, [follower_id, following_id]);
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
-            await db.query(noticeQuery, [notice_id])
+
+            let isFollowingYou;
+            const {rows: followCheckRows} = await db.query(followCheckQuery, [following_id, follower_id]);
+            if (followCheckRows.rowCount !== 0) {
+                if (followCheckRows[0].pending == false) {
+                    isFollowingYou = true;
+                } else {
+                    isFollowingYou = false;
+                }
+            } else {
+                isFollowingYou = false;
+            }
+
+            await db.query(noticeQuery, [notice_id, isFollowingYou])
 
             // 상대(팔로워)에게 알림 생성 - follower_id, following_id, type
             const predata = {
