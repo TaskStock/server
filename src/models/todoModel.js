@@ -9,7 +9,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "insertTodoError";
 
                 throw e;
             });
@@ -26,7 +26,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "readTodoError";
 
                 throw e;
             });
@@ -41,7 +41,7 @@ module.exports = {
                 console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateContentAndProjectError";
 
                 throw e;
             });
@@ -55,7 +55,7 @@ module.exports = {
                 console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateTodoError";
 
                 throw e;
             });
@@ -69,7 +69,7 @@ module.exports = {
                 console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "deleteTodoError";
 
                 throw e;
             });
@@ -84,7 +84,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "readTodosUsingProjectError";
 
                 throw e;
             });
@@ -100,7 +100,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateCheckError";
 
                 throw e;
             });
@@ -116,7 +116,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "readTodoUsingTodoIdError";
 
                 throw e;
             });
@@ -131,7 +131,7 @@ module.exports = {
                 console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateTodoDateError";
 
                 throw e;
             });
@@ -146,7 +146,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getHighestIndexError";
 
                 throw e;
             });
@@ -161,7 +161,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateIndexError";
 
                 throw e;
             });
@@ -176,7 +176,7 @@ module.exports = {
                 return res.rows[0].count;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getTodoCountError";
 
                 throw e;
             });
@@ -193,7 +193,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "readTodoForSchedulerError";
 
                 throw e;
             });
@@ -210,7 +210,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "readTodoForSchedulerWithCheckFalseError";
 
                 throw e;
             });
