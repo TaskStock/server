@@ -131,6 +131,42 @@ module.exports = {
                 })
         }
     },
+    sendMultiPushBeforeMidnight: async(region) => {
+        const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
+
+        if (tokens.length == 0) {
+            console.log('FCM토큰이 0개일 경우 알림 발송 안함')
+            returnDD
+        } else {
+            const tokenChuncks = [];
+            for (let i=0; i<tokens.length; i +=499) { //최대 500개 까지 전송 가능해서 499개씩 끊어서 보냄
+                tokenChuncks.push(tokens.slice(i, i+499))
+            }
+        }
+        let title = '\uD83D\uDCC8 TASKSTOCK';
+        let body = '장 마감 한 시간 전입니다! 오늘의 가치를 확인해주세요'
+        
+        // 각 chunk를 순회하면서 메시지 전송
+        for (let chunk of tokenChuncks) {
+            let message = {
+                notification: {
+                    title: title,
+                    body: body
+                },
+                tokens: chunk, // 여러 토큰 지정
+            };
+            // 메시지 전송
+            admin
+                .messaging()
+                .sendEach(message)
+                .then(function (response) {
+                    console.log('Successfully sent message(all): : ', response)
+                })
+                .catch(function (err) {
+                    console.log('Error Sending message!!! : ', err)
+                })
+        }
+    },
     // TODO : 타입에 따라 슬랙 메세지 전송
     sendSlack: async (noticeData) => {
         try {
