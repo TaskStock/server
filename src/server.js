@@ -84,6 +84,12 @@ app.use(async (err, req, res, next) => {
     // err.ReqBody = req.body;
     // await sendSlack(err);
     
+    // 클라이언트로 오류 메시지 전송
+    return res.status(500).json({
+        result: "fail",
+        message: "서버 내부 오류"
+    })
+    
     // 로그 기록 - 배포 버전에선 삭제
     console.error(err.stack);
 });
