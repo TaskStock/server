@@ -2,6 +2,7 @@ const schedule = require('node-schedule');
 
 const transdate = require('./transdateService.js');
 const calculate = require('./calculateService.js');
+const notice = require('./noticeService.js');
 
 const valueModel = require('../models/valueModel.js');
 const accountModel = require('../models/accountModel.js');
@@ -157,7 +158,7 @@ async function stockitemJobManager(timezone, tommorowsttime){
     }
 }
 
-function mainScheduler(timezone){
+function settlementScheduler(timezone){
     const startTime = transdate.getStartToday(timezone);
     const nextSettlement = transdate.getSettlementTimeInUTC(timezone);
     const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timezone);
@@ -180,7 +181,32 @@ function mainScheduler(timezone){
             });
         });
 
-        mainScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
+        settlementScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
+    });
+}
+
+// 알림 스케쥴링
+function alarmScheduler(timezone){
+    const nextAlarm = transdate.getAlarmTimeInUTC(timezone);
+    
+    // const test = new Date();
+    // test.setTime(test.getTime()+3000);
+
+    schedule.scheduleJob(nextAlarm, async function() {
+        // 비동기로 각 스케쥴러 작업 실행
+
+        await Promise.allSettled([
+            notice.sendMultiPushBeforeMidnight(timezone)
+        ])
+        .then((results)=>{
+            results.forEach((result, index)=>{
+                if(result.status !== 'fulfilled'){
+                    console.log(`${index}번째 스케쥴러 실패:`, result.reason);
+                }
+            });
+        });
+
+        alarmScheduler(timezone);
     });
 }
 
@@ -188,6 +214,6 @@ module.exports = {
     scheduling: () => {
         // const timeZones = ['Asia/Seoul']; // 타임존 목록
         const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
-        timeZones.forEach(tz => mainScheduler(tz)); // 각 타임존에 대해 함수 호출
+        timeZones.forEach(tz => {settlementScheduler(tz), alarmScheduler(tz)}); // 각 타임존에 대해 함수 호출
     }
 }
