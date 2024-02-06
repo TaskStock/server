@@ -231,9 +231,6 @@ module.exports = {
             });
         } else {
             next(err);
-            return res.status(500).json({
-                result: "fail"
-            });
         }
     },
     cancelFollow: async(req, res, next) => {

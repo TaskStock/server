@@ -37,10 +37,7 @@ module.exports = {
             } 
         } catch (err) {
             next(err)
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         }
     },
     //인증코드 확인
@@ -78,10 +75,7 @@ module.exports = {
         } catch (err) {
             await cn.query('ROLLBACK')
             next(err)
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         } finally {
             cn.release();
         }
@@ -129,10 +123,7 @@ module.exports = {
         } catch (err) {
             next(err);  
             await cn.query('ROLLBACK');
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         } finally {
             cn.release();
         }
@@ -158,10 +149,7 @@ module.exports = {
             });
         } catch (err) {
             next(err)
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         }
     }, 
     //소셜 로그인
@@ -248,10 +236,7 @@ module.exports = {
         } catch (err) {
             await cn.query('ROLLBACK');
             next(err);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         } finally {
             cn.release();   
         }
@@ -279,10 +264,7 @@ module.exports = {
             }
         } catch (err) {
             next(err);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         }
     },
     //accessToken 재발급
@@ -337,10 +319,7 @@ module.exports = {
             }
         } catch (err) {
             next(err);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         }
     },
     getUserInfo: async (req, res, next) => {
@@ -392,10 +371,7 @@ module.exports = {
             } 
         } catch (err) {
             next(err);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         }
     },
     //비밀번호 변경
@@ -479,10 +455,7 @@ module.exports = {
         } catch (err) {
             await cn.query('ROLLBACK');
             next(err);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         } finally {
             cn.release();
         }

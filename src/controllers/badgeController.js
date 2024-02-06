@@ -20,9 +20,7 @@ module.exports = {
         } catch (err) {
             cn.query('ROLLBACK');
             next(err);
-            return res.status(500).json({
-                result: 'fail'
-            })
+            
         } finally {
             cn.release();
         }
@@ -38,9 +36,7 @@ module.exports = {
             })
         } catch (err) {
             next(err);
-            return res.status(500).json({
-                result: 'fail'
-            })
+            
         }
     }
 }

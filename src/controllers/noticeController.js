@@ -15,9 +15,7 @@ module.exports = {
             // console.log('getAllNotice ERROR : ', err);
             err.name = 'getAllNotice ERROR'; // err에 name객체 있음
             next(err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+
         }
     },
     //운영진 공지사항 읽어올 때만 사용
@@ -30,9 +28,7 @@ module.exports = {
             });
         } catch (err) {
             next(err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+
         }
     }, 
     changeNoticeSetting: async (req, res, next) => {
@@ -45,9 +41,7 @@ module.exports = {
             });
         } catch (err) {
             next(err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+
         }
     },
     saveFCMToken: async(req, res, next) => {
@@ -62,9 +56,7 @@ module.exports = {
             }); 
     } catch (err) {
             next(err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+
         }
     },
     updateFCMToken: async(req, res, next) => {
@@ -78,9 +70,7 @@ module.exports = {
             });
         } catch (err) {
             next(err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+
         }
     },
     sendCustomerSuggestion: async(req, res, next) => {
@@ -104,9 +94,7 @@ module.exports = {
 
         } catch (err) {
             next(err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+
         }
     } 
 };
