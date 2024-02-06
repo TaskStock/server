@@ -29,6 +29,22 @@ module.exports = {
             });
         return sivalue_id;
     },
+    getSivalueOnemonth: async(db, stockitem_id, start_date, end_date)=>{
+        const query = 'select success_rate, date from "SIValue" where stockitem_id=$1 and date>$2 and date<=$3 order by date';
+        const values = [stockitem_id, start_date, end_date];
+
+        const sivalue = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows;
+            })
+            .catch(e => {
+                console.error(e.stack);
+
+                throw e;
+            });
+        return sivalue;
+    },
     // 스케쥴러에 사용
     // getSivalueOne: async(stockitem_id, date)=>{
     //     const query = 'select * from "SIValue" where stockitem_id=$1 and date=$2';
