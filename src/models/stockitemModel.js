@@ -263,14 +263,15 @@ module.exports = {
             m.take_count my_take_count, m.success_count my_success_count, 
             svm.user_id as is_add_today
         from "Stockitem" s
-            left join "SIMap" m
+            left join 
+                (select * from "SIMap" where user_id = $2) m
                 on s.stockitem_id = m.stockitem_id
             inner join "SIValue" v 
                 on s.stockitem_id = v.stockitem_id
             left join
                 (select * from "SIValueMap" where user_id = $2) as svm
                 on v.sivalue_id = svm.sivalue_id
-        where s.stockitem_id=$1 and m.user_id=$2 and v.date=$3
+        where s.stockitem_id=$1 and v.date=$3
         `;
         const values = [stockitem_id, user_id, date];
 
