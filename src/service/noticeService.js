@@ -156,6 +156,11 @@ module.exports = {
             },
             token: token, // 여기서는 개별 토큰 지정
             }));
+            // 메시지 전송 전 확인
+            if (messages.length === 0) {
+                console.log("No messages to send");
+                return;
+            }
             // 메시지 전송
             admin
                 .messaging()
