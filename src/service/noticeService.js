@@ -135,6 +135,7 @@ module.exports = {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
         let tokenChuncks = [];
+        
         if (tokens.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
@@ -148,17 +149,22 @@ module.exports = {
         
         // 각 chunk를 순회하면서 메시지 전송
         for (let chunk of tokenChuncks) {
-            let message = {
-                notification: {
-                    title: title,
-                    body: body
-                },
-                tokens: chunk, // 여러 토큰 지정
-            };
+            let messages = chunk.map(token => ({
+            notification: {
+                title: title,
+                body: body
+            },
+            token: token, // 여기서는 개별 토큰 지정
+            }));
+            // 메시지 전송 전 확인
+            if (messages.length === 0) {
+                console.log("No messages to send");
+                return;
+            }
             // 메시지 전송
             admin
                 .messaging()
-                .sendEach(message)
+                .sendAll(messages)
                 .then(function (response) {
                     console.log('Successfully sent message(all): : ', response)
                 })
