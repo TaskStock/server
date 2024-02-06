@@ -74,11 +74,11 @@ module.exports = {
                         await sivaluemapModel.insertMapping(cn, user_id, sivalue_id);
     
                         // SIMap 업데이트
-                        const simap = await simapModel.getSimapid(cn, user_id, stockitem_id);
+                        const simap = await simapModel.getSimap(cn, user_id, stockitem_id);
                         if(simap === undefined){
                             await simapModel.createSimap(cn, user_id, stockitem_id);
                         }else{
-                            await simapModel.increaseTakecount(cn, simap.simap_id);
+                            await simapModel.increaseTakecount(cn, user_id, stockitem_id);
                         }
                     }else{
                         await cn.query('ROLLBACK');
