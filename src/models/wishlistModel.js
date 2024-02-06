@@ -8,7 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "insertWishlistError";
 
                 throw e;
             });
@@ -22,7 +22,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "deleteWishlistError";
 
                 throw e;
             });
@@ -45,7 +45,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getWishlistError";
 
                 throw e;
             });
@@ -60,7 +60,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "increaseLikeError";
 
                 throw e;
             });
@@ -74,7 +74,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "decreaseLikeError";
 
                 throw e;
             });

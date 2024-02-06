@@ -15,13 +15,11 @@ module.exports = {
             // console.log('getAllNotice ERROR : ', err);
             err.name = 'getAllNotice ERROR'; // err에 name객체 있음
             next(err);
-            // return res.status(500).json({
-            //     message: "서버 내부 오류"
-            // });
+
         }
     },
     //운영진 공지사항 읽어올 때만 사용
-    getNoticeById: async (req, res) => {
+    getNoticeById: async (req, res, next) => {
         try {
             const notice_id = req.params.notice_id;
             const noticeData = await noticeModel.getNoticeById(db, notice_id);
@@ -29,13 +27,11 @@ module.exports = {
                 noticeData: noticeData
             });
         } catch (err) {
-            console.log('getNoticeById ERROR : ', err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+            next(err);
+
         }
     }, 
-    changeNoticeSetting: async (req, res) => {
+    changeNoticeSetting: async (req, res, next) => {
         try {
             const user_id = req.user.user_id;
             const isPushOn = req.body.isPushOn;
@@ -43,14 +39,12 @@ module.exports = {
             return res.status(200).json({
                 result: "success",
             });
-        } catch (e) {
-            console.log('changeNoticeSetting ERROR : ', e);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+        } catch (err) {
+            next(err);
+
         }
     },
-    saveFCMToken: async(req, res) => {
+    saveFCMToken: async(req, res, next) => {
         try {
             const FCMToken = req.body.FCMToken;
             const isPushOn = req.body.isPushOn;
@@ -60,14 +54,12 @@ module.exports = {
             return res.status(200).json({
                 result: "success",
             }); 
-    } catch (e) {
-            console.log('saveFCMToken ERROR : ', e);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+    } catch (err) {
+            next(err);
+
         }
     },
-    updateFCMToken: async(req, res) => {
+    updateFCMToken: async(req, res, next) => {
         try {
             const user_id = req.user.user_id
             const FCMToken = req.body.FCMToken;
@@ -77,13 +69,11 @@ module.exports = {
                 result: "success",
             });
         } catch (err) {
-            console.log('updateFCMToken ERROR : ', err);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+            next(err);
+
         }
     },
-    sendCustomerSuggestion: async(req, res) => {
+    sendCustomerSuggestion: async(req, res, next) => {
         try {
             const user_id = req.user.user_id;
             const content = req.body.content
@@ -102,11 +92,9 @@ module.exports = {
                 result: "success"
             });
 
-        } catch (e) {
-            console.log('sendCustomerfeedback ERROR : ', e);
-            return res.status(500).json({
-                message: "서버 내부 오류"
-            });
+        } catch (err) {
+            next(err);
+
         }
     } 
 };

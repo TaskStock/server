@@ -2,12 +2,12 @@ const snsModel = require('../models/snsModel.js');
 const db = require('../config/db.js');
 
 module.exports = {
-    changePrivate: async(req, res) => {
+    changePrivate: async(req, res, next) => {
         const cn = await db.connect();
         try {
             cn.query('BEGIN');
 
-            user_id = req.user.user_id;
+            const user_id = req.user.user_id;
             const private = req.body.private;
             const changeResult = await snsModel.changePrivate(cn, user_id, private);
             if (changeResult) {
@@ -23,16 +23,13 @@ module.exports = {
             }
         } catch (err) {
             await cn.query('ROLLBACK');
-            console.log(err)
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            next(err);
+            
         } finally {
             cn.release();
         }
     },
-    // showRanking: async(req, res) => {
+    // showRanking: async(req, res, next) => {
     //     const user_id = req.user.user_id;
     //     const rankingResult = await snsModel.showRanking(user_id);
     //     if (rankingResult) {
@@ -48,7 +45,7 @@ module.exports = {
     //         });
     //     }
     // },
-    followUser: async(req, res) => {
+    followUser: async(req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -70,17 +67,14 @@ module.exports = {
                 });
             }
         } catch (err) {
-            console.log(err)
+            next(err);
             await cn.query('ROLLBACK');
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            
         } finally {
             cn.release();
         }
     },
-    unfollowUser: async(req, res) => {
+    unfollowUser: async(req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -100,17 +94,14 @@ module.exports = {
                 });
             }
         } catch (err) {
-            console.log(err)
             await cn.query('ROLLBACK');
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            next(err);
+            
         } finally {
             cn.release();
         }
     },
-    searchUser: async(req, res) => {
+    searchUser: async(req, res, next) => {
         try {
         const searchTarget = req.query.searchTarget; //이메일 또는 닉네임
         const searchScope = req.query.searchScope; //검색 범위
@@ -123,13 +114,13 @@ module.exports = {
             searchResult: searchResult
         })
     } catch (err) {
-        console.log(err)
+        next(err);  
         return res.status(500).json({
             result: "fail",
             message: "서버 내부 오류"
         })
     }},
-    showFollowList: async(req, res) => {
+    showFollowList: async(req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -143,60 +134,65 @@ module.exports = {
                 followingList: followingList
             });
         } catch (err) {
-            console.log(err)
             await cn.query('ROLLBACK');
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            next(err);
+            
         } finally {
             cn.release();
         }
     },
-    editUserInfo: async(req, res) => {
-        const user_id = req.user.user_id;
-        const user_name = req.body.user_name;
-        const introduce = req.body.introduce;
+    editUserInfo: async(req, res, next) => {
+        try {
+            const user_id = req.user.user_id;
+            const user_name = req.body.user_name;
+            const introduce = req.body.introduce;
 
-        const editResult = await snsModel.editUserInfo(db, user_id, user_name, introduce);
-        if (editResult) {
-            return res.status(200).json({
-                result: "success"
-            });
-        } else {
-            return res.status(400).json({
-                result: "fail"
-            });
+            const editResult = await snsModel.editUserInfo(db, user_id, user_name, introduce);
+            if (editResult) {
+                return res.status(200).json({
+                    result: "success"
+                });
+            } else {
+                return res.status(400).json({
+                    result: "fail"
+                });
+            }
+        } catch (err) {
+            next(err);
         }
     },
-    editUserImage: async(req, res) => {
-        const user_id = req.user.user_id;
-        const image_file = req.file
-        if (image_file == undefined) {
-            console.log('이미지 파일이 없습니다.');
-            return res.status(400).json({
-                message: "이미지 파일이 없습니다.",
-                result: "fail"
-            });
-        } else { 
-            image_path = image_file.path;
-        }
+    editUserImage: async(req, res, next) => {
+        try {
+            const user_id = req.user.user_id;
+            const image_file = req.file
+            if (image_file == undefined) {
+                console.log('이미지 파일이 없습니다.');
+                return res.status(400).json({
+                    message: "이미지 파일이 없습니다.",
+                    result: "fail"
+                });
+            } else { 
+                image_path = image_file.path;
+            }
 
-        const uploadResult = await snsModel.editUserImage(db, user_id, image_path);
-        if (uploadResult) {
-            console.log("이미지 변경 완료");
-            return res.status(200).json({
-                result: "success",
-                imagePath : image_path
-            });
-        } else {
-            console.log("이미지 변경 실패");
-            return res.status(500).json({
-                result: "fail"
-            });
+            const uploadResult = await snsModel.editUserImage(db, user_id, image_path);
+            if (uploadResult) {
+                console.log("이미지 변경 완료");
+                return res.status(200).json({
+                    result: "success",
+                    imagePath : image_path
+                });
+            } else {
+                console.log("이미지 변경 실패");
+                return res.status(500).json({
+                    result: "fail"
+                });
+            }
+        } catch (err) {
+            next(err);
         }
     },
-    acceptPending: async(req, res) => {
+    acceptPending: async(req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -218,32 +214,26 @@ module.exports = {
                 });
             }
         } catch (err) {
-            console.log(err)
+            next(err);
             await cn.query('ROLLBACK');
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            
         } finally {
             cn.release();
         }
     },
-    changeDefaultImage: async(req, res) => {
+    changeDefaultImage: async(req, res, next) => {
         const user_id = req.user.user_id;
         const changeResult = await snsModel.changeDefaultImage(db, user_id);
         
         if (changeResult) {
-            return es.status(200).json({
+            return res.status(200).json({
                 result: "success",
-                imagePath: ''
             });
         } else {
-            return res.status(500).json({
-                result: "fail"
-            });
+            next(err);
         }
     },
-    cancelFollow: async(req, res) => {
+    cancelFollow: async(req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -272,15 +262,12 @@ module.exports = {
         } catch (err) {
             console.log(err)
             await db.query('ROLLBACK');
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            next(err);
         } finally {
             cn.release();
         }
     },
-    userDetail: async(req, res) => {
+    userDetail: async(req, res, next) => {
         const cn = await db.connect();
         try {
         await cn.query('BEGIN');
@@ -299,11 +286,7 @@ module.exports = {
         })
         } catch (err) {
             await cn.query('ROLLBACK');
-            console.log(err)
-            return res.status(500).json({
-                result: "fail",
-                message: "서버 내부 오류"
-            })
+            next(err);
         } finally {
             cn.release();
         }

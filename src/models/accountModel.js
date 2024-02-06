@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { th } = require('date-fns/locale');
 const fs = require('fs');
 
 module.exports = {
@@ -8,11 +9,11 @@ module.exports = {
             const code = authCode;
             const {rows} = await db.query(query, [code]); 
             const codeId = rows[0].code_id; 
-            console.log("코드 db에 저장 완료");
+
             return codeId 
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'saveCodeError';
+            throw err;
         }
     },
     checkCode: async(db, inputData) => {
@@ -32,9 +33,9 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'checkCodeError';
+            throw err;
         }
     },
     deleteCode: async(db, inputData) => {
@@ -48,9 +49,9 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (error) {
-            console.log(error.stack);
-            return false;
+        } catch (err) {
+            err.name = 'deleteCodeError';
+            throw err;
         }
     },
     register: async(db, registerData) => {
@@ -111,9 +112,9 @@ module.exports = {
             await db.query(settingQuery, defaultSet)
 
             return userData;
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'registerError';
+            throw err;
         }
     },
     saveRefreshToken: async(db, user_id, refreshToken, device_id) => {
@@ -124,18 +125,20 @@ module.exports = {
             const insertQuery = 'INSERT INTO "Token" (user_id, refresh_token, device_id) VALUES ($1, $2, $3)';
             await db.query(insertQuery, [user_id, refreshToken, device_id])
                 .catch(e => {
-                    console.error(e.stack);
+                    e.name = 'saveRefreshTokenError - insertQueryError';
+                    throw e;
                 });
         } else {
             const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE user_id = $2 and device_id = $3';
             await db.query(updateQuery, [refreshToken, user_id, device_id])
                 .catch(e => {
-                    console.error(e.stack);
+                    e.name = 'saveRefreshTokenError - updateQueryError';
+                    throw e; 
                 });
         }
-    } catch (e) {
-        console.log(e.stack);
-        throw e;
+    } catch (err) {
+        err.name = 'saveRefreshTokenError';
+        throw err;
     }
     },
     getUserByAppleToken: async(db, apple_token) => {
@@ -156,9 +159,9 @@ module.exports = {
                 return userData;
             }
 
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'getUserByAppleTokenError';
+            throw err;
         }
     },
     getUserByEmail: async(db, email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
@@ -172,9 +175,9 @@ module.exports = {
             } else {
                 return userData;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'getUserByEmailError';
+            throw err;
         }
     },
     deleteRefreshToken: async(db, user_id, device_id) => {
@@ -186,9 +189,9 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            return false;
+        } catch (err) {
+            err.name = 'deleteRefreshTokenError';
+            throw err;
         }
     },
     getUserById: async(db, user_id) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
@@ -201,8 +204,9 @@ module.exports = {
         try {
             const {rows} = await db.query(query, [user_id])
             return rows;
-        } catch (e) {
-            console.log(e.stack);
+        } catch (err) {
+            err.name = 'getUserByIdError';
+            throw err;
         }
     },
     getUserNameById: async(db, user_id) => { //user_id로 유저 이름 가져오기
@@ -210,9 +214,9 @@ module.exports = {
         try {
             const {rows} = await db.query(query, [user_id])
             return rows[0].user_name;
-        } catch (e) {
-            console.log(e.stack);
-            return 
+        } catch (err) {
+            err.name = 'getUserNameByIdError';
+            throw err;
         }
     },
     checkRefreshToken: async(db, user_id, refreshToken, device_id) => {
@@ -230,10 +234,9 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
-            return false;
+        } catch (err) {
+            err.name = 'checkRefreshTokenError';
+            throw err;
         }
     },
     changePasword: async(db, inputData) => {
@@ -248,9 +251,9 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'changePasswordError';
+            throw err;
         }
     },
     deleteUser: async(db, user_id) => {
@@ -275,9 +278,9 @@ module.exports = {
             } else {
                 return false;        
             } 
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'deleteUserError';
+            throw err;
         }
     }, 
     // 스케쥴러 위한 모델
@@ -290,10 +293,9 @@ module.exports = {
                 // console.log(res.rows);
                 return res.rows;
             })
-            .catch(e => {
-                console.error(e.stack);
-
-                throw e;
+            .catch(err => {
+                err.name = 'getUsersIdByRegionError';
+                throw err;
             });
         return user_ids;
     },
@@ -306,19 +308,18 @@ module.exports = {
             .then(res => {
                 // console.log(res.rows[0]);
             })
-            .catch(e => {2
-                console.error(e.stack);
-
-                throw e;
+            .catch(err => {
+                err.name = 'updateValueFieldError';
+                throw err;
             });
     },
     changeTheme: async(db, user_id, theme) => {
         const query = 'UPDATE "UserSetting" SET theme = $1 WHERE user_id = $2';
         try {
             await db.query(query, [theme, user_id])
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'changeThemeError';
+            throw err;
         }
     },
     getPasswordById: async(db, user_id) => {
@@ -326,9 +327,9 @@ module.exports = {
         try {
             const {rows} = await db.query(query, [user_id])
             return rows[0].password;
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'getPasswordByIdError';
+            throw err;
         }
     }
 }

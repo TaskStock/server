@@ -8,7 +8,7 @@ module.exports = {
                 // console.log(res.rows);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "createByNewUserError";
 
                 throw e;
             });
@@ -23,7 +23,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'getRecentValueError'
 
                 throw e;
             });
@@ -39,7 +39,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'createByExistUserError'
 
                 throw e;
             });
@@ -55,7 +55,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'getValuesError'
 
                 throw e;
             });
@@ -72,7 +72,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'updateValueBecauseTodoCompleteError'
 
                 throw e;
             });
@@ -87,7 +87,7 @@ module.exports = {
                 // console.log(res.rows);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'updateValueError'
 
                 throw e;
             });
@@ -103,7 +103,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'getValueOneError'
 
                 throw e;
             });
@@ -119,7 +119,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'updateValueEndError'
 
                 throw e;
             });
@@ -135,7 +135,7 @@ module.exports = {
                 // console.log(res.rows);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'updateValueForMakedTodosError'
 
                 throw e;
             });

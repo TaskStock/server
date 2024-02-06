@@ -8,8 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = 'insertProjectError';
                 throw e;
             });
     },
@@ -22,8 +21,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = 'updateProjectError';
                 throw e;
             });
     },
@@ -37,8 +35,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = 'readProjectError';
                 throw e;
             });
         return project;
@@ -64,8 +61,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = 'readAllProjectsError';
                 throw e;
             });
         return projects;
@@ -79,8 +75,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = 'deleteProjectError';
                 throw e;
             });
     },

@@ -8,8 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "insertRetrospectError";
                 throw e;
             });
     },
@@ -22,8 +21,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "updateRetrospectError";
                 throw e;
             });
     },
@@ -37,7 +35,7 @@ module.exports = {
             })
             .catch(e => {
                 console.error(e.stack);
-
+                e.name = "deleteRetrospectError";
                 throw e;
             });
     },
@@ -51,8 +49,7 @@ module.exports = {
                 return res.rows[0].count;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getRetrospectCountError";
                 throw e;
             });
         return count;
@@ -67,8 +64,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getRetrospectsWithMonthError";
                 throw e;
             });
         return retrospects;
@@ -91,8 +87,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getRetrospectsAllError";
                 throw e;
             });
         return retrospects;
@@ -115,8 +110,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getRetrospectsWithProjectError";
                 throw e;
             });
         return retrospects;

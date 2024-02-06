@@ -15,7 +15,7 @@ module.exports = {
             await db.query(noticeQuery, [user_id, private])
             return true;
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'changePrivateError';
             return false;
         }
     },
@@ -52,7 +52,7 @@ module.exports = {
     //         return [rankingAll, rankingFollower, rankingFollowing];
 
     //     } catch (e) {
-    //         console.log(e.stack);
+    //         
     //         return
     //     }
         
@@ -179,7 +179,7 @@ module.exports = {
 
             return true;
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'followUserError';
             return false;
         }
     },
@@ -199,7 +199,7 @@ module.exports = {
 
             return true;
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'unfollowUserError';
             return false;
         }
     },
@@ -238,7 +238,7 @@ module.exports = {
                 const {rows: result} = await db.query(query, [user_id, queryTarget]);
                 return result;
             } catch (e) {
-                console.log(e.stack);
+                e.name = 'searchUserError';
                 return [];
             }
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
@@ -263,7 +263,7 @@ module.exports = {
                 const {rows} = await db.query(query, [user_id, queryTarget]);
                 return rows;
             } catch (e) {
-                console.log(e.stack);
+                
                 return [];
             }
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
@@ -289,7 +289,7 @@ module.exports = {
                 const {rows} = await db.query(query, [user_id, queryTarget]);
                 return rows;
             } catch (e) {
-                console.log(e.stack);
+                e.name = 'searchUserError';
                 return [];
             }
         } else {
@@ -353,7 +353,7 @@ module.exports = {
             const {rows: followingList} = await db.query(followingQuery, [user_id]);
             return [followerList, followingList]
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'showFollowListError';
             return false;
         }
     },
@@ -363,7 +363,7 @@ module.exports = {
             await db.query(query, [user_name, introduce, user_id]);
             return true;
         } catch (e) {
-            console.log(e.stack);
+            
             return false;
         }
     },
@@ -385,7 +385,7 @@ module.exports = {
             await db.query(updateQuery, [image_path, user_id]);
             return true;
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'editUserImageError';
             return false;
         }
     },
@@ -448,7 +448,7 @@ module.exports = {
 
             return true;
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'acceptPendingError';
             return false;
         }
     },
@@ -458,7 +458,7 @@ module.exports = {
             await db.query(query, ['', user_id]);
             return true;
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'changeDefaultImageError';
             return false;
         }
     },
@@ -511,15 +511,11 @@ module.exports = {
             `
             await db.query(followingNoticeQuery, [following_id, follower_id])
             
-
-
-
             console.log('팔로우 요청 취소 성공')
             return true;
 
         } catch (e) {
-            console.log('팔로우 요청 취소 실패 - DB에 없는 레코드를 삭제하려고 했을 수 있음')
-            console.log(e.stack);
+            e.name = 'cancelFollowError';
             return false;
         }
     },
@@ -563,7 +559,7 @@ module.exports = {
 
             return [targetRows[0], valueRows, todoRows, projectRows];
         } catch (e) {
-            console.log(e.stack);
+            e.name = 'userDetailError';
             throw e;
         }
     },

@@ -8,7 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "likeWishlistError";
 
                 throw e;
             });
@@ -22,7 +22,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "unlikeWishlistError";
 
                 throw e;
             });
@@ -37,7 +37,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = 'getLikeError'
 
                 throw e;
             });

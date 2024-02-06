@@ -12,7 +12,7 @@ const { generateAccessToken, generateRefreshToken, generateAuthCode } = require(
 
 module.exports = {
     //이메일 인증
-    sendMailForRegister: async (req, res) => {
+    sendMailForRegister: async (req, res, next) => {
         try {
             const email = req.body.email;
             const userData = await accountModel.getUserByEmail(db, email); //이메일로 유저 정보 가져오기
@@ -35,16 +35,13 @@ module.exports = {
                     });
                 }
             } 
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+        } catch (err) {
+            next(err)
+            
         }
     },
     //인증코드 확인
-    checkCode: async (req, res) => {
+    checkCode: async (req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -75,19 +72,16 @@ module.exports = {
                     message: "인증코드가 일치하지 않음" 
                 });
             }
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
             await cn.query('ROLLBACK')
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            next(err)
+            
         } finally {
             cn.release();
         }
     },
     //이메일 회원가입
-    register: async (req, res) => {
+    register: async (req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -126,19 +120,16 @@ module.exports = {
                 strategy: userData.strategy
             });
 
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
+            next(err);  
             await cn.query('ROLLBACK');
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            
         } finally {
             cn.release();
         }
     },
     //로그인
-    login: async (req, res) => {
+    login: async (req, res, next) => {
         try {
             const userData = req.user; // passport를 통해 성공적으로 로그인한 유저 객체
             const userDevice = req.body.device_id;
@@ -156,16 +147,13 @@ module.exports = {
                 accessExp, accessExp,
                 refreshExp: refreshExp
             });
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+        } catch (err) {
+            next(err)
+            
         }
     }, 
     //소셜 로그인
-    loginSocial: async (req, res) => {
+    loginSocial: async (req, res, next) => {
         const cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -245,19 +233,16 @@ module.exports = {
                     strategy: userData.strategy 
                 });
             }
-        } catch (error) {
+        } catch (err) {
             await cn.query('ROLLBACK');
-            console.log(error);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            next(err);
+            
         } finally {
             cn.release();   
         }
     },
     //로그아웃
-    logout: async (req, res) => {
+    logout: async (req, res, next) => {
         try {
             // 로그아웃 시 refreshToken 삭제, accessToken 및 refreshToken은 클라이언트에서 삭제
             const user_id = req.user.user_id; 
@@ -277,16 +262,13 @@ module.exports = {
                     message: "로그아웃 실패" 
                 });
             }
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+        } catch (err) {
+            next(err);
+            
         }
     },
     //accessToken 재발급
-    refresh: async (req, res) => {
+    refresh: async (req, res, next) => {
         try {
             const refreshToken = req.body.refreshToken;
             
@@ -335,15 +317,12 @@ module.exports = {
                     }
                 });
             }
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+        } catch (err) {
+            next(err);
+            
         }
     },
-    getUserInfo: async (req, res) => {
+    getUserInfo: async (req, res, next) => {
         try {
             const user_id = req.user.user_id;
             const queryResult = await accountModel.getUserById(db, user_id);
@@ -354,15 +333,15 @@ module.exports = {
                 message: "유저 정보 가져오기 성공",
                 userData: userData
             });
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
+            next(err);
             res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
             });
         }
     },
-    sendMailForFindPassword: async (req, res) => {
+    sendMailForFindPassword: async (req, res, next) => {
         try {
             const email = req.body.email;
             const userData = await accountModel.getUserByEmail(db, email); //이메일로 유저 정보 가져오기
@@ -370,6 +349,12 @@ module.exports = {
                 return res.status(200).json({ 
                     result: "fail" ,
                     message: "가입되지 않은 이메일입니다."
+                });
+            }
+            if (userData.strategy !== 'local') {
+                return res.status(200).json({ 
+                    result: "social" ,
+                    message: "소셜 로그인으로 가입된 계정입니다."
                 });
             }
 
@@ -384,16 +369,13 @@ module.exports = {
                     codeId: codeId
                 });
             } 
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+        } catch (err) {
+            next(err);
+            
         }
     },
     //비밀번호 변경
-    changePassowrd: async (req, res) => {
+    changePassowrd: async (req, res, next) => {
         try {
             const inputData = req.body
             const changeResult = await accountModel.changePasword(db, inputData);
@@ -410,8 +392,8 @@ module.exports = {
                     message: "0개 또는 두개 이상의 비밀번호가 변경됨"
                 });
             }
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
+            next(err);
             res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
@@ -419,7 +401,7 @@ module.exports = {
         }    
     },
     // 비밀번호 확인
-    confirmPassword: async (req, res) => {
+    confirmPassword: async (req, res, next) => {
         try {
             const inputPW = req.body.inputPW;
             
@@ -439,8 +421,8 @@ module.exports = {
                     message: "비밀번호 틀림"
                 })
             }
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
+            next(err)
             res.status(500).json({ 
                 result: "error", 
                 message: "서버 오류"
@@ -448,7 +430,7 @@ module.exports = {
         }
     },
     //회원탈퇴
-    unregister: async (req, res) => {
+    unregister: async (req, res, next) => {
         cn = await db.connect();
         try {
             await cn.query('BEGIN');
@@ -470,18 +452,15 @@ module.exports = {
                     message: "회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨" 
                 });
             }
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
             await cn.query('ROLLBACK');
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
+            next(err);
+            
         } finally {
             cn.release();
         }
     },
-    changeTheme: async (req, res) => {
+    changeTheme: async (req, res, next) => {
         try {
             const theme = req.body.theme;
             const user_id = req.user.user_id;
@@ -492,8 +471,8 @@ module.exports = {
                 message: "테마 변경 성공"
             }); 
         } catch (error) {
-            console.log(error);
-            res.status(500).json({ 
+            next(err);
+            return res.status(500).json({ 
                 result: "error", 
                 message: "서버 내부 오류"
             });

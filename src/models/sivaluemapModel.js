@@ -8,8 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "insertMappingError";
                 throw e;
             });
     },
@@ -22,8 +21,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "deleteMappingError";
                 throw e;
             });
     },
@@ -44,8 +42,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getMappingError";
                 throw e;
             });
         return sivaluemap;
@@ -60,8 +57,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getUserlistError";
                 throw e;
             });
         return userlist;
