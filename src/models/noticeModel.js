@@ -101,6 +101,30 @@ module.exports = {
             throw err
         }
     },
+    getAllFCMTokensInRegion: async (db, region) => {
+        const query = `
+        SELECT fcm_token 
+        FROM "UserSetting" 
+        WHERE is_push_on = true AND fcm_token IS NOT NULL AND user_id IN (
+            SELECT user_id 
+            FROM "User" 
+            WHERE region = $1
+        )
+        `;
+
+        try {
+            const {rows} = await db.query(query, [region]); 
+            if (rows.length === 0) {
+                return []
+            } else {
+                const tokens = rows.map(row => row.fcm_token);
+                return tokens
+            }
+        } catch(err) {
+            console.log('getAllFCMTokensInRegion ERROR : ', err)
+            throw err
+        }
+    },
     saveCustomerSuggestion: async (db, user_id, content, email) => {
         const query = 'INSERT INTO "CustomerService" (user_id, content, email) VALUES ($1, $2, $3)';
         try {
