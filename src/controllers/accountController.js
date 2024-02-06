@@ -377,7 +377,7 @@ module.exports = {
             const mailResult = await mailer(email, authCode, 'changePW');
 
             if (mailResult) {
-                const codeId = await accountModel.saveCode(authCode, db);
+                const codeId = await accountModel.saveCode(db, authCode);
                 
                 return res.status(200).json({ 
                     result: "success", 
