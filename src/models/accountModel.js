@@ -13,7 +13,6 @@ module.exports = {
             return codeId 
         } catch (err) {
             err.name = 'saveCodeError';
-            err.message = '인증코드 저장 실패';
             throw err;
         }
     },
@@ -36,7 +35,6 @@ module.exports = {
             }
         } catch (err) {
             err.name = 'checkCodeError';
-            err.message = '인증코드 확인 실패';
             throw err;
         }
     },
@@ -53,7 +51,6 @@ module.exports = {
             }
         } catch (err) {
             err.name = 'deleteCodeError';
-            err.message = '인증코드 삭제 실패';
             throw err;
         }
     },
@@ -117,7 +114,6 @@ module.exports = {
             return userData;
         } catch (err) {
             err.name = 'registerError';
-            err.message = '회원가입 실패';
             throw err;
         }
     },
@@ -129,18 +125,19 @@ module.exports = {
             const insertQuery = 'INSERT INTO "Token" (user_id, refresh_token, device_id) VALUES ($1, $2, $3)';
             await db.query(insertQuery, [user_id, refreshToken, device_id])
                 .catch(e => {
-                    console.error(e.stack);
+                    e.name = 'saveRefreshTokenError - insertQueryError';
+                    throw e;
                 });
         } else {
             const updateQuery = 'UPDATE "Token" SET refresh_token = $1 WHERE user_id = $2 and device_id = $3';
             await db.query(updateQuery, [refreshToken, user_id, device_id])
                 .catch(e => {
-                    console.error(e.stack);
+                    e.name = 'saveRefreshTokenError - updateQueryError';
+                    throw e; 
                 });
         }
     } catch (err) {
         err.name = 'saveRefreshTokenError';
-        err.message = '리프레시 토큰 저장 실패';
         throw err;
     }
     },
@@ -164,7 +161,6 @@ module.exports = {
 
         } catch (err) {
             err.name = 'getUserByAppleTokenError';
-            err.message = '애플 토큰으로 유저 정보 가져오기 실패';
             throw err;
         }
     },
@@ -181,7 +177,6 @@ module.exports = {
             }
         } catch (err) {
             err.name = 'getUserByEmailError';
-            err.message = '이메일로 유저 정보 가져오기 실패';
             throw err;
         }
     },
@@ -196,7 +191,6 @@ module.exports = {
             }
         } catch (err) {
             err.name = 'deleteRefreshTokenError';
-            err.message = '리프레시 토큰 삭제 실패';
             throw err;
         }
     },
@@ -212,7 +206,6 @@ module.exports = {
             return rows;
         } catch (err) {
             err.name = 'getUserByIdError';
-            err.message = '유저 정보 가져오기 실패';
             throw err;
         }
     },
@@ -223,7 +216,6 @@ module.exports = {
             return rows[0].user_name;
         } catch (err) {
             err.name = 'getUserNameByIdError';
-            err.message = '유저 이름 가져오기 실패';
             throw err;
         }
     },
@@ -244,7 +236,6 @@ module.exports = {
             }
         } catch (err) {
             err.name = 'checkRefreshTokenError';
-            err.message = '리프레시 토큰 확인 실패';
             throw err;
         }
     },
@@ -262,7 +253,6 @@ module.exports = {
             }
         } catch (err) {
             err.name = 'changePasswordError';
-            err.message = '비밀번호 변경 실패';
             throw err;
         }
     },
@@ -290,7 +280,6 @@ module.exports = {
             } 
         } catch (err) {
             err.name = 'deleteUserError';
-            err.message = '회원탈퇴 실패';
             throw err;
         }
     }, 
@@ -306,8 +295,6 @@ module.exports = {
             })
             .catch(err => {
                 err.name = 'getUsersIdByRegionError';
-                err.message = '지역별 유저 아이디 가져오기 실패';
-
                 throw err;
             });
         return user_ids;
@@ -323,7 +310,6 @@ module.exports = {
             })
             .catch(err => {
                 err.name = 'updateValueFieldError';
-                err.message = '유저 가치, 상승률 업데이트 실패';
                 throw err;
             });
     },
@@ -333,7 +319,6 @@ module.exports = {
             await db.query(query, [theme, user_id])
         } catch (err) {
             err.name = 'changeThemeError';
-            err.message = '테마 변경 실패';
             throw err;
         }
     },
@@ -344,7 +329,6 @@ module.exports = {
             return rows[0].password;
         } catch (err) {
             err.name = 'getPasswordByIdError';
-            err.message = '유저 비밀번호 가져오기 실패';
             throw err;
         }
     }
