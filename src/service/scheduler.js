@@ -2,6 +2,7 @@ const schedule = require('node-schedule');
 
 const transdate = require('./transdateService.js');
 const calculate = require('./calculateService.js');
+const notice = require('./noticeService.js');
 
 const valueModel = require('../models/valueModel.js');
 const accountModel = require('../models/accountModel.js');
@@ -158,7 +159,6 @@ async function stockitemJobManager(timezone, tommorowsttime){
 }
 
 function settlementScheduler(timezone){
-    return;
     const startTime = transdate.getStartToday(timezone);
     const nextSettlement = transdate.getSettlementTimeInUTC(timezone);
     const tommorowSettlement = transdate.getTommorowSettlementTimeInUTC(timezone);
@@ -185,30 +185,6 @@ function settlementScheduler(timezone){
     });
 }
 
-async function alarmJobManager(timezone){
-    const cn = await db.connect();
-
-    try{
-        await cn.query('BEGIN');
-
-        const users = await accountModel.getUsersIdByRegion(cn, timezone);
-    
-        if(users.length===0){
-            // console.log('users length : 0');
-            return;
-        }    
-    
-        console.log(users);
-
-        await cn.query('COMMIT');
-    } catch(error){
-        await cn.query('ROLLBACK');
-        console.log('error : ', error);
-    }finally{
-        cn.release();
-    }
-}
-
 // 알림 스케쥴링
 function alarmScheduler(timezone){
     const nextAlarm = transdate.getAlarmTimeInUTC(timezone);
@@ -220,7 +196,7 @@ function alarmScheduler(timezone){
         // 비동기로 각 스케쥴러 작업 실행
 
         await Promise.allSettled([
-            alarmJobManager(timezone)
+            notice.sendMultiPushBeforeMidnight(timezone)
         ])
         .then((results)=>{
             results.forEach((result, index)=>{
@@ -230,7 +206,7 @@ function alarmScheduler(timezone){
             });
         });
 
-        alarmScheduler(timezone); // 5. 다음 날짜에 대한 재스케줄링
+        alarmScheduler(timezone);
     });
 }
 
