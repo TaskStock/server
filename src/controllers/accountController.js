@@ -183,6 +183,15 @@ module.exports = {
             if (existingUser === null) { //존재하지 않으면 회원가입
                 userData.password = null;
                 const registeredUser = await accountModel.register(cn, userData);
+                if (registeredUser.email === false) {
+                    await cn.query('ROLLBACK');
+                    return res.status(409).json({
+                        result: "fail",
+                        message: registeredUser.message,
+                        strategy: registeredUser.strategy
+                    });
+                };
+
                 registeredUser.device_id = userData.device_id;
                 
                 //accessToken 처리

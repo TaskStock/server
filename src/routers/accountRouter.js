@@ -19,7 +19,6 @@ router.delete('/unregister', passport.authenticate('jwt', { session: false }), a
 
 //소셜 로그인 관련
 router.post('/login/social', accountController.loginSocial);
-// router.post('/login/apple', accountController.loginApple);
 
 //계정 정보 관련
 router.post('/sendMail/password', accountController.sendMailForFindPassword);

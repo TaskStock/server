@@ -58,6 +58,24 @@ module.exports = {
             let {email, userName, password, isAgree, strategy, userPicture, theme, language, apple_token} = registerData; 
             let rows;      
             let user_id;
+            const checkQuery = 'SELECT strategy FROM "User" WHERE email = $1';
+            const {rows: checkRows} = await db.query(checkQuery, [email]);
+            if (checkRows.length !== 0) {
+                const strategy = checkRows[0].strategy;
+                if (strategy === 'kakao') {
+                    strategyMessage = '카카오 로그인으로';
+                } else if (strategy === 'google') {
+                    strategyMessage = '구글 로그인으로';
+                } else if (strategy === 'apple') {
+                    strategyMessage = '애플 로그인으로';
+                } else {
+                    strategyMessage = '이메일 로그인으로';
+                }
+
+                const message = `${email}은 이미 ${strategyMessage} 가입한 이메일입니다.`
+                return {email:false, message:message, strategy:strategy};
+            }
+
             if (password === null) {    //소셜 로그인의 경우
                 if (strategy === 'kakao' || strategy === 'google') {
                     const kakaoGoogleQuery = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
