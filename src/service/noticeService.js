@@ -195,7 +195,7 @@ module.exports = {
                 const errorData = noticeData;
                 console.log("sendSlack errorData: ", errorData)
                 message = `
-                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n===STACK TRACE===\n${errorData.stack}
+                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}\n\n===REQ BODY===\n${errorData.ReqBody}
                 `;
                 await slackClient.chat.postMessage({
                     channel: '#error',

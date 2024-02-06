@@ -81,10 +81,11 @@ app.use(async (err, req, res, next) => {
     // MODEL - throw(err) -> CONTROLLER - next(err) -> ERROR MIDDLEWARE
     // 슬랙 알림 - 리팩토링 후 배포 버전에서만 사용
     // err.type = 'error';
+    // err.ReqBody = req.body;
     // await sendSlack(err);
     
     // 로그 기록 - 배포 버전에선 삭제
-    console.error(err.stack);    
+    console.error(err.stack);
     
     res.status(err.status || 500);
 

@@ -372,6 +372,12 @@ module.exports = {
                     message: "가입되지 않은 이메일입니다."
                 });
             }
+            if (userData.strategy !== 'local') {
+                return res.status(200).json({ 
+                    result: "social" ,
+                    message: "소셜 로그인으로 가입된 계정입니다."
+                });
+            }
 
             const authCode = generateAuthCode();
             const mailResult = await mailer(email, authCode, 'changePW');
