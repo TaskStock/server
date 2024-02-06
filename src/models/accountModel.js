@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { th } = require('date-fns/locale');
 const fs = require('fs');
 
 module.exports = {
@@ -8,11 +9,12 @@ module.exports = {
             const code = authCode;
             const {rows} = await db.query(query, [code]); 
             const codeId = rows[0].code_id; 
-            console.log("코드 db에 저장 완료");
+
             return codeId 
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'saveCodeError';
+            err.message = '인증코드 저장 실패';
+            throw err;
         }
     },
     checkCode: async(db, inputData) => {
@@ -32,9 +34,10 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'checkCodeError';
+            err.message = '인증코드 확인 실패';
+            throw err;
         }
     },
     deleteCode: async(db, inputData) => {
@@ -48,9 +51,10 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (error) {
-            console.log(error.stack);
-            return false;
+        } catch (err) {
+            err.name = 'deleteCodeError';
+            err.message = '인증코드 삭제 실패';
+            throw err;
         }
     },
     register: async(db, registerData) => {
@@ -111,9 +115,10 @@ module.exports = {
             await db.query(settingQuery, defaultSet)
 
             return userData;
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'registerError';
+            err.message = '회원가입 실패';
+            throw err;
         }
     },
     saveRefreshToken: async(db, user_id, refreshToken, device_id) => {
@@ -133,9 +138,10 @@ module.exports = {
                     console.error(e.stack);
                 });
         }
-    } catch (e) {
-        console.log(e.stack);
-        throw e;
+    } catch (err) {
+        err.name = 'saveRefreshTokenError';
+        err.message = '리프레시 토큰 저장 실패';
+        throw err;
     }
     },
     getUserByAppleToken: async(db, apple_token) => {
@@ -156,9 +162,10 @@ module.exports = {
                 return userData;
             }
 
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'getUserByAppleTokenError';
+            err.message = '애플 토큰으로 유저 정보 가져오기 실패';
+            throw err;
         }
     },
     getUserByEmail: async(db, email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
@@ -172,9 +179,10 @@ module.exports = {
             } else {
                 return userData;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'getUserByEmailError';
+            err.message = '이메일로 유저 정보 가져오기 실패';
+            throw err;
         }
     },
     deleteRefreshToken: async(db, user_id, device_id) => {
@@ -186,9 +194,10 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            return false;
+        } catch (err) {
+            err.name = 'deleteRefreshTokenError';
+            err.message = '리프레시 토큰 삭제 실패';
+            throw err;
         }
     },
     getUserById: async(db, user_id) => { //user_id로 유저 전체 정보 + 세팅 정보 가져오기
@@ -201,8 +210,10 @@ module.exports = {
         try {
             const {rows} = await db.query(query, [user_id])
             return rows;
-        } catch (e) {
-            console.log(e.stack);
+        } catch (err) {
+            err.name = 'getUserByIdError';
+            err.message = '유저 정보 가져오기 실패';
+            throw err;
         }
     },
     getUserNameById: async(db, user_id) => { //user_id로 유저 이름 가져오기
@@ -210,9 +221,10 @@ module.exports = {
         try {
             const {rows} = await db.query(query, [user_id])
             return rows[0].user_name;
-        } catch (e) {
-            console.log(e.stack);
-            return 
+        } catch (err) {
+            err.name = 'getUserNameByIdError';
+            err.message = '유저 이름 가져오기 실패';
+            throw err;
         }
     },
     checkRefreshToken: async(db, user_id, refreshToken, device_id) => {
@@ -230,10 +242,10 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
-            return false;
+        } catch (err) {
+            err.name = 'checkRefreshTokenError';
+            err.message = '리프레시 토큰 확인 실패';
+            throw err;
         }
     },
     changePasword: async(db, inputData) => {
@@ -248,9 +260,10 @@ module.exports = {
             } else {
                 return false;
             }
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'changePasswordError';
+            err.message = '비밀번호 변경 실패';
+            throw err;
         }
     },
     deleteUser: async(db, user_id) => {
@@ -275,9 +288,10 @@ module.exports = {
             } else {
                 return false;        
             } 
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'deleteUserError';
+            err.message = '회원탈퇴 실패';
+            throw err;
         }
     }, 
     // 스케쥴러 위한 모델
@@ -290,10 +304,11 @@ module.exports = {
                 // console.log(res.rows);
                 return res.rows;
             })
-            .catch(e => {
-                console.error(e.stack);
+            .catch(err => {
+                err.name = 'getUsersIdByRegionError';
+                err.message = '지역별 유저 아이디 가져오기 실패';
 
-                throw e;
+                throw err;
             });
         return user_ids;
     },
@@ -306,19 +321,20 @@ module.exports = {
             .then(res => {
                 // console.log(res.rows[0]);
             })
-            .catch(e => {2
-                console.error(e.stack);
-
-                throw e;
+            .catch(err => {
+                err.name = 'updateValueFieldError';
+                err.message = '유저 가치, 상승률 업데이트 실패';
+                throw err;
             });
     },
     changeTheme: async(db, user_id, theme) => {
         const query = 'UPDATE "UserSetting" SET theme = $1 WHERE user_id = $2';
         try {
             await db.query(query, [theme, user_id])
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'changeThemeError';
+            err.message = '테마 변경 실패';
+            throw err;
         }
     },
     getPasswordById: async(db, user_id) => {
@@ -326,9 +342,10 @@ module.exports = {
         try {
             const {rows} = await db.query(query, [user_id])
             return rows[0].password;
-        } catch (e) {
-            console.log(e.stack);
-            throw e;
+        } catch (err) {
+            err.name = 'getPasswordByIdError';
+            err.message = '유저 비밀번호 가져오기 실패';
+            throw err;
         }
     }
 }
