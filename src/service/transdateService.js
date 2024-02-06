@@ -110,5 +110,19 @@ module.exports = {
         // 6 : 토요일
 
         return dayOfWeek;
-    }
+    },
+    // 알람 스케쥴링
+    getAlarmTimeInUTC: (timezone) =>{
+        const nowUtc = new Date();
+        const nowZoneTime = utcToZonedTime(nowUtc, timezone);
+
+        const adjustTime = addHours(nowZoneTime, 1);    // 11시 기준이므로 임의로 1시간 더함
+        const startOfToday = startOfDay(adjustTime);
+        const nextDay = addDays(startOfToday, 1);
+        const alarmTime = addHours(nextDay, -1);
+
+        const resultUtc = zonedTimeToUtc(alarmTime, timezone);
+
+        return resultUtc;
+    },
 }
