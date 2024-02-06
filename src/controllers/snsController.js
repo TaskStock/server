@@ -233,9 +233,8 @@ module.exports = {
         const changeResult = await snsModel.changeDefaultImage(db, user_id);
         
         if (changeResult) {
-            return es.status(200).json({
+            return res.status(200).json({
                 result: "success",
-                imagePath: ''
             });
         } else {
             return res.status(500).json({
