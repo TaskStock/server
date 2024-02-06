@@ -55,41 +55,60 @@ module.exports = {
     },
     register: async(db, registerData) => {
         try {
-            let {email, userName, password, isAgree, strategy, userPicture, theme, language} = registerData; 
-            let defaultImage = 'public/images/ic_profile.png'
-            let rows;      
-            
-            if (password === null) {    //소셜 로그인의 경우
-                const query = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
-                if (userPicture === null) {
-                    userPicture = defaultImage;
+            let {email, userName, password, isAgree, strategy, userPicture, theme, language, apple_token} = registerData; 
+            let user_id;
+            let _rows;
+
+
+            const checkQuery = 'SELECT strategy FROM "User" WHERE email = $1';
+            const {rows: checkRows} = await db.query(checkQuery, [email]);
+            if (checkRows.length !== 0) {
+                const strategy = checkRows[0].strategy;
+                let strategyMessage;
+
+                if (strategy === 'kakao') {
+                    strategyMessage = '카카오 로그인으로';
+                } else if (strategy === 'google') {
+                    strategyMessage = '구글 로그인으로';
+                } else if (strategy === 'apple') {
+                    strategyMessage = '애플 로그인으로';
+                } else {
+                    strategyMessage = '이메일 로그인으로';
                 }
-                const {rows: _rows} = await db.query(query, [email, userName, strategy, userPicture])
-                    .catch(e => {
-                        console.error(e.stack);
-                    });
-                rows = _rows;
-            
+
+                const message = `${email}은 이미 ${strategyMessage} 가입한 이메일입니다.`
+                return {email:false, message:message, strategy:strategy};
+            }
+
+            if (password === null) {    //소셜 로그인의 경우
+                if (strategy === 'kakao' || strategy === 'google') {
+                    const kakaoGoogleQuery = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
+                    const {rows} = await db.query(kakaoGoogleQuery, [email, userName, strategy, userPicture])
+                    _rows = rows;
+                } else if (strategy === 'apple') {
+                    const appleQuery = 'INSERT INTO "User" (email, user_name, strategy) VALUES ($1, $2, $3) RETURNING *';
+                    const {rows} = await db.query(appleQuery, [email, userName, strategy]);
+                    _rows = rows;
+                    user_id = _rows[0].user_id;
+
+                    const tokenInsertQuery = 'INSERT INTO "AppleToken" (user_id, apple_token) VALUES ($1, $2)';
+                    await db.query(tokenInsertQuery, [user_id, apple_token]);
+                }
             } else {    //로컬 로그인의 경우
                 // 비밀번호 암호화
                 const hashedPassword = await bcrypt.hash(password, 10);
                 
-                const query = 'INSERT INTO "User" (email, password, user_name, image) VALUES ($1, $2, $3, $4) RETURNING *';
-                const {rows: _rows} = await db.query(query, [email, hashedPassword, userName, defaultImage])
-                    .catch(e => {
-                        console.error(e.stack);
-                    });
-                rows = _rows;
+                const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
+                const {rows} = await db.query(query, [email, hashedPassword, userName])
+                _rows = rows;
+
             }
-            const userData = rows[0];
+            const userData = _rows[0];
 
             const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
             const defaultSet = [userData.user_id, isAgree, theme, language];
 
             await db.query(settingQuery, defaultSet)
-                .catch(e => {
-                    console.error(e.stack);
-                });
 
             return userData;
         } catch (e) {
@@ -118,6 +137,29 @@ module.exports = {
         console.log(e.stack);
         throw e;
     }
+    },
+    getUserByAppleToken: async(db, apple_token) => {
+        const query = `
+        SELECT * 
+        FROM "User" U
+        JOIN "AppleToken" A
+        ON U.user_id = A.user_id
+        WHERE apple_token = $1
+        `;
+        try {
+            const {rows} = await db.query(query, [apple_token]);
+            const userData = rows[0];
+
+            if (userData === undefined) {
+                return null;
+            } else {
+                return userData;
+            }
+
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
     },
     getUserByEmail: async(db, email) => { // 로그인 시 이메일(unique)로 유저 정보 가져오기
         try {
