@@ -9,7 +9,7 @@ module.exports = {
                 return res.rows[0].stockitem_id;
             })
             .catch(e => {
-                console.error(e.stack);
+                
 
                 throw e;
             });
@@ -24,7 +24,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateStockitemError";
 
                 throw e;
             });
@@ -38,7 +38,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "deleteStockitemError";
 
                 throw e;
             });
@@ -53,7 +53,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getStockitemsError";
 
                 throw e;
             });
@@ -69,7 +69,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getStockitemsWithRegionError";
 
                 throw e;
             });
@@ -86,7 +86,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "updateStockitemInSchedulerError";
 
                 throw e;
             });
@@ -102,7 +102,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "increaseTakecountError";
 
                 throw e;
             });
@@ -118,7 +118,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "increaseSuccesscountError";
 
                 throw e;
             });
@@ -134,7 +134,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "decreaseSuccesscountError";
 
                 throw e;
             });
@@ -150,7 +150,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "decreaseTakecountError";
 
                 throw e;
             });
@@ -166,7 +166,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "decreaseTwocountError";
 
                 throw e;
             });
@@ -191,7 +191,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getMyinterestError";
 
                 throw e;
             });
@@ -208,7 +208,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getTodaypopularError";
 
                 throw e;
             });
@@ -225,7 +225,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getTodayrecommendError";
 
                 throw e;
             });
@@ -249,7 +249,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getAllError";
 
                 throw e;
             });
@@ -280,7 +280,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
+                e.name = "getItemDetailError";
 
                 throw e;
             });
