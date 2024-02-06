@@ -86,7 +86,7 @@ module.exports = {
         }
     },
     getAllFCMTokens: async (db, user_id_list) => {
-        const query = 'SELECt fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
+        const query = 'SELECT fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
         try {
             const {rows} = await db.query(query, [user_id_list]); 
             if (rows.length === 0) {
