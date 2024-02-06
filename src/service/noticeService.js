@@ -134,11 +134,11 @@ module.exports = {
     sendMultiPushBeforeMidnight: async(region) => {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
+        let tokenChuncks = [];
         if (tokens.length == 0) {
             console.log('FCM토큰이 0개일 경우 알림 발송 안함')
-            returnDD
+            return
         } else {
-            const tokenChuncks = [];
             for (let i=0; i<tokens.length; i +=499) { //최대 500개 까지 전송 가능해서 499개씩 끊어서 보냄
                 tokenChuncks.push(tokens.slice(i, i+499))
             }
