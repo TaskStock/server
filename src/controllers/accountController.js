@@ -98,7 +98,7 @@ module.exports = {
             const userData = await accountModel.register(cn, registerData);
             if (userData.email === false) {
                 await cn.query('ROLLBACK');
-                return res.status(409).json({
+                return res.status(200).json({
                     result: "fail",
                     message: userData.message,
                     strategy: userData.strategy
