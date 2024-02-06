@@ -92,21 +92,19 @@ module.exports = {
         try {
             await cn.query('BEGIN');
 
-            const email = req.body.email;
             const userDevice = req.body.device_id;
-
-            //앞에서 확인하긴 했는데 공격에 대비해서 한번 더 확인
-            const queryResult = await accountModel.getUserByEmail(cn, email); //이메일로 유저 정보 가져오기
-            if (queryResult !== null) {
-                await cn.query('ROLLBACK');
-                return res.status(200).json({
-                    result: "fail",
-                    message: "이미 가입된 이메일입니다."
-                })
-            }
 
             const registerData = req.body; 
             const userData = await accountModel.register(cn, registerData);
+            if (userData.email === false) {
+                await cn.query('ROLLBACK');
+                return res.status(200).json({
+                    result: "fail",
+                    message: userData.message,
+                    strategy: userData.strategy
+                });
+            };
+
             userData.device_id = userDevice;
             //accessToken 처리
             const [accessToken, accessExp] = generateAccessToken(userData);
@@ -173,12 +171,25 @@ module.exports = {
             await cn.query('BEGIN');
             const userData = req.body;
             
-            //이미 존재하는지 체크 - 애플은 이메일
+            let existingUser;
+            //이미 존재하는지 체크 - 애플은 별도로 처리
+            if (userData.strategy !== 'apple') {
             existingUser = await accountModel.getUserByEmail(cn, userData.email);
-
+            } else {
+                existingUser = await accountModel.getUserByAppleToken(cn, userData.apple_token);
+            }
             if (existingUser === null) { //존재하지 않으면 회원가입
                 userData.password = null;
                 const registeredUser = await accountModel.register(cn, userData);
+                if (registeredUser.email === false) {
+                    await cn.query('ROLLBACK');
+                    return res.status(200).json({
+                        result: "fail",
+                        message: registeredUser.message,
+                        strategy: registeredUser.strategy
+                    });
+                };
+
                 registeredUser.device_id = userData.device_id;
                 
                 //accessToken 처리
@@ -366,7 +377,7 @@ module.exports = {
             const mailResult = await mailer(email, authCode, 'changePW');
 
             if (mailResult) {
-                const codeId = await accountModel.saveCode(authCode, db);
+                const codeId = await accountModel.saveCode(db, authCode);
                 
                 return res.status(200).json({ 
                     result: "success", 

@@ -86,7 +86,8 @@ module.exports = {
         }
     },
     getAllFCMTokens: async (db, user_id_list) => {
-        const query = 'SELECt fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1))';
+        const query = 'SELECT fcm_token FROM "UserSetting" WHERE is_push_on = true AND user_id IN (unnest($1::integer[]));';
+
         try {
             const {rows} = await db.query(query, [user_id_list]); 
             if (rows.length === 0) {
@@ -97,6 +98,30 @@ module.exports = {
             }
         } catch(err) {
             console.log('getAllFCMTokens ERROR : ', err)
+            throw err
+        }
+    },
+    getAllFCMTokensInRegion: async (db, region) => {
+        const query = `
+        SELECT fcm_token 
+        FROM "UserSetting" 
+        WHERE is_push_on = true AND fcm_token IS NOT NULL AND user_id IN (
+            SELECT user_id 
+            FROM "User" 
+            WHERE region = $1
+        )
+        `;
+
+        try {
+            const {rows} = await db.query(query, [region]); 
+            if (rows.length === 0) {
+                return []
+            } else {
+                const tokens = rows.map(row => row.fcm_token);
+                return tokens
+            }
+        } catch(err) {
+            console.log('getAllFCMTokensInRegion ERROR : ', err)
             throw err
         }
     },
