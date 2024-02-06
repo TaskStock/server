@@ -8,8 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "createSistatisticsError";
                 throw e;
             });
     },
@@ -38,8 +37,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "updateSistatisticsError";
                 throw e;
             });
     },
@@ -53,8 +51,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getSistatisticsError";
                 throw e;
             });
         return statistics;

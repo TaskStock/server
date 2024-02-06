@@ -9,8 +9,7 @@ module.exports = {
                 return res.rows[0];
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getSimapError";
                 throw e;
             });
         return simap;
@@ -24,8 +23,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "createSimapError";
                 throw e;
             });
     },
@@ -38,8 +36,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "increaseTakecountError";
                 throw e;
             });
     },
@@ -52,8 +49,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "decreaseTakecountError";
                 throw e;
             });
     },
@@ -66,8 +62,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "increaseSuccesscountError";
                 throw e;
             });
     },
@@ -80,8 +75,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "decreaseSuccesscountError";
                 throw e;
             });
     },
@@ -94,8 +88,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "decreaseTwocountError";
                 throw e;
             });
     },

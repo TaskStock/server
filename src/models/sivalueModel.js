@@ -8,8 +8,7 @@ module.exports = {
                 // console.log(res.rows[0]);
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "createSivalueError";
                 throw e;
             });
     },
@@ -23,8 +22,7 @@ module.exports = {
                 return res.rows[0].sivalue_id;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "updateSuccessrateError";
                 throw e;
             });
         return sivalue_id;
@@ -39,8 +37,7 @@ module.exports = {
                 return res.rows;
             })
             .catch(e => {
-                console.error(e.stack);
-
+                e.name = "getSivalueOnemonthError";
                 throw e;
             });
         return sivalue;
@@ -56,7 +53,7 @@ module.exports = {
     //             return res.rows[0];
     //         })
     //         .catch(e => {
-    //             console.error(e.stack);
+    //             
 
     //             throw e;
     //         });
