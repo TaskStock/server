@@ -86,17 +86,6 @@ app.use(async (err, req, res, next) => {
     
     // 로그 기록 - 배포 버전에선 삭제
     console.error(err.stack);
-    
-    res.status(err.status || 500);
-
-    // 클라이언트에 전송 - 리팩토링 전에만 사용
-    res.send(err.message); 
-
-    // 클라이언트에 전송 - 리팩토링 후 배포 버전에서만 사용
-    // res.json({
-    //     result: "error",
-    //     message: err.message
-    // });
 });
 
 // 스케쥴러

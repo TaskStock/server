@@ -2,7 +2,7 @@ const badgeModel = require("../models/badgeModel.js")
 const db = require('../config/db.js')
 
 module.exports = {
-    giveBadge: async(req, res) => {
+    giveBadge: async(req, res, next) => {
         const cn = await db.connect(); 
         try {
             await cn.query('BEGIN');
@@ -19,6 +19,7 @@ module.exports = {
             })
         } catch (err) {
             cn.query('ROLLBACK');
+            next(err);
             return res.status(500).json({
                 result: 'fail'
             })
@@ -36,6 +37,7 @@ module.exports = {
                 badges: badges
             })
         } catch (err) {
+            next(err);
             return res.status(500).json({
                 result: 'fail'
             })

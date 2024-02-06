@@ -5,7 +5,7 @@ module.exports = {
         try {
             await db.query(insertQuery, [user_id, type]);
         } catch (err) {
-            console.log('giveBadge ERROR:', err);
+            err.name = 'giveBadgeError';
             throw err;
         }
     },
@@ -16,7 +16,7 @@ module.exports = {
             const {rows: badges} = await db.query(selectQuery, [user_id]);
             return badges;
         } catch (err) {
-            console.log('getBadges:', err);
+            err.name = 'getBadgesError';
             throw err;
         }
     }
