@@ -56,12 +56,16 @@ module.exports = {
     register: async(db, registerData) => {
         try {
             let {email, userName, password, isAgree, strategy, userPicture, theme, language, apple_token} = registerData; 
-            let rows;      
             let user_id;
+            let _rows;
+
+
             const checkQuery = 'SELECT strategy FROM "User" WHERE email = $1';
             const {rows: checkRows} = await db.query(checkQuery, [email]);
             if (checkRows.length !== 0) {
                 const strategy = checkRows[0].strategy;
+                let strategyMessage;
+
                 if (strategy === 'kakao') {
                     strategyMessage = '카카오 로그인으로';
                 } else if (strategy === 'google') {
@@ -79,10 +83,12 @@ module.exports = {
             if (password === null) {    //소셜 로그인의 경우
                 if (strategy === 'kakao' || strategy === 'google') {
                     const kakaoGoogleQuery = 'INSERT INTO "User" (email, user_name, strategy, image) VALUES ($1, $2, $3, $4) RETURNING *';
-                    const {rows:_rows} = await db.query(kakaoGoogleQuery, [email, userName, strategy, userPicture])
+                    const {rows} = await db.query(kakaoGoogleQuery, [email, userName, strategy, userPicture])
+                    _rows = rows;
                 } else if (strategy === 'apple') {
                     const appleQuery = 'INSERT INTO "User" (email, user_name, strategy) VALUES ($1, $2, $3) RETURNING *';
-                    const {rows: _rows} = await db.query(appleQuery, [email, userName, strategy]);
+                    const {rows} = await db.query(appleQuery, [email, userName, strategy]);
+                    _rows = rows;
                     user_id = _rows[0].user_id;
 
                     const tokenInsertQuery = 'INSERT INTO "AppleToken" (user_id, apple_token) VALUES ($1, $2)';
@@ -93,11 +99,11 @@ module.exports = {
                 const hashedPassword = await bcrypt.hash(password, 10);
                 
                 const query = 'INSERT INTO "User" (email, password, user_name) VALUES ($1, $2, $3) RETURNING *';
-                const {rows: _rows} = await db.query(query, [email, hashedPassword, userName])
+                const {rows} = await db.query(query, [email, hashedPassword, userName])
+                _rows = rows;
 
-                rows = _rows;
             }
-            const userData = rows[0];
+            const userData = _rows[0];
 
             const settingQuery = 'INSERT INTO "UserSetting" (user_id, is_agree, theme, language) VALUES ($1, $2, $3, $4)';
             const defaultSet = [userData.user_id, isAgree, theme, language];
