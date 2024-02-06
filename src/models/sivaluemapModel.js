@@ -30,7 +30,7 @@ module.exports = {
     // 조건에 맞으면 길이가 1이상, 조건에 안맞으면 길이가 0
     getMapping: async(db, stockitem_id, sttime, user_id)=>{
         const query = `
-        select svm.sivaluemap_id 
+        select svm.sivalue_id 
         from "SIValueMap" svm
             inner join "SIValue" sv
             on svm.sivalue_id = sv.sivalue_id
