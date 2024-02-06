@@ -260,7 +260,7 @@ module.exports = {
         const query = `
         select 
             s.name, s.level, s.take_count, s.success_count, 
-            m.take_count my_take_count, m.success_count my_success_count, 
+            coalesce(m.take_count, 0) my_take_count, coalesce(m.success_count, 0) my_success_count, 
             svm.user_id as is_add_today
         from "Stockitem" s
             left join 
