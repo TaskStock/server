@@ -86,6 +86,13 @@ module.exports = {
 
         return previousDayUTC;
     },
+    minusOneMonth: (date, timezone) =>{
+        const zonedDate = utcToZonedTime(date, timezone);
+        const previousMonth = addMonths(zonedDate, -1);
+        const previousMonthUTC = zonedTimeToUtc(previousMonth, timezone);
+
+        return previousMonthUTC;
+    },
     // 스케쥴링에서 사용
     // 오늘 무슨 요일인지 반환
     // 스케쥴링은 정산시간에 실행되므로 하루 빼줘야함
