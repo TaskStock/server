@@ -5,7 +5,7 @@ module.exports = {
             await db.query(query, [noticeData.user_id, noticeData.content, noticeData.type, noticeData.info]);
             return true;
         } catch (err) {
-            console.log('createNotice ERROR : ', err);
+            err.name = 'createNoticeError';
             throw err;
         }
     },
@@ -26,7 +26,7 @@ module.exports = {
             return noticeList;
         }
         catch (err) {
-            // console.log('getAllNotice ERROR : ', err.stack);
+            err.name = 'getAllNoticeError';
             throw(err);
         }
     },
@@ -38,7 +38,7 @@ module.exports = {
             return noticeData;
         }
         catch (err) {
-            console.log('getNoticeById ERROR : ', err.stack);
+            err.name = 'getNoticeByIdError';
             throw err;
     }
     },
@@ -48,7 +48,7 @@ module.exports = {
             console.log('changeNoticeSetting : ', user_id, isPushOn);
             await db.query(query, [isPushOn, user_id]);
         } catch (err) {
-            console.log('changeNoticeSetting ERROR : ', err);
+            err.name = 'changeNoticeSettingError';
             throw err;
         }
     },
@@ -57,7 +57,7 @@ module.exports = {
         try {
             await db.query(query, [FCMToken, isPushOn, user_id]);
         } catch (err) {
-            console.log('saveFCMToken ERROR : ', err);
+            err.name = 'saveFCMTokenError';
             throw err;
         }
     },
@@ -66,7 +66,7 @@ module.exports = {
         try {
             await db.query(query, [FCMToken, user_id]);
         } catch(err) {
-            console.log('updateFCMToken ERROR : ', err);
+            err.name = 'updateFCMTokenError';
             throw err;
         }
     },
@@ -81,7 +81,7 @@ module.exports = {
                 return token
             }
         } catch(err) {
-            console.log('getFCMToken ERROR : ', err);
+            err.name = 'getFCMTokenError';
             throw err
         }
     },
@@ -97,7 +97,7 @@ module.exports = {
                 return tokens
             }
         } catch(err) {
-            console.log('getAllFCMTokens ERROR : ', err)
+            err.name = 'getAllFCMTokensError';
             throw err
         }
     },
@@ -121,7 +121,7 @@ module.exports = {
                 return tokens
             }
         } catch(err) {
-            console.log('getAllFCMTokensInRegion ERROR : ', err)
+            err.name = 'getAllFCMTokensInRegionError';
             throw err
         }
     },
@@ -130,7 +130,7 @@ module.exports = {
         try {
             await db.query(query, [user_id, content, email]);
         } catch (err) {
-            console.log('saveCustomerSuggestion ERROR : ', err);
+            err.name = 'saveCustomerSuggestionError';
             throw err;
         }
     }
