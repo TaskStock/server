@@ -29,11 +29,7 @@ module.exports = {
     },
     getWishlist: async(db, offset, limit, filter, user_id)=>{
         const query = `
-        select a.*, 
-            case
-                when b.user_id is null then false
-                else true
-            end as is_liked
+        select a.*, b.user_id is not null as is_liked 
         from "WishList" a
             left join 
                 (select * from "WishLike" where user_id=$3) b 
