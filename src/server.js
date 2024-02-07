@@ -14,18 +14,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //cors 설정
-const corsConfig = {
-    origin: [
-        'http://localhost:8000', // Node.js 서버
-        'http://localhost:8081', // Merto Bundler 서버
-        'http://localhost:19000', // Expo 서버
-        'http://localhost:19001', // Expo Metro Bundler 서버
-        'http://localhost:19002', // Expo 개발자 도구
-        'http://192.168.0.5:8081' // Merto Bundler 서버
-    ],
-    credentials: true
-};
-app.use(cors(corsConfig));
+// const corsConfig = {
+//     origin: [
+
+//     ],
+//     credentials: true
+// };
+app.use(cors());
 
 // passport 초기화
 app.use(passport.initialize());
@@ -53,12 +48,12 @@ app.get('/', (req, res) => {
 });
 
 // 클라이언트로부터 받은 req.body를 출력하는 미들웨어
-const printReq = (req, res, next) => {
-    console.log('==header==:\n', req.headers.authorization);
-    console.log('==body==:\n', req.body);
-    next(); 
-};
-app.use(printReq);
+// const printReq = (req, res, next) => {
+//     console.log('==header==:\n', req.headers.authorization);
+//     console.log('==body==:\n', req.body);
+//     next(); 
+// };
+// app.use(printReq);
 
 app.use("/account", accountRouter);
 app.use("/todo", passport.authenticate('jwt', { session: false }), todoRouter);
@@ -77,13 +72,13 @@ app.use("/badge", passport.authenticate('jwt', { session: false }), badgeRouter)
 app.use(async (err, req, res, next) => {
     console.log('오류처리 미들웨어 호출')
     // MODEL - throw(err) -> CONTROLLER - next(err) -> ERROR MIDDLEWARE
-    // 슬랙 알림 - 리팩토링 후 배포 버전에서만 사용
-    // err.type = 'error';
-    // err.ReqBody = req.body;
-    // await sendSlack(err);
+    // 슬랙 알림 전송
+    err.type = 'error';
+    err.ReqBody = req.body;
+    await sendSlack(err);
     
     // 로그 기록 - 배포 버전에선 삭제
-    console.error(err.stack);
+    // console.error(err.stack);
     
     // 클라이언트로 오류 메시지 전송
     return res.status(500).json({
