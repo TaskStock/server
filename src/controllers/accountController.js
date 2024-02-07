@@ -159,7 +159,7 @@ module.exports = {
             let existingUser;
             //이미 존재하는지 체크 - 애플은 별도로 처리
             if (userData.strategy !== 'apple') {
-            existingUser = await accountModel.getUserByEmail(cn, userData.email);
+                existingUser = await accountModel.getUserByEmail(cn, userData.email);
             } else {
                 existingUser = await accountModel.getUserByAppleToken(cn, userData.apple_token);
             }
@@ -198,7 +198,7 @@ module.exports = {
                     refreshExp: refreshExp,
                     strategy: userData.strategy
                 });
-            } else if (userData.strategy !== 'local') { //존재하고, 소셜 로그인으로 가입한 유저의 경우 로그인
+            } else if (userData.strategy !== 'local' && existingUser.strategy == userData.strategy) { //존재하고, 소셜 로그인으로 가입한 유저의 경우 로그인
                 const userDevice = userData.device_id;
                 existingUser.device_id = userDevice;
 
@@ -223,7 +223,7 @@ module.exports = {
                 return res.status(200).json({ 
                     result: "fail",
                     message: "이미 가입된 이메일입니다.",
-                    strategy: userData.strategy 
+                    strategy: existingUser.strategy 
                 });
             }
         } catch (err) {
