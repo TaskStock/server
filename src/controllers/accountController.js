@@ -54,13 +54,11 @@ module.exports = {
                 const wellDeleted = await accountModel.deleteCode(cn, inputData);
 
                 if (!wellDeleted) {
-                    console.log("인증 성공, 코드 삭제 실패");
                     await cn.query('ROLLBACK')
                     return res.status(200).json({ 
                         result: "success"
                     });
                 }
-                console.log("인증 성공, 코드 삭제 완료");
                 await cn.query('COMMIT');
                 return res.status(200).json({ 
                     result: "success"
@@ -139,7 +137,6 @@ module.exports = {
             const [refreshToken, refreshExp] = generateRefreshToken(userData);
             await accountModel.saveRefreshToken(db, userData.user_id, refreshToken, userDevice);
 
-            console.log("로그인 성공");
             return res.status(200).json({ 
                 result: "success", 
                 accessToken: accessToken, 
@@ -162,7 +159,7 @@ module.exports = {
             let existingUser;
             //이미 존재하는지 체크 - 애플은 별도로 처리
             if (userData.strategy !== 'apple') {
-            existingUser = await accountModel.getUserByEmail(cn, userData.email);
+                existingUser = await accountModel.getUserByEmail(cn, userData.email);
             } else {
                 existingUser = await accountModel.getUserByAppleToken(cn, userData.apple_token);
             }
@@ -187,8 +184,6 @@ module.exports = {
                 const [refreshToken, refreshExp] = generateRefreshToken(registeredUser);
                 await accountModel.saveRefreshToken(cn, registeredUser.user_id, refreshToken, userData.device_id, db); 
 
-                console.log("회원가입 성공");
-
                 // 회원가입 후 자동으로 value 생성
                 const settlementTime = transdate.getSettlementTimeInUTC(registeredUser.region);
                 await valueModel.createByNewUser(cn, registeredUser.user_id, settlementTime);
@@ -203,7 +198,7 @@ module.exports = {
                     refreshExp: refreshExp,
                     strategy: userData.strategy
                 });
-            } else if (userData.strategy !== 'local') { //존재하고, 소셜 로그인으로 가입한 유저의 경우 로그인
+            } else if (userData.strategy !== 'local' && existingUser.strategy == userData.strategy) { //존재하고, 소셜 로그인으로 가입한 유저의 경우 로그인
                 const userDevice = userData.device_id;
                 existingUser.device_id = userDevice;
 
@@ -211,7 +206,6 @@ module.exports = {
                 const [refreshToken, refreshExp] = generateRefreshToken(existingUser);
                 await accountModel.saveRefreshToken(cn, existingUser.user_id, refreshToken, userDevice);
 
-                console.log("로그인 성공");
 
                 await cn.query('COMMIT');
 
@@ -223,14 +217,13 @@ module.exports = {
                     refreshExp: refreshExp
                 });
             } else {
-                console.log("이미 <이메일로 회원가입>을 통해 가입된 게정입니다.");
 
                 await cn.query('ROLLBACK');
 
                 return res.status(200).json({ 
                     result: "fail",
                     message: "이미 가입된 이메일입니다.",
-                    strategy: userData.strategy 
+                    strategy: existingUser.strategy 
                 });
             }
         } catch (err) {
@@ -250,13 +243,11 @@ module.exports = {
             const deleteResult = await accountModel.deleteRefreshToken(db, user_id, userDevice);
             
             if (deleteResult) {
-                console.log("로그아웃 성공");
                 return res.status(200).json({ 
                     result: "success", 
                     message: "로그아웃 성공" 
                 });
             } else {
-                console.log("로그아웃 실패 - 0개 혹은 2개 이상의 refreshToken이 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
                     message: "로그아웃 실패" 
@@ -273,7 +264,6 @@ module.exports = {
             const refreshToken = req.body.refreshToken;
             
             if (refreshToken === null) {
-                console.log("refreshToken 재발급 실패.")
                 return res.status(401).json({ 
                     result: "fail", 
                     message: "refreshToken이 없습니다." 
@@ -285,7 +275,7 @@ module.exports = {
 
             const certified = await accountModel.checkRefreshToken(db, user_id, refreshToken, device_id);
             if (certified === 'noToken') {
-                console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
+                // console.log("access token 재발급 실패. refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태")
                 return res.status(401).json({
                     result: "fail",
                     message: "refreshToken이 DB에 없습니다.(회원 가입 안돼있거나 로그아웃 상태)"   
@@ -299,7 +289,7 @@ module.exports = {
             } else if (certified == true) {
                 jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, payload) => {
                     if (err) {
-                        console.log("access token 재발급 실패. refrehToken이 유효하지 않습니다. ")
+                        // console.log("access token 재발급 실패. refrehToken이 유효하지 않습니다. ")
                         return res.status(401).json({
                             result: "fail",
                             message: "refreshToken이 유효하지 않습니다."
@@ -307,7 +297,7 @@ module.exports = {
                     } else {
                         const userData = {user_id: payload.user_id , device_id: payload.device_id, region: payload.region};
                         const [accessToken, accessExp] = generateAccessToken(userData);
-                        console.log("access token 재발급 성공.");
+                        // console.log("access token 재발급 성공.");
                         return res.status(200).json({
                             result: "success",
                             message: "accessToken 재발급 성공",

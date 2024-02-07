@@ -233,7 +233,7 @@ module.exports = {
     },
     // 전체 종목 리스트 조회
     getAll: async(db, date)=>{
-        console.log(date);
+        // console.log(date);
         const query = `
         select s.*, v.success_rate
         from "Stockitem" s

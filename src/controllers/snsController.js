@@ -106,8 +106,6 @@ module.exports = {
         const searchTarget = req.query.searchTarget; //이메일 또는 닉네임
         const searchScope = req.query.searchScope; //검색 범위
         const user_id = req.user.user_id;
-        console.log(searchTarget, searchScope, user_id)
-
         const searchResult = await snsModel.searchUser(db, searchTarget, searchScope, user_id);
         return res.status(200).json({
             result: "success",
@@ -166,7 +164,6 @@ module.exports = {
             const user_id = req.user.user_id;
             const image_file = req.file
             if (image_file == undefined) {
-                console.log('이미지 파일이 없습니다.');
                 return res.status(400).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
@@ -177,13 +174,11 @@ module.exports = {
 
             const uploadResult = await snsModel.editUserImage(db, user_id, image_path);
             if (uploadResult) {
-                console.log("이미지 변경 완료");
                 return res.status(200).json({
                     result: "success",
                     imagePath : image_path
                 });
             } else {
-                console.log("이미지 변경 실패");
                 return res.status(500).json({
                     result: "fail"
                 });
@@ -260,7 +255,6 @@ module.exports = {
                 });
             } 
         } catch (err) {
-            console.log(err)
             await db.query('ROLLBACK');
             next(err);
         } finally {
