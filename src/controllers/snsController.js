@@ -29,22 +29,7 @@ module.exports = {
             cn.release();
         }
     },
-    // showRanking: async(req, res, next) => {
-    //     const user_id = req.user.user_id;
-    //     const rankingResult = await snsModel.showRanking(user_id);
-    //     if (rankingResult) {
-    //         res.status(200).json({
-    //             result: "success",
-    //             rankingAll: rankingResult[0],
-    //             rankingFollower: rankingResult[1],
-    //             rankingFollowing: rankingResult[2]
-    //         });
-    //     } else {
-    //         res.status(400).json({
-    //             result: "fail"
-    //         });
-    //     }
-    // },
+
     followUser: async(req, res, next) => {
         const cn = await db.connect();
         try {
@@ -113,10 +98,6 @@ module.exports = {
         })
     } catch (err) {
         next(err);  
-        return res.status(500).json({
-            result: "fail",
-            message: "서버 내부 오류"
-        })
     }},
     showFollowList: async(req, res, next) => {
         const cn = await db.connect();

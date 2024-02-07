@@ -14,7 +14,7 @@ module.exports = {
 
             cn.query('COMMIT');
             return res.status(200).json({
-                reuslt: 'success',
+                result: 'success',
                 badges: badges,
             })
         } catch (err) {

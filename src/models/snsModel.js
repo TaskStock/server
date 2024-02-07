@@ -19,44 +19,7 @@ module.exports = {
             return false;
         }
     },
-    // showRanking: async(user_id) => {
-    //     const entireQuery = `
-    //     SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
-    //     FROM "User"
-    //     ORDER BY rank
-    //     LIMIT 100
-    //     `;
-    //     const followerQuery = `
-    //     SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
-    //     FROM "User" U
-    //     JOIN "FollowMap" F
-    //     ON U.user_id = F.follower_id
-    //     WHERE F.following_id = $1
-    //     `
-    //     const followingQuery = `
-    //     SELECT strategy, user_id, image, user_name, cumulative_value, RANK() OVER (ORDER BY cumulative_value DESC) AS rank
-    //     FROM "User" U
-    //     JOIN "FollowMap" F
-    //     ON U.user_id = F.following_id
-    //     WHERE F.follower_id = $1
-    //     `;
-    //     try {
-    //         const entireRes = await db.query(entireQuery)
-    //         const followerRes = await db.query(followerQuery, [user_id])
-    //         const followingRes = await db.query(followingQuery, [user_id])
 
-    //         const rankingAll = entireRes.rows
-    //         const rankingFollower = followerRes.rows
-    //         const rankingFollowing = followingRes.rows
-
-    //         return [rankingAll, rankingFollower, rankingFollowing];
-
-    //     } catch (e) {
-    //         
-    //         return
-    //     }
-        
-    // },
     // 비공개인 애가 공개인 애한테 팔로우를 걸었어, 알람에 뜸 - 공개인 애가 비공개인 애한테 팔로우 요청을 보냄
     followUser: async(db, follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
