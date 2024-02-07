@@ -98,10 +98,6 @@ module.exports = {
         })
     } catch (err) {
         next(err);  
-        return res.status(500).json({
-            result: "fail",
-            message: "서버 내부 오류"
-        })
     }},
     showFollowList: async(req, res, next) => {
         const cn = await db.connect();

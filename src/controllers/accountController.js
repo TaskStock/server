@@ -1,4 +1,5 @@
 const accountModel = require('../models/accountModel.js');
+const { getBadges } = require('../models/badgeModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -316,19 +317,18 @@ module.exports = {
         try {
             const user_id = req.user.user_id;
             const queryResult = await accountModel.getUserById(db, user_id);
+            const badges = await badgeModel.getBadges(db, user_id);
+
             const {password, ...userData} = queryResult[0]
 
             res.status(200).json({
                 result: "success",
                 message: "유저 정보 가져오기 성공",
-                userData: userData
+                userData: userData,
+                badges: badges
             });
         } catch (err) {
             next(err);
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
         }
     },
     sendMailForFindPassword: async (req, res, next) => {
@@ -384,10 +384,6 @@ module.exports = {
             }
         } catch (err) {
             next(err);
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
         }    
     },
     // 비밀번호 확인
@@ -413,10 +409,6 @@ module.exports = {
             }
         } catch (err) {
             next(err)
-            res.status(500).json({ 
-                result: "error", 
-                message: "서버 오류"
-            });
         }
     },
     //회원탈퇴
@@ -462,10 +454,6 @@ module.exports = {
             }); 
         } catch (error) {
             next(err);
-            return res.status(500).json({ 
-                result: "error", 
-                message: "서버 내부 오류"
-            });
         }
     }
 };
