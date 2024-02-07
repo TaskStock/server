@@ -168,7 +168,7 @@ module.exports = {
                 const registeredUser = await accountModel.register(cn, userData);
                 if (registeredUser.email === false) {
                     await cn.query('ROLLBACK');
-                    return res.status(500).json({
+                    return res.status(200).json({
                         result: "fail",
                         message: registeredUser.message,
                         strategy: registeredUser.strategy
@@ -220,7 +220,7 @@ module.exports = {
 
                 await cn.query('ROLLBACK');
 
-                return res.status(500).json({ 
+                return res.status(200).json({ 
                     result: "fail",
                     message: "이미 가입된 이메일입니다.",
                     strategy: userData.strategy 
