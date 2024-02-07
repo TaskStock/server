@@ -1,5 +1,5 @@
 const accountModel = require('../models/accountModel.js');
-const { getBadges } = require('../models/badgeModel.js');
+const badgeModel = require('../models/badgeModel.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
