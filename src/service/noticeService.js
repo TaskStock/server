@@ -51,7 +51,7 @@ module.exports = {
         const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
 
         if (token.length == 0) {
-            console.log('FCM토큰이 0개일 경우 알림 발송 안함')
+            // console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
         }
         let title = '\uD83D\uDCC8 TASKSTOCK';
@@ -70,7 +70,6 @@ module.exports = {
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
         }
-        console.log(target_id);
         let message = {
             notification: {
                 title: title,
@@ -86,10 +85,11 @@ module.exports = {
             .messaging()
             .send(message)
             .then(function (response) {
-                console.log('Successfully sent message: : ', response)
+                // console.log('Successfully sent message: : ', response)
             })
             .catch(function (err) {
-                console.log('Error Sending message : ', err)
+                next(err)   
+                // console.log('Error Sending message : ', err)
             })
     },
     // TODO : 여러 사용자에게 같은 내용의 FCM 푸시 알림 전송
@@ -99,7 +99,7 @@ module.exports = {
         const tokens = await noticeModel.getAllFCMTokens(db, user_id_list);
 
         if (tokens.length == 0) {
-            console.log('FCM토큰이 0개일 경우 알림 발송 안함')
+            // console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
         } else {
             const tokenChuncks = [];
@@ -124,10 +124,10 @@ module.exports = {
                 .messaging()
                 .sendEach(message)
                 .then(function (response) {
-                    console.log('Successfully sent message(all): : ', response)
+                    // console.log('Successfully sent message(all): : ', response)
                 })
                 .catch(function (err) {
-                    console.log('Error Sending message!!! : ', err)
+                    next(err)
                 })
         }
     },
@@ -137,7 +137,7 @@ module.exports = {
         let tokenChuncks = [];
         
         if (tokens.length == 0) {
-            console.log('FCM토큰이 0개일 경우 알림 발송 안함')
+            // console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
         } else {
             for (let i=0; i<tokens.length; i +=499) { //최대 500개 까지 전송 가능해서 499개씩 끊어서 보냄
@@ -158,7 +158,7 @@ module.exports = {
             }));
             // 메시지 전송 전 확인
             if (messages.length === 0) {
-                console.log("No messages to send");
+                // console.log("No messages to send");
                 return;
             }
             // 메시지 전송
@@ -166,10 +166,10 @@ module.exports = {
                 .messaging()
                 .sendAll(messages)
                 .then(function (response) {
-                    console.log('Successfully sent message(all): : ', response)
+                    // console.log('Successfully sent message(all): : ', response)
                 })
                 .catch(function (err) {
-                    console.log('Error Sending message!!! : ', err)
+                    next(err)
                 })
         }
     },
@@ -193,7 +193,6 @@ module.exports = {
             } 
             if (noticeData.type === 'error') {
                 const errorData = noticeData;
-                console.log("sendSlack errorData: ", errorData)
                 message = `
                 ===:rotating_light:서버 에러 발생:rotating_light:===\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
                 `;
@@ -204,7 +203,6 @@ module.exports = {
                 return
             }
         } catch (err) {
-            console.log('sendSlack ERROR : ', err);
             next(err)
         } 
     }

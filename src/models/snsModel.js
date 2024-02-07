@@ -60,7 +60,6 @@ module.exports = {
     // 비공개인 애가 공개인 애한테 팔로우를 걸었어, 알람에 뜸 - 공개인 애가 비공개인 애한테 팔로우 요청을 보냄
     followUser: async(db, follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
-            console.log('자기 자신을 팔로우할 수 없습니다.');
             return false;
         }
         /*
@@ -98,7 +97,6 @@ module.exports = {
 
         try {
             if (notice_id != undefined) {
-                console.log('notice_id 있는 곳')
                 const noticeQuery = `
                 UPDATE "Notice"
                 SET info = jsonb_set(
@@ -114,7 +112,6 @@ module.exports = {
                 `
                 await db.query(noticeQuery, [notice_id])
             } else {
-                console.log('notice_id 없는 곳 탐')
                 const noticeQuery2 = `
                 UPDATE "Notice"
                 SET info = jsonb_set(
@@ -285,7 +282,6 @@ module.exports = {
             AND (U.user_name LIKE $2 OR U.email LIKE $2)
             `
             try {
-                console.log(user_id)
                 const {rows} = await db.query(query, [user_id, queryTarget]);
                 return rows;
             } catch (e) {
@@ -293,7 +289,7 @@ module.exports = {
                 return [];
             }
         } else {
-            console.log('searchScope error. 잘못된 검색 범위입니다.');
+            // console.log('searchScope error. 잘못된 검색 범위입니다.');
             return [];
         }
     },
@@ -376,9 +372,7 @@ module.exports = {
             if (oldImagePath !== '') { // 기본 이미지가 아닐 경우
                 try {
                     await fs.promises.unlink(oldImagePath);
-                    console.log('기존 이미지 삭제 성공');
                 } catch (err) {
-                    console.error('기존 이미지 삭제 실패', err);
                     throw err; // 에러 발생 시 함수 실행 중단
                 }
             }
@@ -469,7 +463,7 @@ module.exports = {
             const {rows} = await db.query(query, [follower_id, following_id]);
             
             if (rows[0].pending == false) {
-                console.log('이미 팔로우 요청이 수락된 상태입니다.');
+                // console.log('이미 팔로우 요청이 수락된 상태입니다.');
                 rollbackQuery = 'INSERT INTO "FollowMap" (follower_id, following_id, pending) VALUES ($1, $2, false)';
                 await db.query(rollbackQuery, [follower_id, following_id]);
                 return 'alreadyAccepted'
@@ -511,7 +505,6 @@ module.exports = {
             `
             await db.query(followingNoticeQuery, [following_id, follower_id])
             
-            console.log('팔로우 요청 취소 성공')
             return true;
 
         } catch (e) {

@@ -33,7 +33,6 @@ passport.use(new LocalStrategy({
                 return done(null, false, { message: '비밀번호가 일치하지 않습니다.' });
             }
         } catch (error) {
-            console.log(error);
             return done(error);
         } 
     }
@@ -51,11 +50,9 @@ passport.use(new JWTStrategy({
                 device_id: jwtPayload.device_id,
                 region: jwtPayload.region
             }
-            console.log('passport userData:', userData)
             return done(null, userData);
 
         } catch (error) {
-            console.log(error);
             return done(error);
         }
     }
