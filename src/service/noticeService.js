@@ -79,6 +79,16 @@ module.exports = {
                 target_id: target_id
             },
             token: token,
+            android: {
+                priority: 'high'
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        contentAvailable: true
+                    }
+                }
+            }
         }
 
         admin
@@ -155,6 +165,16 @@ module.exports = {
                 body: body
             },
             token: token, // 여기서는 개별 토큰 지정
+            android: {
+                priority: 'high'
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        contentAvailable: true
+                    }
+                }
+            }
             }));
             // 메시지 전송 전 확인
             if (messages.length === 0) {
