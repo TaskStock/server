@@ -152,3 +152,9 @@ Dockerfile
 #app.yaml
 app.yaml
 .gcloudignore
+
+#db init 파일
+init.sql
+
+#postgresql db 데이터
+postgresql/data/*
