@@ -424,14 +424,12 @@ module.exports = {
                 console.log("회원탈퇴 성공")
                 return res.status(200).json({ 
                     result: "success", 
-                    message: "회원탈퇴 성공" 
                 });
             } else {
                 await cn.query('ROLLBACK');
                 console.log("회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
-                    message: "회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨" 
                 });
             }
         } catch (err) {

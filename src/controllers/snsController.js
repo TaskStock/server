@@ -251,6 +251,7 @@ module.exports = {
         const target_id = req.params.user_id;
 
         const [targetData, values, todos, projects] = await snsModel.userDetail(cn, my_id, target_id)
+
         await cn.query('COMMIT');
         return res.status(200).json({
             result: "success",
