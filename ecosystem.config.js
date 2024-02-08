@@ -2,7 +2,7 @@ module.exports={
     apps:[{
         name: 'server',
         script: './src/server.js',
-        instances: 0,
+        instances: 4,
         exec_mode: 'cluster',
         wait_ready: true,
         listen_timeout: 50000,
