@@ -148,3 +148,7 @@ server/db/mysql/*
 pm2.json
 docker-compose.yml
 Dockerfile
+
+#app.yaml
+app.yaml
+.gcloudignore
