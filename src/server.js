@@ -43,6 +43,15 @@ const siuserRouter = require("./routers/siuserRouter.js");
 const wishlistRouter = require("./routers/wishlistRouter.js");
 const badgeRouter = require("./routers/badgeRouter.js");
 
+// pm2 설정
+let isDisableKeepAlive = false;
+app.use(function(req, res, next){
+    if(isDisableKeepAlive){
+        res.set('Connection', 'close');
+    }
+    next();
+});
+
 app.get('/', (req, res) => {
     res.send('Hello, Express')
 });
@@ -89,9 +98,20 @@ app.use(async (err, req, res, next) => {
 });
 
 // 스케쥴러
-// const scheduler = require("./service/scheduler.js");
-// scheduler.scheduling();
+// if(process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0'){
+//     const scheduler = require("./service/scheduler.js");
+//     scheduler.scheduling();
+// }
 
 app.listen(app.get('port'), ()=>{
-    console.log(app.get('port'), '번 포트에서 대기 중')
+    process.send('ready');   // pm2 설정
+    console.log(app.get('port'), '번 포트에서 대기 중');
+});
+// pm2 설정
+process.on('SIGINT', function(){
+    isDisableKeepAlive = true;
+    app.close(function (){
+        console.log('server closed');
+        process.exit(0);
+    });
 });
