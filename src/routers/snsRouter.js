@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const uploader = require('../config/multerConfig.js');
+const {uploader} = require('../config/multerConfig.js');
 
 const snsController = require('../controllers/snsController.js');
 

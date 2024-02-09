@@ -82,12 +82,12 @@ app.use(async (err, req, res, next) => {
     console.log('오류처리 미들웨어 호출')
     // MODEL - throw(err) -> CONTROLLER - next(err) -> ERROR MIDDLEWARE
     // 슬랙 알림 전송
-    // err.type = 'error';
-    // err.ReqBody = req.body;
-    // await sendSlack(err);
+    err.type = 'error';
+    err.ReqBody = req.body;
+    await sendSlack(err);   
     
     // 로그 기록 - 배포 버전에선 삭제
-    console.error(err.stack);
+    // console.error(err.stack);
     
     // 클라이언트로 오류 메시지 전송
     return res.status(500).json({
@@ -98,10 +98,10 @@ app.use(async (err, req, res, next) => {
 });
 
 // 스케쥴러
-// if(process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0'){
-//     const scheduler = require("./service/scheduler.js");
-//     scheduler.scheduling();
-// }
+if(process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0'){
+    const scheduler = require("./service/scheduler.js");
+    scheduler.scheduling();
+}
 
 app.listen(app.get('port'), ()=>{
     process.send('ready');   // pm2 설정

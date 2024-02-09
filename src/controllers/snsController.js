@@ -1,5 +1,6 @@
 const snsModel = require('../models/snsModel.js');
 const db = require('../config/db.js');
+const {bucket} = require('../config/multerConfig.js');
 
 module.exports = {
     changePrivate: async(req, res, next) => {
@@ -143,27 +144,57 @@ module.exports = {
     editUserImage: async(req, res, next) => {
         try {
             const user_id = req.user.user_id;
-            const image_file = req.file
-            if (image_file == undefined) {
+            const image_file = req.file;
+            
+            if (!image_file) {
                 return res.status(400).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
                 });
-            } else { 
-                image_path = image_file.path;
             }
+            const uniqueFileName = `${Date.now()}-${user_id}`;
+            const blob = bucket.file(uniqueFileName);
+            const blobStream = blob.createWriteStream({
+                resumable: false,
+                metadata: {
+                    contentType: image_file.mimetype
+                }
+    
+            });
 
-            const uploadResult = await snsModel.editUserImage(db, user_id, image_path);
-            if (uploadResult) {
+            blobStream.on('error', err => {
+                next(err);
+            });
+
+            blobStream.on('finish', async () => {
+                // 파일 업로드 후 공개적으로 접근 가능하도록 설정
+                await blob.makePublic();
+
+                // update전 기존 이미지 삭제
+                beforeUrl = await snsModel.checkUserImage(db, user_id);
+                if (beforeUrl) {
+
+                    const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
+                    const beforeFilename = beforeUrl.substring(lastSlashIndex); // 마지막 슬래시 이후 문자열 추출
+                    const beforeBlob = bucket.file(beforeFilename);
+                    
+                    await beforeBlob.delete();
+                }
+
+
+
+                //게시 및 프로필 이미지 경로를 DB에 저장
+                const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+                await snsModel.editUserImage(db, user_id, publicUrl);
+
                 return res.status(200).json({
                     result: "success",
-                    imagePath : image_path
+                    imagePath : publicUrl
                 });
-            } else {
-                return res.status(500).json({
-                    result: "fail"
-                });
-            }
+            });
+            // GCS에 파일 업로드 시작
+            blobStream.end(image_file.buffer);
+
         } catch (err) {
             next(err);
         }
