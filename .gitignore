@@ -158,3 +158,8 @@ init.sql
 
 #postgresql db 데이터
 postgresql/data/*
+
+
+#gcp 관련
+.gcloudignore
+gcp-share-409015-b1d39abde494.json
