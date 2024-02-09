@@ -206,7 +206,7 @@ module.exports = {
                 const content = noticeData.content;
                 const email = noticeData.email;
                 message = `
-                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n-----# 의견 #-----${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
                 `;
 
                 await slackClient.chat.postMessage({

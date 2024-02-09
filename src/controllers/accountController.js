@@ -1,5 +1,7 @@
 const accountModel = require('../models/accountModel.js');
 const badgeModel = require('../models/badgeModel.js');
+const noticeModel = require('../models/noticeModel.js');
+const noticeService = require('../service/noticeService.js');
 const mailer = require('../../nodemailer/mailer.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -417,8 +419,20 @@ module.exports = {
         try {
             await cn.query('BEGIN');
             const user_id = req.user.user_id;
+            const content = req.body.content;
+            const email = 'unregister'
+            
+            const noticeData = {
+                type: 'customer.suggestion',
+                user_id: user_id,
+                content: content,
+                email: email
+            }
+            await noticeModel.saveCustomerSuggestion(db, user_id, content, email);
+            await noticeService.sendSlack(noticeData);
+            
             const deleteResult = await accountModel.deleteUser(cn, user_id);
-
+            
             if (deleteResult) {
                 await cn.query('COMMIT');
                 console.log("회원탈퇴 성공")
