@@ -6,46 +6,50 @@ const db = require('../config/db.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
-    processNotice: async (predata) => {
-        let noticeData = {
-            user_id: predata.user_id, // 알림을 받을 사람 ID
-            content: '', // 알림 내용
-            type: predata.type, // 알림 타입
-            info: '' // 알림 터치 등 동작 구현을 위한 추가 정보
-        };
-        let displayAccept;
-        
-        if (noticeData.type === 'sns') {
-            let follower_name = await accountModel.getUserNameById(db, predata.follower_id);
-            if (predata.followerPending === false) { // 팔로우 당한 사람이 공개 계정일 때
-                noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
-                displayAccept = false;
-            } else { // 상대가 비공개 계정일 때
-                noticeData.content = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
-                displayAccept = true;
+    processNotice: async (predata, next) => {
+        try {
+            let noticeData = {
+                user_id: predata.user_id, // 알림을 받을 사람 ID
+                content: '', // 알림 내용
+                type: predata.type, // 알림 타입
+                info: '' // 알림 터치 등 동작 구현을 위한 추가 정보
+            };
+            let displayAccept;
+            
+            if (noticeData.type === 'sns') {
+                let follower_name = await accountModel.getUserNameById(db, predata.follower_id);
+                if (predata.followerPending === false) { // 팔로우 당한 사람이 공개 계정일 때
+                    noticeData.content = `${follower_name}님이 팔로우를 시작했습니다.`;
+                    displayAccept = false;
+                } else { // 상대가 비공개 계정일 때
+                    noticeData.content = `${follower_name}님이 팔로우 요청을 보냈습니다.`;
+                    displayAccept = true;
+                }
+                noticeData.info = JSON.stringify({
+                    target_id: predata.follower_id, // 팔로우 요청한 사람 ID
+                    isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
+                    isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
+                    pending: predata.followingPending, // 팔로우 당한 사람 입장 pending
+                    displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
+                    private: predata.private // 팔로우 한 사람 입장 private
+                });
             }
-            noticeData.info = JSON.stringify({
-                target_id: predata.follower_id, // 팔로우 요청한 사람 ID
-                isFollowingYou: predata.isFollowingYou, // 팔로우 당한 사람 입장 isFollowingYou
-                isFollowingMe: predata.isFollowingMe, // 팔로우 당한 사람 입장 isFollowingMe
-                pending: predata.followingPending, // 팔로우 당한 사람 입장 pending
-                displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
-                private: predata.private // 팔로우 한 사람 입장 private
-            });
-        }
 
-        if (noticeData.type === 'general') {
-            let following_name = await accountModel.getUserNameById(db, predata.following_id);
-            noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
+            if (noticeData.type === 'general') {
+                let following_name = await accountModel.getUserNameById(db, predata.following_id);
+                noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
 
-            noticeData.info = JSON.stringify({
-                target_id: predata.following_id
-            });
+                noticeData.info = JSON.stringify({
+                    target_id: predata.following_id
+                });
+            }
+            await noticeModel.createNotice(db, noticeData);
+        } catch (err) {
+            next(err);
         }
-        await noticeModel.createNotice(db, noticeData);
     },
     // TODO : FCM 푸시 알림 전송
-    sendPush: async (noticeData) => {
+    sendPush: async (noticeData, next) => {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
         const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
@@ -79,6 +83,16 @@ module.exports = {
                 target_id: target_id
             },
             token: token,
+            android: {
+                priority: 'high'
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        contentAvailable: true
+                    }
+                }
+            }
         }
 
         admin
@@ -94,7 +108,7 @@ module.exports = {
     },
     // TODO : 여러 사용자에게 같은 내용의 FCM 푸시 알림 전송
     // ! @params: noticeData = {user_id_list: [user_id, user_id, ...]}
-    sendMultiPush: async(noticeData) => {
+    sendMultiPush: async(noticeData, next) => {
         let {user_id_list} = noticeData //user_id_list: 알림을 보낼 사용자 목록 user_id 리스트
         const tokens = await noticeModel.getAllFCMTokens(db, user_id_list);
 
@@ -131,7 +145,7 @@ module.exports = {
                 })
         }
     },
-    sendMultiPushBeforeMidnight: async(region) => {
+    sendMultiPushBeforeMidnight: async(region, next) => {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
         let tokenChuncks = [];
@@ -155,6 +169,16 @@ module.exports = {
                 body: body
             },
             token: token, // 여기서는 개별 토큰 지정
+            android: {
+                priority: 'high'
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        contentAvailable: true
+                    }
+                }
+            }
             }));
             // 메시지 전송 전 확인
             if (messages.length === 0) {
@@ -174,7 +198,7 @@ module.exports = {
         }
     },
     // TODO : 타입에 따라 슬랙 메세지 전송
-    sendSlack: async (noticeData) => {
+    sendSlack: async (noticeData, next) => {
         try {
             let message = "";
             if (noticeData.type === 'customer.suggestion') {
@@ -182,7 +206,7 @@ module.exports = {
                 const content = noticeData.content;
                 const email = noticeData.email;
                 message = `
-                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n-----# 의견 #-----${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
                 `;
 
                 await slackClient.chat.postMessage({

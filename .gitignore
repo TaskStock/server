@@ -144,7 +144,17 @@ server/src/uploads/profile/
 # db 파일 제외
 server/db/mysql/*
 
-# docker 관련
-pm2.json
-docker-compose.yml
-Dockerfile
+#app.yaml
+app.yaml
+.gcloudignore
+
+#db init 파일
+init.sql
+
+#postgresql db 데이터
+postgresql/data/*
+
+
+#gcp 관련
+.gcloudignore
+gcp-share-409015-b1d39abde494.json
