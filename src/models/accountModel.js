@@ -270,9 +270,9 @@ module.exports = {
                 await db.query(followerQuery, [user_id]);
 
                 // 서버에서 프로필 이미지 삭제
-                if (strategy === 'local' && image !== '') {
-                    fs.promises.unlink(image)
-                }
+                // if (strategy === 'local' && image !== '') {
+                //     fs.promises.unlink(image)
+                // }
 
                 return true;
             } else {
