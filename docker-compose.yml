@@ -19,7 +19,7 @@ services:
       - pg
     build:
       dockerfile: Dockerfile
-    image: server-node:latest
+    image: server-node
     restart: unless-stopped
     ports:
       - "8000:8000"
