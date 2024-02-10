@@ -327,22 +327,20 @@ module.exports = {
         }
     },
     editUserImage: async(db, user_id, image_path) => {
-        const checkQuery = 'SELECT image FROM "User" WHERE user_id = $1';
         const updateQuery = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         try {
-            const {rows} = await db.query(checkQuery, [user_id]);
-            const oldImagePath = rows[0].image;
-            if (oldImagePath !== '') { // 기본 이미지가 아닐 경우
-                try {
-                    await fs.promises.unlink(oldImagePath);
-                } catch (err) {
-                    throw err; // 에러 발생 시 함수 실행 중단
-                }
-            }
             await db.query(updateQuery, [image_path, user_id]);
-            return true;
         } catch (e) {
             e.name = 'editUserImageError';
+        }
+    },
+    checkUserImage: async(db, user_id) => {
+        const query = 'SELECT image FROM "User" WHERE user_id = $1';
+        try {
+            const {rows} = await db.query(query, [user_id]);
+            return rows[0].image; // ''는 false로 판단(기본이미지), 빈문자열 아니면 true로 판단
+        } catch (e) {
+            e.name = 'checkUserImageError';
             return false;
         }
     },
