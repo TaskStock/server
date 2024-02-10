@@ -143,6 +143,8 @@ module.exports = {
     },
     editUserImage: async(req, res, next) => {
         try {
+
+
             const user_id = req.user.user_id;
             const image_file = req.file;
             
