@@ -1,6 +1,7 @@
 const snsModel = require('../models/snsModel.js');
 const db = require('../config/db.js');
 const {bucket} = require('../config/multerConfig.js');
+const badgeModel = require('../models/badgeModel.js');
 
 module.exports = {
     changePrivate: async(req, res, next) => {
@@ -284,6 +285,7 @@ module.exports = {
         const target_id = req.params.user_id;
 
         const [targetData, values, todos, projects] = await snsModel.userDetail(cn, my_id, target_id)
+        const badges = await badgeModel.getBadges(cn, target_id);
 
         await cn.query('COMMIT');
         return res.status(200).json({
@@ -291,7 +293,8 @@ module.exports = {
             targetData: targetData,
             values: values,
             todos: todos,
-            projects: projects
+            projects: projects,
+            badges: badges
         })
         } catch (err) {
             await cn.query('ROLLBACK');
