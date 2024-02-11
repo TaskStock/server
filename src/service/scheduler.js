@@ -43,7 +43,10 @@ async function settlementJob(cn, user_id, startTime, sttime, tommorowsttime){
     // check==false인 todo만 가져와서 value에 반영
     const todos = await todoModel.readTodoForSchedulerWithCheckFalse(cn, user_id, startTime, sttime);
     for(let i=0;i<todos.length;i++){
-        const end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
+        let end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
+        if(end<0){
+            end = 0;
+        }
         value = await valueModel.updateValueEnd(cn, value.value_id, end);
     }
 
