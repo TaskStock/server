@@ -145,7 +145,6 @@ module.exports = {
     editUserImage: async(req, res, next) => {
         try {
 
-
             const user_id = req.user.user_id;
             const image_file = req.file;
             
@@ -175,17 +174,20 @@ module.exports = {
 
                 // update전 기존 이미지 삭제
                 beforeUrl = await snsModel.checkUserImage(db, user_id);
-                if (beforeUrl) {
+
+                // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
+                const intTheBucket = str.includes("taskstock-bucket-1");
+                if (beforeUrl && intTheBucket) {
 
                     const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
                     const beforeFilename = beforeUrl.substring(lastSlashIndex); // 마지막 슬래시 이후 문자열 추출
                     const beforeBlob = bucket.file(beforeFilename);
-                    
-                    await beforeBlob.delete();
+                    try {
+                        await beforeBlob.delete();
+                    } catch (err) {
+                        next(err);
+                    }
                 }
-
-
-
                 //게시 및 프로필 이미지 경로를 DB에 저장
                 const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
                 await snsModel.editUserImage(db, user_id, publicUrl);
