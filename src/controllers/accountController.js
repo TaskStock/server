@@ -110,7 +110,9 @@ module.exports = {
 
             // 회원가입 후 자동으로 value 생성
             const settlementTime = transdate.getSettlementTimeInUTC(userData.region);
-            await valueModel.createByNewUser(cn, userData.user_id, settlementTime);
+            const value = await valueModel.createByNewUser(cn, userData.user_id, settlementTime);
+            await accountModel.updateValueField(cn, userData.user_id, value.start, 0);
+
             await cn.query('COMMIT');
             return res.status(200).json({ 
                 result: "success",
@@ -189,7 +191,8 @@ module.exports = {
 
                 // 회원가입 후 자동으로 value 생성
                 const settlementTime = transdate.getSettlementTimeInUTC(registeredUser.region);
-                await valueModel.createByNewUser(cn, registeredUser.user_id, settlementTime);
+                const value = await valueModel.createByNewUser(cn, registeredUser.user_id, settlementTime);
+                await accountModel.updateValueField(cn, registeredUser.user_id, value.start, 0);
 
                 await cn.query('COMMIT');
 

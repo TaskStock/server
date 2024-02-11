@@ -33,7 +33,7 @@ module.exports = {
             const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id, sttime);
             const statistics = await sistatisticsModel.getSistatistics(db, stockitem_id);
 
-            if(stockitem.is_add_today === null){
+            if(stockitem.is_add_today === undefined || stockitem.is_add_today === null){
                 stockitem.is_add_today = false
             }else{
                 stockitem.is_add_today = true
