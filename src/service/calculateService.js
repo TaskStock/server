@@ -28,6 +28,9 @@ module.exports = {
     },
     // 상승률 계산
     rateOfIncrease: (start, end) =>{
+        if(start===0){
+            return 0;
+        }
         const percentage = (end-start)/start * 100;
         return percentage;
     }

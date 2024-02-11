@@ -16,29 +16,36 @@ const oauth2Client = new OAuth2(
 
 //메일 형식 세팅
 let htmlBody, attachedfile;
-function createMailOptions(code, type) {
+function createMailOptions(_code, type) {
+    let code_1 = _code.toString().charAt(0)
+    let code_2 = _code.toString().charAt(1)
+    let code_3 = _code.toString().charAt(2)
+    let code_4 = _code.toString().charAt(3)
+    let code_5 = _code.toString().charAt(4)
+    let code_6 = _code.toString().charAt(5)
+
     switch (type) {
         case "register":
-            htmlBody = registerHTML(code);
+            htmlBody = registerHTML(code_1, code_2, code_3, code_4, code_5, code_6);
             attachedfile = [{
-                filename: 'logo_background.png',
-                path: __dirname + '/../public/images/logo_background.png',
+                filename: 'full_logo_dark.png',
+                path: __dirname + '/../public/images/full_logo_dark.png',
                 cid: 'unique@nodemailer.com'
             }]
             break;
         case "changePW":
-            htmlBody = changePWHTML(code);
+            htmlBody = changePWHTML(code_1, code_2, code_3, code_4, code_5, code_6);
             attachedfile = [{
-                filename: 'padang.png',
-                path: __dirname + '/../public/images/padang.png',
+                filename: 'full_logo_dark.png',
+                path: __dirname + '/../public/images/full_logo_dark.png',
                 cid: 'unique@nodemailer.com'
             }]
             break;
         default:
-            htmlBody = registerHTML(code);
+            htmlBody = registerHTML(code_1, code_2, code_3, code_4, code_5, code_6);
             attachedfile = [{
                 filename: 'padang.png',
-                path: __dirname + '/../public/images/padang.png',
+                path: __dirname + '/../public/images/full_logo_dark.png',
                 cid: 'unique@nodemailer.com'
             }]
             break;
@@ -72,17 +79,15 @@ module.exports = async (email, code, type) => {
 
     try {
         const info = await transporter.sendMail({
-            from: `TaskStock TEAM <${process.env.OAUTH_USER}>`,
+            from: `Team TASKSTOCK <${process.env.OAUTH_USER}>`,
             to: email,
-            subject: "[TaskStock] 이메일 인증 코드입니다.",
+            subject: "[TASKSTOCK] 이메일 인증 코드입니다.",
             html: htmlBody,
             attachments: attachedfile
         });
         return {result: true};
     } catch (error) {
-        next(error)
-        return {result: false};
+        throw error;
     }
-
 }
 
