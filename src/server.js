@@ -98,10 +98,10 @@ app.use(async (err, req, res, next) => {
 });
 
 // 스케쥴러
-// if(process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0'){
-//     const scheduler = require("./service/scheduler.js");
-//     scheduler.scheduling();
-// }
+if(process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0'){
+    const scheduler = require("./service/scheduler.js");
+    scheduler.scheduling();
+}
 
 app.listen(app.get('port'), ()=>{
     process.send('ready');   // pm2 설정
