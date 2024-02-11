@@ -176,7 +176,7 @@ module.exports = {
                 beforeUrl = await snsModel.checkUserImage(db, user_id);
 
                 // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
-                const intTheBucket = str.includes("taskstock-bucket-1");
+                const intTheBucket = beforeUrl.includes("taskstock-bucket-1");
                 if (beforeUrl && intTheBucket) {
 
                     const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
