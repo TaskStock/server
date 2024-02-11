@@ -1,17 +1,19 @@
 module.exports = {
     createByNewUser: async(db, user_id, date)=>{
-        const query = "insert into \"Value\" (user_id, date) VALUES ($1, $2)";
+        const query = "insert into \"Value\" (user_id, date) VALUES ($1, $2) returning start";
         const values = [user_id, date];
 
-        await db.query(query, values)
+        const start = await db.query(query, values)
             .then(res => {
                 // console.log(res.rows);
+                return res.rows[0];
             })
             .catch(e => {
                 e.name = "createByNewUserError";
 
                 throw e;
             });
+        return start;
     },
     getRecentValue: async(db, user_id)=>{
         const query = "select * from \"Value\" where user_id=$1 order by date desc limit 1";

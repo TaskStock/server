@@ -158,3 +158,6 @@ postgresql/data/*
 #gcp 관련
 .gcloudignore
 gcp-share-409015-b1d39abde494.json
+
+# nginx 설정 파일
+nginx.conf
