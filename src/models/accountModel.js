@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const { th } = require('date-fns/locale');
-const fs = require('fs');
 
 module.exports = {
     saveCode: async(db, authCode) => {
@@ -266,14 +265,9 @@ module.exports = {
                 // 팔로우, 팔로잉 관계에 있는 사람들 카운트 조절
                 const followingQuery = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id IN (SELECT follower_id FROM "FollowMap" WHERE following_id = $1)';
                 const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
+
                 await db.query(followingQuery, [user_id]);
                 await db.query(followerQuery, [user_id]);
-
-                // 서버에서 프로필 이미지 삭제
-                // if (strategy === 'local' && image !== '') {
-                //     fs.promises.unlink(image)
-                // }
-
                 return true;
             } else {
                 return false;        

@@ -3,9 +3,11 @@ const badgeModel = require('../models/badgeModel.js');
 const noticeModel = require('../models/noticeModel.js');
 const noticeService = require('../service/noticeService.js');
 const mailer = require('../../nodemailer/mailer.js');
+const snsModel = require('../models/snsModel.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const db = require('../config/db.js');
+const {bucket} = require('../config/multerConfig.js');
 
 
 // 회원가입 controller에서 value 생성하는 곳에만 사용
@@ -431,12 +433,31 @@ module.exports = {
                 content: content,
                 email: email
             }
-            await noticeModel.saveCustomerSuggestion(db, user_id, content, email);
-            await noticeService.sendSlack(noticeData);
+            await noticeModel.saveCustomerSuggestion(cn, user_id, content, email);
             
             const deleteResult = await accountModel.deleteUser(cn, user_id);
             
             if (deleteResult) {
+                // 서버에서 프로필 이미지 삭제
+                const beforeUrl = await snsModel.checkUserImage(cn, user_id);
+                console.log(beforeUrl);
+                // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
+                const intTheBucket = beforeUrl.includes("taskstock-bucket-1");
+                if (beforeUrl && intTheBucket) {
+
+                    const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
+                    const beforeFilename = beforeUrl.substring(lastSlashIndex); // 마지막 슬래시 이후 문자열 추출
+                    const beforeBlob = bucket.file(beforeFilename);
+                    try {
+                        await beforeBlob.delete();
+                    } catch (err) {
+                        next(err);
+                    }
+
+                }
+                
+                await noticeService.sendSlack(noticeData);
+
                 await cn.query('COMMIT');
                 console.log("회원탈퇴 성공")
                 return res.status(200).json({ 
