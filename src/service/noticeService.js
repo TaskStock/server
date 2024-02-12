@@ -6,7 +6,7 @@ const db = require('../config/db.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
-    processNotice: async (predata, next) => {
+    processNotice: async (predata) => {
         try {
             let noticeData = {
                 user_id: predata.user_id, // 알림을 받을 사람 ID
@@ -45,11 +45,12 @@ module.exports = {
             }
             await noticeModel.createNotice(db, noticeData);
         } catch (err) {
-            next(err);
+            err.name = 'Notice - ProcessNoticeError'
+            throw err
         }
     },
     // TODO : FCM 푸시 알림 전송
-    sendPush: async (noticeData, next) => {
+    sendPush: async (noticeData) => {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
         const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
@@ -102,7 +103,8 @@ module.exports = {
                 // console.log('Successfully sent message: : ', response)
             })
             .catch(function (err) {
-                next(err)   
+                err.name = 'FCM - SendPushError'
+                throw err
                 // console.log('Error Sending message : ', err)
             })
     },
@@ -145,7 +147,7 @@ module.exports = {
                 })
         }
     },
-    sendMultiPushBeforeMidnight: async(region, next) => {
+    sendMultiPushBeforeMidnight: async(region) => {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
         let tokenChuncks = [];
@@ -193,12 +195,13 @@ module.exports = {
                     // console.log('Successfully sent message(all): : ', response)
                 })
                 .catch(function (err) {
-                    next(err)
+                    err.name = 'FCM - SendMultiPushBeforeMidnightError'
+                    throw err
                 })
         }
     },
     // TODO : 타입에 따라 슬랙 메세지 전송
-    sendSlack: async (noticeData, next) => {
+    sendSlack: async (noticeData, req, res, next) => {
         try {
             let message = "";
             if (noticeData.type === 'customer.suggestion') {
