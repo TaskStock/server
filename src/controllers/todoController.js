@@ -41,6 +41,8 @@ module.exports = {
                 const value = await valueModel.getRecentValue(cn, user_id);
                 
                 if(value === undefined){
+                    await cn.query('ROLLBACK');
+                    return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
                 }else if(value.date.toISOString() === sttime){
                     const value_id = value.value_id;
                     const start = value.start;
