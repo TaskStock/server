@@ -18,6 +18,7 @@ services:
     depends_on:
       - pg
     build:
+      context: ./
       dockerfile: Dockerfile
     image: server-node
     restart: unless-stopped
