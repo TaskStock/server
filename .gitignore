@@ -150,6 +150,7 @@ app.yaml
 
 #db init 파일
 init.sql
+init/*
 
 #postgresql db 데이터
 postgresql/data/*
@@ -161,3 +162,4 @@ gcp-share-409015-b1d39abde494.json
 
 # nginx 설정 파일
 nginx.conf
+conf/*
