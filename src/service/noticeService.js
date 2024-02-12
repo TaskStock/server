@@ -110,7 +110,7 @@ module.exports = {
     },
     // TODO : 여러 사용자에게 같은 내용의 FCM 푸시 알림 전송
     // ! @params: noticeData = {user_id_list: [user_id, user_id, ...]}
-    sendMultiPush: async(noticeData, next) => {
+    sendMultiPush: async(noticeData) => {
         let {user_id_list} = noticeData //user_id_list: 알림을 보낼 사용자 목록 user_id 리스트
         const tokens = await noticeModel.getAllFCMTokens(db, user_id_list);
 
@@ -143,7 +143,8 @@ module.exports = {
                     // console.log('Successfully sent message(all): : ', response)
                 })
                 .catch(function (err) {
-                    next(err)
+                    err.name = 'FCM - SendMultiPushError'
+                    throw err
                 })
         }
     },
@@ -201,7 +202,7 @@ module.exports = {
         }
     },
     // TODO : 타입에 따라 슬랙 메세지 전송
-    sendSlack: async (noticeData, req, res, next) => {
+    sendSlack: async (noticeData) => {
         try {
             let message = "";
             if (noticeData.type === 'customer.suggestion') {
@@ -209,7 +210,7 @@ module.exports = {
                 const content = noticeData.content;
                 const email = noticeData.email;
                 message = `
-                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n-----# 의견 #-----${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n-----# 의견 #-----\n${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
                 `;
 
                 await slackClient.chat.postMessage({
@@ -230,7 +231,8 @@ module.exports = {
                 return
             }
         } catch (err) {
-            next(err)
+            err.name = 'Slack - SendSlackError'
+            throw err
         } 
     }
 };
