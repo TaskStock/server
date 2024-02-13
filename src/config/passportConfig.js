@@ -20,15 +20,25 @@ passport.use(new LocalStrategy({
         try {
             const userData = await accountModel.getUserByEmail(db, email);
             if (userData === null) {
-                return done(null, false, { message: '가입 정보가 없습니다.' }); //done(error, user, info)
+                return done(null, false, {
+                    result: 'fail',
+                    message: '가입 정보가 없습니다.' 
+                }); //done(error, user, info)
             } else if (userData.strategy != 'local') {
-                return done(null, false, { message: '다른 방식으로 가입된 이메일입니다.' }); //소셜 로그인으로 가입된 이메일일 경우
+                return done(null, false, { 
+                    result: 'fail',
+                    message: '다른 방식으로 가입된 이메일입니다.',
+                    strategy: userData.strategy
+                }); //소셜 로그인으로 가입된 이메일일 경우
             }
             const result = await bcrypt.compare(password, userData.password);
             if (result) {
                 return done(null, userData); // 로그인 성공
             } else {
-                return done(null, false, { message: '비밀번호가 일치하지 않습니다.' });
+                return done(null, false, {
+                    result: 'fail', 
+                    message: '비밀번호가 일치하지 않습니다.' 
+                });
             }
         } catch (error) {
             return done(error);
