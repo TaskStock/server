@@ -481,6 +481,7 @@ module.exports = {
             U.image,
             U.user_name,
             U.cumulative_value,
+            value_yesterday_ago,
             U.private,
             CASE
                 WHEN F1.pending IS NOT NULL THEN F1.pending
