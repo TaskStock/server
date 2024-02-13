@@ -366,7 +366,9 @@ module.exports = {
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
 
-            const {rows: followCheckRows} = await db.query(followCheckQuery, [following_id, follower_id]);
+            const {rows: followCheckRows} = await db.query(followCheckQuery, [follower_id, following_id]);
+            console.log(followCheckRows);
+            
             if (followCheckRows.rowCount !== 0 && followCheckRows[0].pending == false) {
                 acceptingNoticeQuery = `
                 UPDATE "Notice" 
