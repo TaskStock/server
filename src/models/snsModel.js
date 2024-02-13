@@ -155,7 +155,7 @@ module.exports = {
             await db.query(query, [follower_id, unfollowing_id]);
             await db.query(updateQuery1, [unfollowing_id])
             await db.query(updateQuery2, [follower_id]) 
-            await db.query(noticeQuery, [follower_id, unfollowing_id])
+            await db.query(noticeQuery, [unfollowing_id, follower_id])
 
             return true;
         } catch (e) {

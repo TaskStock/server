@@ -427,12 +427,7 @@ module.exports = {
             const content = req.body.content;
             const email = 'unregister'
             
-            const noticeData = {
-                type: 'customer.suggestion',
-                user_id: user_id,
-                content: content,
-                email: email
-            }
+
             await noticeModel.saveCustomerSuggestion(cn, user_id, content, email);
             
             const deleteResult = await accountModel.deleteUser(cn, user_id);
@@ -454,6 +449,12 @@ module.exports = {
                         next(err);
                     }
 
+                }
+                const noticeData = {
+                    type: 'customer.suggestion',
+                    user_id: user_id,
+                    content: content,
+                    email: email
                 }
                 
                 await noticeService.sendSlack(noticeData);
