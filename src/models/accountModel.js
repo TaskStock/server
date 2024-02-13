@@ -267,7 +267,9 @@ module.exports = {
                 const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
                 
                 // target_id가 탈퇴한 사람인 알림 전부 삭제
-                const noticeDeleteQuery = 'DELETE FROM "Notice WHERE (info ->> \'target_id\')::int = $1'
+                const noticeDeleteQuery = `
+                DELETE FROM "Notice" WHERE (info ->> 'target_id')::int = $1
+                `
 
                 await db.query(followingQuery, [user_id]);
                 await db.query(followerQuery, [user_id]);
