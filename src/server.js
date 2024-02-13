@@ -77,6 +77,13 @@ app.use("/siuser", passport.authenticate('jwt', { session: false }), siuserRoute
 app.use("/wishlist", passport.authenticate('jwt', { session: false }), wishlistRouter);
 app.use("/badge", passport.authenticate('jwt', { session: false }), badgeRouter);
 
+
+// 스케쥴러
+if (process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0') {
+    const scheduler = require("./service/scheduler.js");
+    scheduler.scheduling();
+}
+
 // 오류 처리 미들웨어
 app.use(async (err, req, res, next) => {
     console.log('오류처리 미들웨어 호출')
@@ -96,13 +103,6 @@ app.use(async (err, req, res, next) => {
     })
     
 });
-
-// 스케쥴러
-if (process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0') {
-    const scheduler = require("./service/scheduler.js");
-    scheduler.scheduling();
-}
-
 
 app.listen(app.get('port'), () => {
     process.send('ready');   // pm2 설정
