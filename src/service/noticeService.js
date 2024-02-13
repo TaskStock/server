@@ -59,7 +59,7 @@ module.exports = {
             // console.log('FCM토큰이 0개일 경우 알림 발송 안함')
             return
         }
-        let title = '\uD83D\uDCC8 TASKSTOCK';
+        let title = 'TASKSTOCK';
         let body = '';
         let target_id;
         if (noticeData.type === 'sns') {
@@ -123,7 +123,7 @@ module.exports = {
                 tokenChuncks.push(tokens.slice(i, i+499))
             }
         }
-        let title = '\uD83D\uDCC8 TASKSTOCK';
+        let title = 'TASKSTOCK';
         let body = '장 마감 한 시간 전입니다! 오늘의 가치를 확인해주세요'
         
         // 각 chunk를 순회하면서 메시지 전송
@@ -161,7 +161,7 @@ module.exports = {
                 tokenChuncks.push(tokens.slice(i, i+499))
             }
         }
-        let title = '\uD83D\uDCC8 TASKSTOCK';
+        let title = 'TASKSTOCK';
         let body = '장 마감 한 시간 전입니다! 오늘의 가치를 확인해주세요'
         
         // 각 chunk를 순회하면서 메시지 전송
