@@ -6,7 +6,7 @@ const db = require('../config/db.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
-    processNotice: async (predata, next) => {
+    processNotice: async (predata) => {
         try {
             let noticeData = {
                 user_id: predata.user_id, // 알림을 받을 사람 ID
@@ -45,11 +45,12 @@ module.exports = {
             }
             await noticeModel.createNotice(db, noticeData);
         } catch (err) {
-            next(err);
+            err.name = 'Notice - ProcessNoticeError'
+            throw err
         }
     },
     // TODO : FCM 푸시 알림 전송
-    sendPush: async (noticeData, next) => {
+    sendPush: async (noticeData) => {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
         const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
@@ -102,13 +103,14 @@ module.exports = {
                 // console.log('Successfully sent message: : ', response)
             })
             .catch(function (err) {
-                next(err)   
+                err.name = 'FCM - SendPushError'
+                throw err
                 // console.log('Error Sending message : ', err)
             })
     },
     // TODO : 여러 사용자에게 같은 내용의 FCM 푸시 알림 전송
     // ! @params: noticeData = {user_id_list: [user_id, user_id, ...]}
-    sendMultiPush: async(noticeData, next) => {
+    sendMultiPush: async(noticeData) => {
         let {user_id_list} = noticeData //user_id_list: 알림을 보낼 사용자 목록 user_id 리스트
         const tokens = await noticeModel.getAllFCMTokens(db, user_id_list);
 
@@ -141,11 +143,12 @@ module.exports = {
                     // console.log('Successfully sent message(all): : ', response)
                 })
                 .catch(function (err) {
-                    next(err)
+                    err.name = 'FCM - SendMultiPushError'
+                    throw err
                 })
         }
     },
-    sendMultiPushBeforeMidnight: async(region, next) => {
+    sendMultiPushBeforeMidnight: async(region) => {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
         let tokenChuncks = [];
@@ -193,12 +196,13 @@ module.exports = {
                     // console.log('Successfully sent message(all): : ', response)
                 })
                 .catch(function (err) {
-                    next(err)
+                    err.name = 'FCM - SendMultiPushBeforeMidnightError'
+                    throw err
                 })
         }
     },
     // TODO : 타입에 따라 슬랙 메세지 전송
-    sendSlack: async (noticeData, next) => {
+    sendSlack: async (noticeData) => {
         try {
             let message = "";
             if (noticeData.type === 'customer.suggestion') {
@@ -206,7 +210,7 @@ module.exports = {
                 const content = noticeData.content;
                 const email = noticeData.email;
                 message = `
-                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n-----# 의견 #-----${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
+                -----# 고객의견 알림 #-----\n*${user_name}*님이 고객센터에 새로운 의견을 남겼습니다.\n\n-----# 의견 #-----\n${content}\n\nuser_id: ${noticeData.user_id}\nemail: ${email}
                 `;
 
                 await slackClient.chat.postMessage({
@@ -227,7 +231,8 @@ module.exports = {
                 return
             }
         } catch (err) {
-            next(err)
+            err.name = 'Slack - SendSlackError'
+            throw err
         } 
     }
 };

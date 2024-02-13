@@ -199,7 +199,7 @@ module.exports = {
                 return result;
             } catch (e) {
                 e.name = 'searchUserError';
-                return [];
+                throw e;
             }
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
             const query = `
@@ -224,7 +224,7 @@ module.exports = {
                 return rows;
             } catch (e) {
                 
-                return [];
+                throw e;
             }
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
             const query = `
@@ -249,7 +249,8 @@ module.exports = {
                 return rows;
             } catch (e) {
                 e.name = 'searchUserError';
-                return [];
+                
+                throw e;
             }
         } else {
             // console.log('searchScope error. 잘못된 검색 범위입니다.');
@@ -313,7 +314,7 @@ module.exports = {
             return [followerList, followingList]
         } catch (e) {
             e.name = 'showFollowListError';
-            return false;
+            throw e;
         }
     },
     editUserInfo: async(db, user_id, user_name, introduce) => {
@@ -322,8 +323,8 @@ module.exports = {
             await db.query(query, [user_name, introduce, user_id]);
             return true;
         } catch (e) {
-            
-            return false;
+            e.name = 'editUserInfoError';
+            throw e;
         }
     },
     editUserImage: async(db, user_id, image_path) => {
@@ -332,6 +333,7 @@ module.exports = {
             await db.query(updateQuery, [image_path, user_id]);
         } catch (e) {
             e.name = 'editUserImageError';
+            throw e;
         }
     },
     checkUserImage: async(db, user_id) => {
@@ -340,8 +342,7 @@ module.exports = {
             const {rows} = await db.query(query, [user_id]);
             return rows[0].image; // ''는 false로 판단(기본이미지), 빈문자열 아니면 true로 판단
         } catch (e) {
-            e.name = 'checkUserImageError';
-            return false;
+            return '';
         }
     },
     // 팔로워: 요청, 팔로잉: 수락
@@ -404,7 +405,7 @@ module.exports = {
             return true;
         } catch (e) {
             e.name = 'acceptPendingError';
-            return false;
+            throw e;
         }
     },
     changeDefaultImage: async(db, user_id) => {
@@ -414,7 +415,7 @@ module.exports = {
             return true;
         } catch (e) {
             e.name = 'changeDefaultImageError';
-            return false;
+            throw e;
         }
     },
     //팔로우 요청 취소
@@ -470,7 +471,7 @@ module.exports = {
 
         } catch (e) {
             e.name = 'cancelFollowError';
-            return false;
+            throw e;
         }
     },
     userDetail: async(db, my_id, target_id) => {

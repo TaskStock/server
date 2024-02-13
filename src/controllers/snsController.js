@@ -174,7 +174,7 @@ module.exports = {
 		
 
                 // update전 기존 이미지 삭제
-                beforeUrl = await snsModel.checkUserImage(db, user_id);
+                const beforeUrl = await snsModel.checkUserImage(db, user_id);
 
                 // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
                 const intTheBucket = beforeUrl.includes("taskstock-bucket-1");
