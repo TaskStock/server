@@ -321,13 +321,22 @@ module.exports = {
         }
     },
     getUserInfo: async (req, res, next) => {
+        const cn = await db.connect();
         try {
+            await cn.query('BEGIN');
+
             const user_id = req.user.user_id;
-            const queryResult = await accountModel.getUserById(db, user_id);
-            const badges = await badgeModel.getBadges(db, user_id);
+            const queryResult = await accountModel.getUserById(cn, user_id);
+            const badges = await badgeModel.getBadges(cn, user_id);
 
-            const {password, ...userData} = queryResult[0]
+            const {password, ...userData} = queryResult[0];
 
+            if(userData.dormant_count !== 0){
+                await accountModel.initializeDormantCount(cn, user_id);
+                userData.dormant_count = 0;
+            }
+
+            await cn.query('COMMIT');
             res.status(200).json({
                 result: "success",
                 message: "유저 정보 가져오기 성공",
@@ -335,7 +344,10 @@ module.exports = {
                 badges: badges
             });
         } catch (err) {
+            await cn.query('ROLLBACK');
             next(err);
+        }finally{
+            cn.release();
         }
     },
     sendMailForFindPassword: async (req, res, next) => {
