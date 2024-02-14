@@ -8,15 +8,15 @@ WORKDIR /ts/app
 
 COPY package*.json ./
 
-# RUN npm install && npm install -g pm2
-RUN npm install
+RUN npm install && npm install -g pm2
+# RUN npm install
 
 COPY . .
 
 EXPOSE 8000
 
-# pm2와 docker는 같이 사용하면 의미가 없으므로 pm2 사용 x
+# pm2와 docker는 같이 사용하면 의미가 없으므로 pm2 사용 x => 애플리케이션 무중단을 위해 pm2 사용, scale-up은 도커를 사용
 # pm2-runtime으로 실행 - 포어그라운드에서 실행되어 컨테이너 오케스트레이션 시스템과의 통합이 용이하다.
-# CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]
 
-CMD ["npm", "start"]
+# CMD ["npm", "start"]
