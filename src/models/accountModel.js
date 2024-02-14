@@ -313,6 +313,20 @@ module.exports = {
                 throw err;
             });
     },
+    // 스케쥴러 위한 업데이트 로직
+    updateValueFieldForScheduler: async(db, user_id, cumulative_value, value_yesterday_ago)=>{
+        const query = 'update "User" set cumulative_value=$1, value_yesterday_ago=$2, dormant_count = dormant_count + 1 where user_id=$3';
+        const values = [cumulative_value, value_yesterday_ago, user_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(err => {
+                err.name = 'updateValueFieldError';
+                throw err;
+            });
+    },
     changeTheme: async(db, user_id, theme) => {
         const query = 'UPDATE "UserSetting" SET theme = $1 WHERE user_id = $2';
         try {

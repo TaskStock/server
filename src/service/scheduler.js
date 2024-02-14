@@ -80,7 +80,7 @@ async function settlementJob(cn, user_id, startTime, sttime, tommorowsttime){
     await valueModel.updateValueForMakedTodos(cn, tommorowValue.value_id, tv_end, tv_low, tv_high);
 
     // 4-2. user의 value 필드 업데이트
-    await accountModel.updateValueField(cn, user_id, tv_end, tv_start);
+    await accountModel.updateValueFieldForScheduler(cn, user_id, tv_end, tv_start);
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
