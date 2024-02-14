@@ -285,7 +285,7 @@ module.exports = {
     }, 
     // 스케쥴러 위한 모델
     getUsersIdByRegion: async(db, region) => {
-        const query = 'select user_id from "User" where region = $1';
+        const query = 'select user_id from "User" where region = $1 and dormant_count < 30';
         const values = [region];
 
         const user_ids = await db.query(query, values)
