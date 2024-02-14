@@ -171,6 +171,7 @@ module.exports = {
             blobStream.on('finish', async () => {
                 // 파일 업로드 후 공개적으로 접근 가능하도록 설정
                 await blob.makePublic();
+		
 
                 // update전 기존 이미지 삭제
                 const beforeUrl = await snsModel.checkUserImage(db, user_id);
