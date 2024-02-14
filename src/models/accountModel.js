@@ -331,6 +331,20 @@ module.exports = {
             err.name = 'getPasswordByIdError';
             throw err;
         }
-    }
+    },
+    // dormant_count 0으로 초기화
+    initializeDormantCount: async(db, user_id)=>{
+        const query = 'update "User" set dormant_count=0 where user_id=$1';
+        const values = [user_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(err => {
+                err.name = 'updateValueFieldError';
+                throw err;
+            });
+    },
 }
 
