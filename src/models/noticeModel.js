@@ -9,6 +9,22 @@ module.exports = {
             throw err;
         }
     },
+    checkNewNotice: async (db, user_id) => {
+        const query = 'SELECT COUNT(*) FROM "Notice" WHERE user_id = $1 AND is_read = false';
+        try {
+            const {rows} = await db.query(query, [user_id]);
+            const newNoticeCount = rows[0].count;
+
+            if (newNoticeCount > 0) {
+                return true
+            } else {
+                return false
+            }
+        } catch(err) {
+            err.name = 'checkNewNoticeError';
+            throw err;
+        }
+    },
     getAllNotice: async (db, user_id) => {
         const query = `
             SELECT notice_id, content, type, info, is_read, created_time 
@@ -27,7 +43,7 @@ module.exports = {
         }
         catch (err) {
             err.name = 'getAllNoticeError';
-            throw(err);
+            throw err;
         }
     },
     getNoticeById: async (db, notice_id) => {
