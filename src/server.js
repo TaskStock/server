@@ -79,7 +79,7 @@ app.use("/badge", passport.authenticate('jwt', { session: false }), badgeRouter)
 
 
 // 스케쥴러
-if (process.env.NODE_APP_INSTANCE===undefined || process.env.NODE_APP_INSTANCE === '0') {
+if (process.env.IS_SCHEDULER===true) {
     const scheduler = require("./service/scheduler.js");
     scheduler.scheduling();
 }
