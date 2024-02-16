@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { processNotice, sendPush } = require('../service/noticeService.js')
 
 
@@ -111,7 +110,7 @@ module.exports = {
                 followingPending = false;
             }
 
-            if (followingPending == false) {
+            if (followerPending == false) {
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
                 await db.query(updateQuery1, [following_id])

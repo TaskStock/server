@@ -326,10 +326,12 @@ module.exports = {
             await cn.query('BEGIN');
 
             const user_id = req.user.user_id;
-            const queryResult = await accountModel.getUserById(cn, user_id);
-            const badges = await badgeModel.getBadges(cn, user_id);
+            const queryResult = await accountModel.getUserById(cn, user_id); //array
+            const badges = await badgeModel.getBadges(cn, user_id); //array
+            const is_new_notice = await noticeModel.checkNewNotice(cn, user_id); //boolean
 
             const {password, ...userData} = queryResult[0];
+            userData.is_new_notice = is_new_notice;
 
             if(userData.dormant_count !== 0){
                 await accountModel.initializeDormantCount(cn, user_id);
