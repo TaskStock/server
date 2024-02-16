@@ -163,3 +163,10 @@ gcp-share-409015-b1d39abde494.json
 # nginx 설정 파일
 nginx.conf
 conf/*
+
+# Docker 파일
+Dockerfile
+docker-compose.*
+
+# 배포 스크립트
+deploy.sh
