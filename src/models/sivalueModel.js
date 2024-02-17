@@ -42,21 +42,27 @@ module.exports = {
             });
         return sivalue;
     },
-    // 스케쥴러에 사용
-    // getSivalueOne: async(stockitem_id, date)=>{
-    //     const query = 'select * from "SIValue" where stockitem_id=$1 and date=$2';
-    //     const q_values = [stockitem_id, date];
+    getUserlist: async(db, stockitem_id, date)=>{
+        const query = `
+        select u.user_id, u.user_name, u.image
+        from "SIValue" v
+            inner join "SIValueMap" svm
+                on v.sivalue_id = svm.sivalue_id
+            inner join "User" u
+                on svm.user_id=u.user_id
+        where v.stockitem_id=$1 and v.date=$2
+        `;
+        const values = [stockitem_id, date];
 
-    //     const sivalue = await db.query(query, q_values)
-    //         .then(res => {
-    //             // console.log(res.rows[0]);
-    //             return res.rows[0];
-    //         })
-    //         .catch(e => {
-    //             
-
-    //             throw e;
-    //         });
-    //     return sivalue;
-    // },
+        const userlist = await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+                return res.rows;
+            })
+            .catch(e => {
+                e.name = "getSivalueOnemonthError";
+                throw e;
+            });
+        return userlist;
+    },
 }
