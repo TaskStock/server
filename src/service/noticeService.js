@@ -151,7 +151,7 @@ module.exports = {
     sendMultiPushBeforeMidnight: async(region) => {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
-        let tokenChuncks = [];
+        let tokenChuncks = [];D
         
         if (tokens.length == 0) {
             // console.log('FCM토큰이 0개일 경우 알림 발송 안함')
@@ -215,7 +215,7 @@ module.exports = {
             }
         }
         let title = 'TASKSTOCK';
-        let body = '오늘의 가치를 올리는 첫 걸음, 계획을 세워보아요! \uD83C\uDF1E'
+        let body = '오늘의 가치를 올리는 첫 걸음, 계획을 세워볼까요? \uD83C\uDF1E'
         
         // 각 chunk를 순회하면서 메시지 전송
         for (let chunk of tokenChuncks) {
