@@ -27,6 +27,7 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                   text-align: center;
                   word-break: keep-all;
                   line-height: 1.2;
+                  color: black;
                 "
               >
                 안녕하세요!
@@ -40,6 +41,7 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                   text-align: center;
                   word-break: keep-all;
                   line-height: 1.2;
+                  color: black;
                 "
               >
                 TASKSTOCK 가입을 위한 인증번호를 보내드립니다.
@@ -53,6 +55,7 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                   text-align: center;
                   word-break: keep-all;
                   line-height: 1.2;
+                  color: black;
                 "
               >
                 아래 인증번호를 앱 화면에서 입력하여 이메일 주소 인증을 완료해
@@ -74,8 +77,9 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                 style="
                   padding: 10px;
                   background-color: #EDEEF0;
-                  border-radius: 10px;
+                  border-radius: 5px;
                   width: 20px;
+                  color: black;
                 "
               >
                 ${code_1}
@@ -84,8 +88,9 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                 style="
                   padding: 10px;
                   background-color: #EDEEF0;
-                  border-radius: 10px;
+                  border-radius: 5px;
                   width: 20px;
+                  color: black;
                 "
               >
                 ${code_2}
@@ -94,8 +99,9 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                 style="
                   padding: 10px;
                   background-color: #EDEEF0;
-                  border-radius: 10px;
+                  border-radius: 5px;
                   width: 20px;
+                  color: black;
                 "
               >
                 ${code_3}
@@ -104,8 +110,9 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                 style="
                   padding: 10px;
                   background-color: #EDEEF0;
-                  border-radius: 10px;
+                  border-radius: 5px;
                   width: 20px;
+                  color: black;
                 "
               >
                 ${code_4}
@@ -114,8 +121,9 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                 style="
                   padding: 10px;
                   background-color: #EDEEF0;
-                  border-radius: 10px;
+                  border-radius: 5px;
                   width: 20px;
+                  color: black;
                 "
               >
                 ${code_5}
@@ -124,8 +132,9 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
                 style="
                   padding: 10px;
                   background-color: #EDEEF0;
-                  border-radius: 10px;
+                  border-radius: 5px;
                   width: 20px;
+                  color: black;
                 "
               >
                 ${code_6}
@@ -138,13 +147,13 @@ module.exports = (code_1, code_2, code_3, code_4, code_5, code_6) => {
         <td style="padding: 50px; background-color: #333; color: white">
           <table>
             <tr>
-              <td style="font-size: 1rem">Team TASKSTOCK</td>
+              <td style="font-size: 1rem; color: white;">Team TASKSTOCK</td>
             </tr>
             <tr>
-              <td style="font-size: 1rem">Email: taskstock.team@gmail.com</td>
+              <td style="font-size: 1rem; color: white;">Email: taskstock.team@gmail.com</td>
             </tr>
             <tr>
-              <td style="font-size: 1rem">Instagram: @taskstock.official</td>
+              <td style="font-size: 1rem; color: white;">Instagram: @taskstock.official</td>
             </tr>
           </table>
         </td>

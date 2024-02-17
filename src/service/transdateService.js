@@ -112,14 +112,25 @@ module.exports = {
         return dayOfWeek;
     },
     // 알람 스케쥴링
-    getAlarmTimeInUTC: (timezone) =>{
+    getAlarmTime11PM: (timezone) =>{
         const nowUtc = new Date();
         const nowZoneTime = utcToZonedTime(nowUtc, timezone);
 
-        const adjustTime = addHours(nowZoneTime, 1);    // 11시 기준이므로 임의로 1시간 더함
+        const adjustTime = addHours(nowZoneTime, 1);    // 23시 기준이므로 임의로 1시간 더함
         const startOfToday = startOfDay(adjustTime);
-        const nextDay = addDays(startOfToday, 1);
-        const alarmTime = addHours(nextDay, -1);
+        const alarmTime = addHours(startOfToday, 23);
+
+        const resultUtc = zonedTimeToUtc(alarmTime, timezone);
+
+        return resultUtc;
+    },
+    getAlarmTime9AM: (timezone) =>{
+        const nowUtc = new Date();
+        const nowZoneTime = utcToZonedTime(nowUtc, timezone);
+
+        const adjustTime = addHours(nowZoneTime, 15);    // 09시 기준이므로 임의로 15시간 더함
+        const startOfToday = startOfDay(adjustTime);
+        const alarmTime = addHours(startOfToday, 9);
 
         const resultUtc = zonedTimeToUtc(alarmTime, timezone);
 
