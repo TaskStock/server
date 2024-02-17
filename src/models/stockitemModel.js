@@ -245,7 +245,7 @@ module.exports = {
 
         const stockitems = await db.query(query, values)
             .then(res => {
-                console.log(res.rows);
+                // console.log(res.rows);
                 return res.rows;
             })
             .catch(e => {
