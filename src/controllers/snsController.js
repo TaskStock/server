@@ -2,6 +2,7 @@ const snsModel = require('../models/snsModel.js');
 const db = require('../config/db.js');
 const {bucket} = require('../config/multerConfig.js');
 const badgeModel = require('../models/badgeModel.js');
+const sharp = require('sharp')
 
 module.exports = {
     changePrivate: async(req, res, next) => {
@@ -144,16 +145,33 @@ module.exports = {
     },
     editUserImage: async(req, res, next) => {
         try {
-
             const user_id = req.user.user_id;
             const image_file = req.file;
             
+            // 이미지 없는 경우
             if (!image_file) {
                 return res.status(400).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
                 });
             }
+
+            // 이미지 파일 압축
+            const buffer = image_file.buffer;
+            const metadata = await sharp(buffer).metadata();
+            let compressedBuffer;
+            
+            if (metadata.width > 320) {
+                compressedBuffer = await sharp(buffer)
+                    .resize({ width: 320 })
+                    .jpeg({ quality: 60 })
+                    .toBuffer();
+            } else {
+                compressedBuffer = await sharp(buffer)
+                    .jpeg({ quality: 60 })
+                    .toBuffer();
+            }
+        
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
             const blobStream = blob.createWriteStream({
@@ -161,19 +179,17 @@ module.exports = {
                 metadata: {
                     contentType: image_file.mimetype
                 }
-    
             });
-
+            //오류 발생 시 처리
             blobStream.on('error', err => {
                 next(err);
             });
-
+            //파일 업로드 완료 시
             blobStream.on('finish', async () => {
                 // 파일 업로드 후 공개적으로 접근 가능하도록 설정
                 await blob.makePublic();
-		
-
-                // update전 기존 이미지 삭제
+                
+            // update전 기존 이미지 삭제
                 const beforeUrl = await snsModel.checkUserImage(db, user_id);
 
                 // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
@@ -191,6 +207,7 @@ module.exports = {
                 }
                 //게시 및 프로필 이미지 경로를 DB에 저장
                 const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+
                 await snsModel.editUserImage(db, user_id, publicUrl);
 
                 return res.status(200).json({
@@ -198,8 +215,10 @@ module.exports = {
                     imagePath : publicUrl
                 });
             });
-            // GCS에 파일 업로드 시작
-            blobStream.end(image_file.buffer);
+            
+        // GCS에 파일 업로드
+        blobStream.end(compressedBuffer);
+
 
         } catch (err) {
             next(err);
