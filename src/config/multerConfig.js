@@ -23,13 +23,13 @@ const fileFilter = (req, file, cb) => {
 const errorHandler = (err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(200).json({
-            message: "파일 크기는 5MB를 넘을 수 없습니다.",
-            result: "limitFileSize"
+            message: "limitFileSize.",
+            result: "fail"
         });
     } else if (err.code === 'LIMIT_FILE_TYPE') {
         return res.status(200).json({
-            message: "이미지 파일만 업로드 가능합니다.",
-            result: "limitFileType"
+            message: "limitFileType.",
+            result: "fail"
         });
     } else {
         next(err);
@@ -41,7 +41,7 @@ const errorHandler = (err, req, res, next) => {
 
 const uploader = multer({ 
     storage: multer.memoryStorage(),
-    limits: {filesize: 5 * 1024 * 1024}, // 5MB 제한
+    limits: {fileSize: 10 * 1024 * 1024}, // 10MB 제한
     fileFilter: fileFilter
 });
 

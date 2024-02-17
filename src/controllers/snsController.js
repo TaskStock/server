@@ -155,21 +155,23 @@ module.exports = {
                     result: "fail"
                 });
             }
-            // 이미지 크기 조정 및 품질 설정을 한 번에 처리
-            const formatOptions = {
-                jpeg: { quality: 80 },
-                png: { quality: 80 }
-            };
 
-            let compressedBuffer = await sharp(image_file.buffer)
-                .resize({ width: 800 }) // 너비를 800px로 조정합니다.
-                .toFormat(
-                    image_file.mimetype.includes('png') ? 'png' : 'jpeg', 
-                    formatOptions[image_file.mimetype.includes('png') ? 'png' : 'jpeg'
-                ])
-                .toBuffer();
-
-
+            // 이미지 파일 압축
+            const buffer = image_file.buffer;
+            const metadata = await sharp(buffer).metadata();
+            let compressedBuffer;
+            
+            if (metadata.width > 320) {
+                compressedBuffer = await sharp(buffer)
+                    .resize({ width: 320 })
+                    .jpeg({ quality: 60 })
+                    .toBuffer();
+            } else {
+                compressedBuffer = await sharp(buffer)
+                    .jpeg({ quality: 60 })
+                    .toBuffer();
+            }
+        
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
             const blobStream = blob.createWriteStream({
@@ -186,7 +188,7 @@ module.exports = {
             blobStream.on('finish', async () => {
                 // 파일 업로드 후 공개적으로 접근 가능하도록 설정
                 await blob.makePublic();
-    
+                
             // update전 기존 이미지 삭제
                 const beforeUrl = await snsModel.checkUserImage(db, user_id);
 
@@ -205,6 +207,7 @@ module.exports = {
                 }
                 //게시 및 프로필 이미지 경로를 DB에 저장
                 const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+
                 await snsModel.editUserImage(db, user_id, publicUrl);
 
                 return res.status(200).json({
@@ -216,7 +219,6 @@ module.exports = {
         // GCS에 파일 업로드
         blobStream.end(compressedBuffer);
 
-        console.log(publicUrl)
 
         } catch (err) {
             next(err);
