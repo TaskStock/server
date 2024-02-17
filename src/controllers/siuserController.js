@@ -4,6 +4,7 @@ const sistatisticsModel = require('../models/sistatisticsModel.js');
 const transdate = require('../service/transdateService.js');
 
 const db = require('../config/db.js');
+const sivalueModel = require('../models/sivalueModel.js');
 
 module.exports = {
     getItemsAll: async(req, res, next) =>{
@@ -31,7 +32,14 @@ module.exports = {
             const sttime = transdate.getSettlementTimeInUTC(region);
 
             const stockitem = await stockitemModel.getItemDetail(db, stockitem_id, user_id, sttime);
+
+            if(stockitem === undefined){
+                await cn.query('ROLLBACK');
+                return res.status(400).json({result: "fail", message: "존재하지 않는 종목입니다."});
+            }
+
             const statistics = await sistatisticsModel.getSistatistics(db, stockitem_id);
+            const userlist = await sivalueModel.getUserlist(db, stockitem_id, sttime);
 
             if(stockitem.is_add_today === undefined || stockitem.is_add_today === null){
                 stockitem.is_add_today = false
@@ -40,7 +48,7 @@ module.exports = {
             }
 
             await cn.query('COMMIT');
-            return res.json({stockitem: stockitem, statistics: statistics});
+            return res.json({stockitem: stockitem, statistics: statistics, userlist: userlist});
         }catch(error){
             await cn.query('ROLLBACK');
             next(error);
