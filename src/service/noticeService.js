@@ -33,19 +33,18 @@ module.exports = {
                     displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
                     private: predata.private // 팔로우 한 사람 입장 private
                 });
-            }
 
-            if (noticeData.type === 'general') {
+            } else if (noticeData.type === 'general') {
                 let following_name = await accountModel.getUserNameById(db, predata.following_id);
                 noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
 
                 noticeData.info = JSON.stringify({
                     target_id: predata.following_id
                 });
-            }
-
-            if (noticeData.type === 'badge') {
+            
+            } else if (noticeData.type === 'badge') {
                 noticeData.content = '새로운 뱃지를 획득했습니다. 🔥';
+                noticeData.info = null;
             }
 
             await noticeModel.createNotice(db, noticeData);
@@ -80,7 +79,7 @@ module.exports = {
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
         } 
-        
+
         let message = {
             notification: {
                 title: title,
