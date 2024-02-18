@@ -259,23 +259,21 @@ module.exports = {
     try {
             // 나를 팔로우 하는 사람들(follower)의 팔로잉 카운트 감소
             const followingQuery = `
-            UPDATE "User" 
-            SET following_count = following_count - 1 
-            WHERE user_id IN (
-                SELECT follower_id 
-                FROM "FollowMap" 
-                WHERE following_id = $1 AND pending = false
-            );
+            UPDATE "User" U
+            SET U.following_count = U.following_count - 1
+            FROM "FollowMap" FM
+            WHERE U.user_id = FM.follower_id
+            AND FM.following_id = $1
+            AND FM.pending = false;
             `;
             // 내가 팔로우 하는 사람들(following)의 팔로워 카운트 감소
             const followerQuery = `
-            UPDATE "User" 
-            SET follower_count = follower_count - 1 
-            WHERE user_id IN (
-                SELECT following_id 
-                FROM "FollowMap" 
-                WHERE follower_id = $1 AND pending = false
-            );
+            UPDATE "User" U
+            SET U.follower_count = U.follower_count - 1
+            FROM "FollowMap" FM
+            WHERE U.user_id = FM.following_id
+            AND FM.follower_id = $1
+            AND FM.pending = false;
             `;
             //유저 삭제
             const deleteQuery = 'DELETE FROM "User" WHERE user_id = $1';
