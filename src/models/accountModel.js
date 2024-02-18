@@ -258,26 +258,23 @@ module.exports = {
     deleteUser: async(db, user_id) => {
         try {
             const query = 'DELETE FROM "User" WHERE user_id = $1 RETURNING image, strategy';
-            const queryResult = await db.query(query, [user_id])
-            const {image, strategy} = queryResult.rows[0];
+            await db.query(query, [user_id])
 
-            if (queryResult.rowCount === 1) { // 삭제 성공
-                // 팔로우, 팔로잉 관계에 있는 사람들 카운트 조절
-                const followingQuery = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id IN (SELECT follower_id FROM "FollowMap" WHERE following_id = $1)';
-                const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
-                
-                // target_id가 탈퇴한 사람인 알림 전부 삭제
-                const noticeDeleteQuery = `
-                DELETE FROM "Notice" WHERE (info ->> 'target_id')::int = $1
-                `
+            // 팔로우, 팔로잉 관계에 있는 사람들 카운트 조절
+            const followingQuery = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id IN (SELECT follower_id FROM "FollowMap" WHERE following_id = $1)';
+            const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
+            
+            // target_id가 탈퇴한 사람인 알림 전부 삭제
+            const noticeDeleteQuery = `
+            DELETE FROM "Notice" WHERE (info ->> 'target_id')::int = $1
+            `
 
-                await db.query(followingQuery, [user_id]);
-                await db.query(followerQuery, [user_id]);
-                await db.query(noticeDeleteQuery, [user_id]);
-                return true;
-            } else {
-                return false;        
-            } 
+            await db.query(followingQuery, [user_id]);
+            await db.query(followerQuery, [user_id]);
+            await db.query(noticeDeleteQuery, [user_id]);
+            
+            return true;
+
         } catch (err) {
             err.name = 'deleteUserError';
             throw err;
