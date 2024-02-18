@@ -32,7 +32,6 @@ module.exports = {
             cn.release();
         }
     },
-
     followUser: async(req, res, next) => {
         const cn = await db.connect();
         try {
@@ -109,6 +108,28 @@ module.exports = {
             const user_id = req.user.user_id;
 
             const [followerList, followingList] = await snsModel.showFollowList(cn, user_id);
+            await cn.query('COMMIT');
+            return res.status(200).json({
+                result: "success",
+                followerList: followerList,
+                followingList: followingList
+            });
+        } catch (err) {
+            await cn.query('ROLLBACK');
+            next(err);
+            
+        } finally {
+            cn.release();
+        }
+    },
+    showTargetFollowList: async(req, res, next) => {
+        const cn = await db.connect();
+        try {
+            await cn.query('BEGIN');
+            const user_id = req.user.user_id;
+            const target_id = req.params.target_id;
+
+            const [followerList, followingList] = await snsModel.showTargetFollowList(cn, user_id, target_id);
             await cn.query('COMMIT');
             return res.status(200).json({
                 result: "success",

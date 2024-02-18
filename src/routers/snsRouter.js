@@ -16,6 +16,7 @@ router.patch('/pending', snsController.acceptPending);
 router.patch('/edit/default', snsController.changeDefaultImage);
 router.delete('/follow', snsController.cancelFollow);
 router.get('/users/:user_id', snsController.userDetail);
+router.get('/:target_id/list', snsController.showTargetFollowList);
 
 module.exports = router;
 
