@@ -446,7 +446,7 @@ module.exports = {
             
             const deleteResult = await accountModel.deleteUser(cn, user_id);
             
-            if (deleteResult) {
+            if (deleteResult === true) {
                 // 서버에서 프로필 이미지 삭제
                 const beforeUrl = await snsModel.checkUserImage(cn, user_id);
                 console.log(beforeUrl);
@@ -474,13 +474,11 @@ module.exports = {
                 await noticeService.sendSlack(noticeData);
 
                 await cn.query('COMMIT');
-                console.log("회원탈퇴 성공")
                 return res.status(200).json({ 
                     result: "success", 
                 });
             } else {
                 await cn.query('ROLLBACK');
-                console.log("회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
                 });
