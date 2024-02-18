@@ -256,11 +256,11 @@ module.exports = {
         }
     },
     deleteUser: async(db, user_id) => {
-    try {
+        try {
             // 나를 팔로우 하는 사람들(follower)의 팔로잉 카운트 감소
             const followingQuery = `
             UPDATE "User" U
-            SET U.following_count = U.following_count - 1
+            SET following_count = U.following_count - 1
             FROM "FollowMap" FM
             WHERE U.user_id = FM.follower_id
             AND FM.following_id = $1
@@ -269,7 +269,7 @@ module.exports = {
             // 내가 팔로우 하는 사람들(following)의 팔로워 카운트 감소
             const followerQuery = `
             UPDATE "User" U
-            SET U.follower_count = U.follower_count - 1
+            SET follower_count = U.follower_count - 1
             FROM "FollowMap" FM
             WHERE U.user_id = FM.following_id
             AND FM.follower_id = $1
