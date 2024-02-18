@@ -258,10 +258,25 @@ module.exports = {
     deleteUser: async(db, user_id) => {
     try {
             // 나를 팔로우 하는 사람들(follower)의 팔로잉 카운트 감소
-            const followingQuery = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id IN (SELECT follower_id FROM "FollowMap" WHERE following_id = $1)';
+            const followingQuery = `
+            UPDATE "User" 
+            SET following_count = following_count - 1 
+            WHERE user_id IN (
+                SELECT follower_id 
+                FROM "FollowMap" 
+                WHERE following_id = $1 AND pending = false
+            );
+            `;
             // 내가 팔로우 하는 사람들(following)의 팔로워 카운트 감소
-            const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
-    
+            const followerQuery = `
+            UPDATE "User" 
+            SET follower_count = follower_count - 1 
+            WHERE user_id IN (
+                SELECT following_id 
+                FROM "FollowMap" 
+                WHERE follower_id = $1 AND pending = false
+            );
+            `;
             //유저 삭제
             const deleteQuery = 'DELETE FROM "User" WHERE user_id = $1';
                         
