@@ -79,7 +79,8 @@ app.use("/badge", passport.authenticate('jwt', { session: false }), badgeRouter)
 
 
 // 스케쥴러
-if (process.env.IS_SCHEDULER===true) {
+if (process.env.IS_SCHEDULER==='true') {
+    console.log('스케쥴러 설정됨');
     const scheduler = require("./service/scheduler.js");
     scheduler.scheduling();
 }
