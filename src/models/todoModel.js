@@ -38,7 +38,7 @@ module.exports = {
 
         await db.query(query, values)
             .then(res => {
-                console.log(res.rows[0]);
+                // console.log(res.rows[0]);
             })
             .catch(e => {
                 e.name = "updateContentAndProjectError";
@@ -52,7 +52,7 @@ module.exports = {
 
         await db.query(query, values)
             .then(res => {
-                console.log(res.rows[0]);
+                // console.log(res.rows[0]);
             })
             .catch(e => {
                 e.name = "updateTodoError";
@@ -66,7 +66,7 @@ module.exports = {
 
         await db.query(query, values)
             .then(res => {
-                console.log(res.rows[0]);
+                // console.log(res.rows[0]);
             })
             .catch(e => {
                 e.name = "deleteTodoError";
@@ -128,7 +128,7 @@ module.exports = {
 
         await db.query(query, values)
             .then(res => {
-                console.log(res.rows[0]);
+                // console.log(res.rows[0]);
             })
             .catch(e => {
                 e.name = "updateTodoDateError";
@@ -215,5 +215,19 @@ module.exports = {
                 throw e;
             });
         return todos;
+    },
+    deleteTodoBecauseDeleteProject: async(db, user_id, project_id, date)=>{
+        const query = "delete from \"Todo\" where user_id=$1 and project_id=$2 and date>=$3";
+        const values = [user_id, project_id, date];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                e.name = "deleteTodoError";
+
+                throw e;
+            });
     },
 }
