@@ -11,7 +11,6 @@ const OAuth2 = google.auth.OAuth2;
 const oauth2Client = new OAuth2(
     process.env.OAUTH_CLIENT_ID,
     process.env.OAUTH_CLIENT_SECRET,
-    process.env.OAUTH_REDIRECT_URL
 );
 
 //메일 형식 세팅

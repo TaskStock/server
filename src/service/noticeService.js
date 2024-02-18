@@ -6,7 +6,7 @@ const db = require('../config/db.js');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
-    processNotice: async (predata) => {
+    processNotice: async (db, predata) => {
         try {
             let noticeData = {
                 user_id: predata.user_id, // 알림을 받을 사람 ID
@@ -33,16 +33,20 @@ module.exports = {
                     displayAccept: displayAccept, // 팔로우 당한 사람 입장 displayAccept
                     private: predata.private // 팔로우 한 사람 입장 private
                 });
-            }
 
-            if (noticeData.type === 'general') {
+            } else if (noticeData.type === 'general') {
                 let following_name = await accountModel.getUserNameById(db, predata.following_id);
                 noticeData.content = `${following_name}님이 팔로우 요청을 수락했습니다.`;
 
                 noticeData.info = JSON.stringify({
                     target_id: predata.following_id
                 });
+            
+            } else if (noticeData.type === 'badge') {
+                noticeData.content = '새로운 뱃지를 획득했습니다. 🔥';
+                noticeData.info = null;
             }
+
             await noticeModel.createNotice(db, noticeData);
         } catch (err) {
             err.name = 'Notice - ProcessNoticeError'
@@ -50,7 +54,7 @@ module.exports = {
         }
     },
     // TODO : FCM 푸시 알림 전송
-    sendPush: async (noticeData) => {
+    sendPush: async (db, noticeData) => {
         const user_id = noticeData.user_id; // 알림 받을 상대의 user_id
         
         const token = await noticeModel.getFCMToken(db, user_id); // 푸시메세지를 받을 유저의 FCM 토큰
@@ -74,7 +78,8 @@ module.exports = {
             let following_name = await accountModel.getUserNameById(db, noticeData.following_id)
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
-        }
+        } 
+
         let message = {
             notification: {
                 title: title,

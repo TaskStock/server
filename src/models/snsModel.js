@@ -137,8 +137,8 @@ module.exports = {
                 followerPending: followerPending,
                 private: followerPrivate // 내 입장 private
             };
-            await processNotice(predata);
-            await sendPush(predata);
+            await processNotice(db, predata);
+            await sendPush(db, predata);
 
             return true;
         } catch (e) {
@@ -404,8 +404,8 @@ module.exports = {
                 following_id: following_id, // 터치하면 이동할 대상
                 type: 'general' // 알림 타입
             };
-            await processNotice(predata);
-            await sendPush(predata);
+            await processNotice(db, predata);
+            await sendPush(db, predata);
 
             return true;
         } catch (e) {
