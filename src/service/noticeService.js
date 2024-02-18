@@ -45,7 +45,7 @@ module.exports = {
             }
 
             if (noticeData.type === 'badge') {
-                noticeData.content = '새로운 뱃지를 획득했습니다.';
+                noticeData.content = '새로운 뱃지를 획득했습니다. 🔥';
             }
 
             await noticeModel.createNotice(db, noticeData);
@@ -79,9 +79,8 @@ module.exports = {
             let following_name = await accountModel.getUserNameById(db, noticeData.following_id)
             target_id = noticeData.following_id.toString()
             body = `${following_name}님이 팔로우 요청을 수락했습니다.`
-        } else if (noticeData.type = 'badge') {
-            body = '새로운 뱃지를 획득했습니다.\uD83D\uDCAF'
-        }
+        } 
+        
         let message = {
             notification: {
                 title: title,

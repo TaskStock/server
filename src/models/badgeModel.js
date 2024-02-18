@@ -1,4 +1,4 @@
-const { processNotice, sendPush } = require('../service/noticeService.js')
+const { processNotice } = require('../service/noticeService.js')
 
 module.exports = {
     giveBadge: async(db, type, user_id) => {
@@ -10,8 +10,6 @@ module.exports = {
         }
         
         processNotice(db. preData);
-        sendPush(db, preData);
-
         try {
             await db.query(insertQuery, [user_id, type]);
         } catch (err) {
