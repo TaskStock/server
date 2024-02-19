@@ -188,8 +188,8 @@ function settlementScheduler(timezone){
 }
 
 // 알림 스케쥴링
-function alarmScheduler(timezone){
-    const nextAlarm = transdate.getAlarmTimeInUTC(timezone);
+function alarmSchedulerIn11PM(timezone){
+    const nextAlarm = transdate.getAlarmTime11PM(timezone);
     
     // const test = new Date();
     // test.setTime(test.getTime()+3000);
@@ -203,12 +203,36 @@ function alarmScheduler(timezone){
         .then((results)=>{
             results.forEach((result, index)=>{
                 if(result.status !== 'fulfilled'){
-                    console.log(`${index}번째 스케쥴러 실패:`, result.reason);
+                    console.log(`${index}번째 스케쥴러 실패(alarmSchedulerIn11PM) :`, result.reason);
                 }
             });
         });
 
-        alarmScheduler(timezone);
+        alarmSchedulerIn11PM(timezone);
+    });
+}
+
+function alarmSchedulerIn9AM(timezone){
+    const nextAlarm = transdate.getAlarmTime9AM(timezone);
+    
+    // const test = new Date();
+    // test.setTime(test.getTime()+3000);
+
+    schedule.scheduleJob(nextAlarm, async function() {
+        // 비동기로 각 스케쥴러 작업 실행
+
+        await Promise.allSettled([
+            notice.sendMultiPushInMorning(timezone)
+        ])
+        .then((results)=>{
+            results.forEach((result, index)=>{
+                if(result.status !== 'fulfilled'){
+                    console.log(`${index}번째 스케쥴러 실패(alarmSchedulerIn9AM) :`, result.reason);
+                }
+            });
+        });
+
+        alarmSchedulerIn9AM(timezone);
     });
 }
 
@@ -216,6 +240,6 @@ module.exports = {
     scheduling: () => {
         // const timeZones = ['Asia/Seoul']; // 타임존 목록
         const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
-        timeZones.forEach(tz => {settlementScheduler(tz), alarmScheduler(tz)}); // 각 타임존에 대해 함수 호출
+        timeZones.forEach(tz => {settlementScheduler(tz), alarmSchedulerIn11PM(tz), alarmSchedulerIn9AM(tz)}); // 각 타임존에 대해 함수 호출
     }
 }

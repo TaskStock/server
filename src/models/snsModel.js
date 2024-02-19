@@ -18,7 +18,6 @@ module.exports = {
             return false;
         }
     },
-
     // 비공개인 애가 공개인 애한테 팔로우를 걸었어, 알람에 뜸 - 공개인 애가 비공개인 애한테 팔로우 요청을 보냄
     followUser: async(db, follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
@@ -137,8 +136,8 @@ module.exports = {
                 followerPending: followerPending,
                 private: followerPrivate // 내 입장 private
             };
-            await processNotice(predata);
-            await sendPush(predata);
+            await processNotice(db, predata);
+            await sendPush(db, predata);
 
             return true;
         } catch (e) {
@@ -285,7 +284,6 @@ module.exports = {
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
-        WHERE FM.following_id = $1
     `;
         //내가 팔로우하는 사람들 (F.follower_id = user_id)
         const followingQuery = `
@@ -308,7 +306,6 @@ module.exports = {
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
-        WHERE FM.follower_id = $1
         `;
         
         try {
@@ -318,6 +315,68 @@ module.exports = {
         } catch (e) {
             e.name = 'showFollowListError';
             throw e;
+        }
+    },
+    showTargetFollowList: async(db, user_id, target_id) => {
+        // user_id = 조회하는 사람(기준) = $1, target_id = 조회당하는 사람 = $2
+        //조회 당하는 사람을 팔로우하는 사람들 가져오기
+        const followerQuery = `
+        SELECT
+            U.user_id,
+            U.image,
+            U.user_name,
+            U.cumulative_value,
+            U.private,
+            U.strategy,
+            CASE
+                WHEN F2.pending IS NOT NULL THEN F2.pending
+                ELSE false
+            END AS "pending",
+            CASE
+                WHEN F2.pending IS NOT NULL AND F2.pending = false then true
+                ELSE false
+            END AS "isFollowingYou",
+            CASE 
+                WHEN F3.pending IS NOT NULL AND F3.pending = false then true
+                ELSE false
+            END AS "isFollowingMe"
+        FROM "User" U
+        JOIN "FollowMap" F1 ON U.user_id = F1.follower_id AND F1.following_id = $2
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        LEFT JOIN "FollowMap" F3 ON U.user_id = F3.follower_id AND F3.following_id = $1
+        `
+        // user_id = 조회하는 사람(기준) = $1, target_id = 조회당하는 사람 = $2
+        //조회 당하는 사람이 팔로우하는 사람들 가져오기
+        const followingQuery = `
+        SELECT
+        U.user_id,
+        U.image,
+        U.user_name,
+        U.cumulative_value,
+        U.private,
+        U.strategy,
+        F1.pending, 
+        CASE
+            WHEN F2.pending IS NOT NULL AND F2.pending = false THEN true
+            ELSE false
+        END AS "isFollowingYou",
+        CASE
+            WHEN F3.pending IS NOT NULL AND F3.pending = false THEN true
+            ELSE false
+        END AS "isFollowingMe"
+        FROM "User" U
+        JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $2
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        LEFT JOIN "FollowMap" F3 ON U.user_id = F3.follower_id AND F3.following_id = $1
+        `
+        try {
+            const {rows: followerList} = await db.query(followerQuery, [user_id, target_id]);
+            const {rows: followingList} = await db.query(followingQuery, [user_id, target_id]);
+
+            return [followerList, followingList];
+        } catch (err) {
+            err.name = 'showTargetFollowListError'
+            throw err;
         }
     },
     editUserInfo: async(db, user_id, user_name, introduce) => {
@@ -404,8 +463,8 @@ module.exports = {
                 following_id: following_id, // 터치하면 이동할 대상
                 type: 'general' // 알림 타입
             };
-            await processNotice(predata);
-            await sendPush(predata);
+            await processNotice(db, predata);
+            await sendPush(db, predata);
 
             return true;
         } catch (e) {

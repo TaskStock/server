@@ -1,8 +1,16 @@
+const { processNotice } = require('../service/noticeService.js')
+
 module.exports = {
     giveBadge: async(db, type, user_id) => {
         const insertQuery = 'INSERT INTO "Badge" (user_id, type) VALUES ($1, $2)';
-        
         try {
+            const preData = {
+                user_id: user_id,
+                type: 'badge'
+            }
+            
+            processNotice(db, preData);
+        
             await db.query(insertQuery, [user_id, type]);
         } catch (err) {
             err.name = 'giveBadgeError';
