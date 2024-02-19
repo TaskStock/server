@@ -2,7 +2,8 @@ const snsModel = require('../models/snsModel.js');
 const db = require('../config/db.js');
 const {bucket} = require('../config/multerConfig.js');
 const badgeModel = require('../models/badgeModel.js');
-const sharp = require('sharp')
+const sharp = require('sharp');
+const exifReader = require('exif-reader');
 
 module.exports = {
     changePrivate: async(req, res, next) => {
@@ -171,7 +172,7 @@ module.exports = {
             
             // 이미지 없는 경우
             if (!image_file) {
-                return res.status(400).json({
+                return res.status(400 ).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
                 });
@@ -180,17 +181,40 @@ module.exports = {
             // 이미지 파일 압축
             const buffer = image_file.buffer;
             const metadata = await sharp(buffer).metadata();
+
+            // exif-reader로 정보 파싱
+            let exif;
+            if (metadata.exif) {
+                exif = exifReader(metadata.exif);
+            }
+            
+            // 회전 각도 결정
+            let rotation = 0;
+            if (exif && exif.image && exif.image.Orientation) {
+                switch (exif.image.Orientation) {
+                    case 3:
+                        rotation = 180;
+                        break;
+                    case 6:
+                        rotation = 90;
+                        break;
+                    case 8:
+                        rotation = 270;
+                        break;
+                }
+            }
+
             let compressedBuffer;
             
-            if (metadata.width > 320) {
+            if (metadata.width >= 320) {
                 compressedBuffer = await sharp(buffer)
-                    .withMetadata()
-                    .resize({ width: 320, height: 320, fit: 'inside' })
+                    .rotate(rotation)
+                    .resize({ width: 320 })
                     .jpeg({ quality: 70 })
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
-                    .withMetadata()
+                    .rotate(rotation)
                     .jpeg({ quality: 70 })
                     .toBuffer();
             }
@@ -277,33 +301,28 @@ module.exports = {
         }
     },
     changeDefaultImage: async(req, res, next) => {
-        const user_id = req.user.user_id;
-        const changeResult = await snsModel.changeDefaultImage(db, user_id);
-        
-        if (changeResult) {
+        try {
+            const user_id = req.user.user_id;
             // update전 기존 이미지 삭제
             const beforeUrl = await snsModel.checkUserImage(db, user_id);
-
+            
             // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
             const intTheBucket = beforeUrl.includes("taskstock-bucket-1");
             if (beforeUrl && intTheBucket) {
-
+                
                 const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
                 const beforeFilename = beforeUrl.substring(lastSlashIndex); // 마지막 슬래시 이후 문자열 추출
                 const beforeBlob = bucket.file(beforeFilename);
-                try {
-                    await beforeBlob.delete();
-                } catch (err) {
-                    next(err);
-                }
+                await beforeBlob.delete();
+                await snsModel.changeDefaultImage(db, user_id);
+                return res.status(200).json({
+                    result: "success",
+                });
             }
-
-            return res.status(200).json({
-                result: "success",
-            });
-        } else {
+        } catch (err) {
             next(err);
         }
+    
     },
     cancelFollow: async(req, res, next) => {
         const cn = await db.connect();
