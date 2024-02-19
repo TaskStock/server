@@ -180,6 +180,8 @@ module.exports = {
             // 이미지 파일 압축
             const buffer = image_file.buffer;
             const metadata = await sharp(buffer).metadata();
+            console.log("Before processing:", metadata);
+            
             let compressedBuffer;
             
             if (metadata.width >= 320) {
@@ -196,7 +198,10 @@ module.exports = {
                     .withMetadata()
                     .toBuffer();
             }
-        
+            
+            const metadataAfter = await sharp(imageBuffer).metadata();
+            console.log("After processing:", metadataAfter);
+
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
             const blobStream = blob.createWriteStream({
