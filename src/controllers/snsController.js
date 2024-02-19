@@ -179,30 +179,21 @@ module.exports = {
 
             // 이미지 파일 압축
             const buffer = image_file.buffer;
-            // const metadata = await sharp(buffer).metadata();
+            const metadata = await sharp(buffer).metadata();
             let compressedBuffer;
-
-            compressedBuffer = await sharp(buffer)
-                .rotate()
-                .withMetadata()
-                .jpeg({ quality: 70 })
-                .toBuffer();
-
             
-            // if (metadata.width > 320) {
-            //     compressedBuffer = await sharp(buffer)
-            //         .rotate()
-            //         .withMetadata()
-            //         .resize({ width: 320 })
-            //         .jpeg({ quality: 70 })
-            //         .toBuffer();
-            // } else {
-            //     compressedBuffer = await sharp(buffer)
-            //         .rotate()
-            //         .withMetadata()
-            //         .jpeg({ quality: 70 })
-            //         .toBuffer();
-            // }
+            if (metadata.width > 320) {
+                compressedBuffer = await sharp(buffer)
+                    .withMetadata()
+                    .resize({ width: 320, height: 320, fit: 'inside' })
+                    .jpeg({ quality: 70 })
+                    .toBuffer();
+            } else {
+                compressedBuffer = await sharp(buffer)
+                    .withMetadata()
+                    .jpeg({ quality: 70 })
+                    .toBuffer();
+            }
         
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
@@ -221,7 +212,7 @@ module.exports = {
                 // 파일 업로드 후 공개적으로 접근 가능하도록 설정
                 await blob.makePublic();
                 
-            // update전 기존 이미지 삭제
+                // update전 기존 이미지 삭제
                 const beforeUrl = await snsModel.checkUserImage(db, user_id);
 
                 // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
@@ -290,6 +281,23 @@ module.exports = {
         const changeResult = await snsModel.changeDefaultImage(db, user_id);
         
         if (changeResult) {
+            // update전 기존 이미지 삭제
+            const beforeUrl = await snsModel.checkUserImage(db, user_id);
+
+            // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
+            const intTheBucket = beforeUrl.includes("taskstock-bucket-1");
+            if (beforeUrl && intTheBucket) {
+
+                const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
+                const beforeFilename = beforeUrl.substring(lastSlashIndex); // 마지막 슬래시 이후 문자열 추출
+                const beforeBlob = bucket.file(beforeFilename);
+                try {
+                    await beforeBlob.delete();
+                } catch (err) {
+                    next(err);
+                }
+            }
+
             return res.status(200).json({
                 result: "success",
             });
