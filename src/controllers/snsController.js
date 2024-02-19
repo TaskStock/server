@@ -2,7 +2,8 @@ const snsModel = require('../models/snsModel.js');
 const db = require('../config/db.js');
 const {bucket} = require('../config/multerConfig.js');
 const badgeModel = require('../models/badgeModel.js');
-const sharp = require('sharp')
+const sharp = require('sharp');
+const exifReader = require('exif-reader');
 
 module.exports = {
     changePrivate: async(req, res, next) => {
@@ -171,12 +172,52 @@ module.exports = {
             
             // 이미지 없는 경우
             if (!image_file) {
-                return res.status(400).json({
+                return res.status(400 ).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
                 });
             }
 
+            // 이미지 파일 압축
+            const buffer = image_file.buffer;
+            const metadata = await sharp(buffer).metadata();
+
+            // exif-reader로 정보 파싱
+            let exif;
+            if (metadata.exif) {
+                exif = exifReader(metadata.exif);
+            }
+            
+            // 회전 각도 결정
+            let rotation = 0;
+            if (exif && exif.image && exif.image.Orientation) {
+                switch (exif.image.Orientation) {
+                    case 3:
+                        rotation = 180;
+                        break;
+                    case 6:
+                        rotation = 90;
+                        break;
+                    case 8:
+                        rotation = 270;
+                        break;
+                }
+            }
+
+            let compressedBuffer;
+            
+            if (metadata.width >= 320) {
+                compressedBuffer = await sharp(buffer)
+                    .rotate(rotation)
+                    .resize({ width: 320 })
+                    .jpeg({ quality: 70 })
+                    .toBuffer();
+            } else {
+                compressedBuffer = await sharp(buffer)
+                    .rotate(rotation)
+                    .jpeg({ quality: 70 })
+                    .toBuffer();
+            }
         
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
