@@ -184,13 +184,13 @@ module.exports = {
             
             if (metadata.width > 320) {
                 compressedBuffer = await sharp(buffer)
-                    .rotate()
                     .resize({ width: 320 })
+                    .withMetadata()
                     .jpeg({ quality: 70 })
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
-                    .rotate()
+                    .withMetadata()
                     .jpeg({ quality: 70 })
                     .toBuffer();
             }
