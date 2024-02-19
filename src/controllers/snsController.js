@@ -179,23 +179,30 @@ module.exports = {
 
             // 이미지 파일 압축
             const buffer = image_file.buffer;
-            const metadata = await sharp(buffer).metadata();
+            // const metadata = await sharp(buffer).metadata();
             let compressedBuffer;
+
+            compressedBuffer = await sharp(buffer)
+                .rotate()
+                .withMetadata()
+                .jpeg({ quality: 70 })
+                .toBuffer();
+
             
-            if (metadata.width > 320) {
-                compressedBuffer = await sharp(buffer)
-                    .rotate()
-                    .withMetadata()
-                    .resize({ width: 320 })
-                    .jpeg({ quality: 70 })
-                    .toBuffer();
-            } else {
-                compressedBuffer = await sharp(buffer)
-                    .rotate()
-                    .withMetadata()
-                    .jpeg({ quality: 70 })
-                    .toBuffer();
-            }
+            // if (metadata.width > 320) {
+            //     compressedBuffer = await sharp(buffer)
+            //         .rotate()
+            //         .withMetadata()
+            //         .resize({ width: 320 })
+            //         .jpeg({ quality: 70 })
+            //         .toBuffer();
+            // } else {
+            //     compressedBuffer = await sharp(buffer)
+            //         .rotate()
+            //         .withMetadata()
+            //         .jpeg({ quality: 70 })
+            //         .toBuffer();
+            // }
         
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
