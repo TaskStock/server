@@ -7,7 +7,7 @@ const db = require('../config/db.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{
-        const {name, public_range} = req.body;
+        const {name, emoji, public_range} = req.body;
         const user_id = req.user.user_id;
         // public_range
         // none : 비공개
@@ -15,7 +15,7 @@ module.exports = {
         // all : 전체공개
         
         try{
-            await projectModel.insertProject(db, user_id, name, public_range);
+            await projectModel.insertProject(db, user_id, name, emoji, public_range);
 
 			return res.json({result: "success"});
         }catch(error){
@@ -23,11 +23,11 @@ module.exports = {
         }
     },
     updateProject: async(req, res, next) =>{
-        const {project_id, name, public_range, finished} = req.body;
+        const {project_id, name, emoji, public_range, finished} = req.body;
         const user_id = req.user.user_id;
         
         try{
-            await projectModel.updateProject(db, project_id, user_id, name, public_range, finished);
+            await projectModel.updateProject(db, project_id, user_id, name, emoji, public_range, finished);
 
 			return res.json({result: "success"});
         }catch(error){
