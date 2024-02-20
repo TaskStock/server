@@ -40,22 +40,16 @@ module.exports = {
             const following_id = req.body.following_id;
             const notice_id = req.body.notice_id
             
-            const followResult = await snsModel.followUser(cn, follower_id, following_id, notice_id);
+            await snsModel.followUser(cn, follower_id, following_id, notice_id);
 
-            if (followResult) {
-                await cn.query('COMMIT');
-                return res.status(200).json({
-                    result: "success",
-                });
-            } else {
-                await cn.query('ROLLBACK');
-                res.status(400).json({
-                    result: "fail"
-                });
-            }
+            await cn.query('COMMIT');
+            return res.status(200).json({
+                result: "success",
+            });
+
         } catch (err) {
-            next(err);
             await cn.query('ROLLBACK');
+            next(err);
             
         } finally {
             cn.release();
@@ -67,19 +61,14 @@ module.exports = {
             await cn.query('BEGIN');
             const follower_id = req.user.user_id;
             const unfollowing_id = req.body.unfollowing_id;
-            const unfollowResult = await snsModel.unfollowUser(cn, follower_id, unfollowing_id);
+            
+            await snsModel.unfollowUser(cn, follower_id, unfollowing_id);
 
-            if (unfollowResult) {
-                await cn.query('COMMIT');
-                return res.status(200).json({
-                    result: "success"
-                });
-            } else {
-                await cn.query('ROLLBACK');
-                return res.status(400).json({
-                    result: "fail"
-                });
-            }
+            await cn.query('COMMIT');
+            return res.status(200).json({
+                result: "success"
+            });
+
         } catch (err) {
             await cn.query('ROLLBACK');
             next(err);
@@ -198,7 +187,7 @@ module.exports = {
                     .withMetadata()
                     .toBuffer();
             }
-            
+
             const metadataAfter = await sharp(imageBuffer).metadata();
             console.log("After processing:", metadataAfter);
 
