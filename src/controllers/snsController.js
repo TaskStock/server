@@ -160,7 +160,7 @@ module.exports = {
             
             // 이미지 없는 경우
             if (!image_file) {
-                return res.status(400 ).json({
+                return res.status(400).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
                 });
@@ -169,27 +169,25 @@ module.exports = {
             // 이미지 파일 압축
             const buffer = image_file.buffer;
             const metadata = await sharp(buffer).metadata();
-            // console.log("Before processing:", metadata);
+            console.log("Before processing:", metadata);
             
             let compressedBuffer;
             
             if (metadata.width >= 320) {
                 compressedBuffer = await sharp(buffer)
-                    .rotate(0)
                     .resize({ width: 320 })
                     .jpeg({ quality: 70 })
                     .withMetadata()
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
-                    .rotate(0)
                     .jpeg({ quality: 70 })
                     .withMetadata()
                     .toBuffer();
             }
 
             const metadataAfter = await sharp(compressedBuffer).metadata();
-            // console.log("After processing:", metadataAfter);
+            console.log("After processing:", metadataAfter);
 
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
@@ -200,7 +198,7 @@ module.exports = {
                     metadata: {
                         originalWidth: metadataAfter.width.toString(), // 커스텀 메타데이터 예시
                         originalHeight: metadataAfter.height.toString(), // 커스텀 메타데이터 예시
-                        // 추가적으로 필요한 메타데이터를 설정할 수 있습니다.
+                        orientation: "1"
                     }
                 }
             });
