@@ -275,6 +275,7 @@ module.exports = {
             AND FM.follower_id = $1
             AND FM.pending = false;
             `;
+
             //유저 삭제
             const deleteQuery = 'DELETE FROM "User" WHERE user_id = $1';
                         
@@ -285,8 +286,8 @@ module.exports = {
 
             await db.query(followingQuery, [user_id]);
             await db.query(followerQuery, [user_id]);
-            await db.query(deleteQuery, [user_id])
             await db.query(noticeDeleteQuery, [user_id]);
+            await db.query(deleteQuery, [user_id])
             
             return true;
 
