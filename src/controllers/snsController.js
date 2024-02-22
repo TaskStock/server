@@ -169,7 +169,7 @@ module.exports = {
             // 이미지 파일 압축
             const buffer = image_file.buffer;
             const metadata = await sharp(buffer).metadata();
-            console.log("Before processing:", metadata);
+            // console.log("Before processing:", metadata);
             
             let compressedBuffer;
             
@@ -187,7 +187,7 @@ module.exports = {
             }
 
             const metadataAfter = await sharp(compressedBuffer).metadata();
-            console.log("After processing:", metadataAfter);
+            // console.log("After processing:", metadataAfter);
 
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
