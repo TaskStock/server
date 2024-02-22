@@ -172,15 +172,19 @@ module.exports = {
             // console.log("Before processing:", metadata);
             
             let compressedBuffer;
+            // console.log(metadata.width)
+            // console.log(metadata.height)
+            // console.log(metadata.width / metadata.height)
             
             if (metadata.width / metadata.height == 0.75) {
+                // console.log("회전시키자")
                 compressedBuffer = await sharp(buffer)
+                    .rotate(0)
                     .resize({ 
                         width: 300,
                         height: 300,
                     })
                     .jpeg({ quality: 70 })
-                    .rotate(90)
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
