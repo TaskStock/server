@@ -567,22 +567,39 @@ module.exports = {
         WHERE U.user_id = $1
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
-        const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
+        const todoQuery = `
+        SELECT * FROM "Todo" 
+        WHERE user_id = $1 
+        AND (
+            public_range = 'all' 
+            OR (public_range = 'follow' AND EXISTS (
+                SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
+            ))
+        )
+        ORDER BY date;
+        `;
         const projectQuery = `
         SELECT P.*, COUNT(DISTINCT T.todo_id) AS todo_count, COUNT(DISTINCT R.retrospect_id) AS retrospect_count
         FROM "Project" P
         LEFT JOIN "Todo" T ON P.project_id = T.project_id AND T.user_id = $1
         LEFT JOIN "Retrospect" R ON P.project_id = R.project_id AND R.user_id = $1
-        GROUP BY P.project_id 
-        HAVING P.user_id = $1
+        WHERE P.user_id = $1
+        AND (
+            P.public_range = 'all'
+            OR (P.public_range = 'follow' AND EXISTS (
+                SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
+            ))
+        )
+        GROUP BY P.project_id
         ORDER BY P.project_id;
         `;
         try {
             const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
-            const {rows: todoRows} = await db.query(todoQuery, [target_id]);
-            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
 
+            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
+            
+            const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
             
 
             return [targetRows[0], valueRows, todoRows, projectRows];
