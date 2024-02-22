@@ -569,9 +569,9 @@ module.exports = {
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
         const todoQuery = `
         SELECT T.*
-        FROM "Todo" T
+        FROM "Todo" T, P.public_range
         LEFT JOIN "Project" P ON T.project_id = P.project_id
-        WHERE T.user_id = $1 
+        WHERE T.user_id = $1
         AND (
             P.public_range = 'all'
             OR (P.public_range = 'follow' AND EXISTS (
@@ -579,7 +579,6 @@ module.exports = {
             )
             OR T.project_id IS NULL
             )
-        AND P.public_range != 'none'
         ORDER BY T.date;
         `;
         const projectQuery = `
