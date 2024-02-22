@@ -568,7 +568,7 @@ module.exports = {
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
         const todoQuery = `
-        SELECT T.*, P.*
+        SELECT T.*
         FROM "Todo" T
         LEFT JOIN "Project" P ON T.project_id = P.project_id
         WHERE T.user_id = $1
@@ -601,8 +601,6 @@ module.exports = {
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
             const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
             const {rows: projectRows} = await db.query(projectQuery, [target_id]);
-            
-            
 
             return [targetRows[0], valueRows, todoRows, projectRows];
         } catch (e) {
