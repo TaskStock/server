@@ -568,15 +568,17 @@ module.exports = {
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
         const todoQuery = `
-        SELECT * FROM "Todo" 
-        WHERE user_id = $1 
+        SELECT T.* 
+        FROM "Todo" T
+        LEFT JOIN "Project" P ON T.project_id = P.project_id
+        WHERE T.user_id = $1 
         AND (
-            public_range = 'all' 
-            OR (public_range = 'follow' AND EXISTS (
+            P.public_range = 'all'
+            OR (P.public_range = 'follow' AND EXISTS (
                 SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
             ))
-        )
-        ORDER BY date;
+            OR T.project_id IS NULL
+        ORDER BY T.date;
         `;
         const projectQuery = `
         SELECT P.*, COUNT(DISTINCT T.todo_id) AS todo_count, COUNT(DISTINCT R.retrospect_id) AS retrospect_count
