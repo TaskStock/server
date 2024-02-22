@@ -40,22 +40,16 @@ module.exports = {
             const following_id = req.body.following_id;
             const notice_id = req.body.notice_id
             
-            const followResult = await snsModel.followUser(cn, follower_id, following_id, notice_id);
+            await snsModel.followUser(cn, follower_id, following_id, notice_id);
 
-            if (followResult) {
-                await cn.query('COMMIT');
-                return res.status(200).json({
-                    result: "success",
-                });
-            } else {
-                await cn.query('ROLLBACK');
-                res.status(400).json({
-                    result: "fail"
-                });
-            }
+            await cn.query('COMMIT');
+            return res.status(200).json({
+                result: "success",
+            });
+
         } catch (err) {
-            next(err);
             await cn.query('ROLLBACK');
+            next(err);
             
         } finally {
             cn.release();
@@ -67,19 +61,14 @@ module.exports = {
             await cn.query('BEGIN');
             const follower_id = req.user.user_id;
             const unfollowing_id = req.body.unfollowing_id;
-            const unfollowResult = await snsModel.unfollowUser(cn, follower_id, unfollowing_id);
+            
+            await snsModel.unfollowUser(cn, follower_id, unfollowing_id);
 
-            if (unfollowResult) {
-                await cn.query('COMMIT');
-                return res.status(200).json({
-                    result: "success"
-                });
-            } else {
-                await cn.query('ROLLBACK');
-                return res.status(400).json({
-                    result: "fail"
-                });
-            }
+            await cn.query('COMMIT');
+            return res.status(200).json({
+                result: "success"
+            });
+
         } catch (err) {
             await cn.query('ROLLBACK');
             next(err);
@@ -171,7 +160,7 @@ module.exports = {
             
             // 이미지 없는 경우
             if (!image_file) {
-                return res.status(400 ).json({
+                return res.status(400).json({
                     message: "이미지 파일이 없습니다.",
                     result: "fail"
                 });
@@ -180,34 +169,45 @@ module.exports = {
             // 이미지 파일 압축
             const buffer = image_file.buffer;
             const metadata = await sharp(buffer).metadata();
-            console.log("Before processing:", metadata);
+            // console.log("Before processing:", metadata);
             
             let compressedBuffer;
             
-            if (metadata.width >= 320) {
+            if (metadata.width / metadata.height == 0.75) {
                 compressedBuffer = await sharp(buffer)
-                    .rotate(false)
-                    .resize({ width: 320 })
+                    .rotate(90)
+                    .resize({ 
+                        width: 300,
+                        height: 300,
+                    })
                     .jpeg({ quality: 70 })
                     .withMetadata()
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
-                    .rotate(false)
+                    .resize({ 
+                        width: 300,
+                        height: 300,
+                    })
                     .jpeg({ quality: 70 })
                     .withMetadata()
                     .toBuffer();
             }
-            
-            const metadataAfter = await sharp(imageBuffer).metadata();
-            console.log("After processing:", metadataAfter);
+
+            const metadataAfter = await sharp(compressedBuffer).metadata();
+            // console.log("After processing:", metadataAfter);
 
             const uniqueFileName = `${Date.now()}-${user_id}`;
             const blob = bucket.file(uniqueFileName);
             const blobStream = blob.createWriteStream({
                 resumable: false,
                 metadata: {
-                    contentType: image_file.mimetype
+                    contentType: 'image/jpeg',
+                    metadata: {
+                        originalWidth: metadataAfter.width.toString(), // 커스텀 메타데이터 예시
+                        originalHeight: metadataAfter.height.toString(), // 커스텀 메타데이터 예시
+                        orientation: "1"
+                    }
                 }
             });
             //오류 발생 시 처리

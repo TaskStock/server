@@ -32,67 +32,32 @@ module.exports = {
         */
         let isFollowingMe;
         let isFollowingYou;
-        let followerPrivate;
         let followingPending;
         
         const insertQuery = `
-        WITH inserted AS (
-            INSERT INTO "FollowMap" (follower_id, following_id, pending)
-            SELECT
-                $1,
-                $2,
-                CASE
-                    WHEN U.private = false THEN false
-                    ELSE true
-                END
-            FROM
-                "User" U
-            WHERE
-                U.user_id = $2
-            RETURNING follower_id, pending
-        )
-        SELECT i.pending, U.private
-        FROM inserted i
-        JOIN "User" U ON i.follower_id = U.user_id;
+        INSERT INTO "FollowMap" (follower_id, following_id, pending)
+        SELECT
+            $1,
+            $2,
+            CASE
+                WHEN U.private = false THEN false
+                ELSE true
+            END
+        FROM
+            "User" U
+        WHERE
+            U.user_id = $2
+        RETURNING pending
         `;
 
-        try {
-            if (notice_id != undefined) {
-                const noticeQuery = `
-                UPDATE "Notice"
-                SET info = jsonb_set(
-                                jsonb_set(
-                                    info, 
-                                    '{pending}', 
-                                    (info ->> 'private')::jsonb
-                                ), 
-                                '{isFollowingYou}', 
-                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
-                            )
-                WHERE notice_id = $1;
-                `
-                await db.query(noticeQuery, [notice_id])
-            } else {
-                const noticeQuery2 = `
-                UPDATE "Notice"
-                SET info = jsonb_set(
-                                jsonb_set(
-                                    info, 
-                                    '{pending}', 
-                                    (info ->> 'private')::jsonb
-                                ), 
-                                '{isFollowingYou}', 
-                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
-                            )
-                WHERE user_id = $1 AND info ->> 'target_id' = $2
-                `
-                //user_id(팔로우 버튼 누른 주인 == 알림 주인)
-                await db.query(noticeQuery2, [follower_id, following_id])
-            }
+        const privateQuery = 'SELECT private FROM "User" from user_id = $1'
 
+        try {
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
             const followerPending = insertRows[0].pending;
-            followerPrivate = insertRows[0].private;
+
+            const {rows: privateRows} = await db.query(privateQuery, [follower_id]);
+            const followerPrivate = privateRows[0].private;
             
             // 상대 입장에서의 isFollowingYou 체크 
             const checkQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
@@ -109,7 +74,7 @@ module.exports = {
                 followingPending = false;
             }
 
-            if (followerPending == false) {
+            if (followerPending == false) { //상대가 공개 계정이라 pending이 false면
                 const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
                 const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
                 await db.query(updateQuery1, [following_id])
@@ -125,6 +90,41 @@ module.exports = {
                 isFollowingMe = false;
             }
 
+            //알림 상태 수정
+            if (notice_id != undefined) { // 알림 창에서 팔로우 요청을 하면
+                const noticeQuery = `
+                UPDATE "Notice"
+                SET info = jsonb_set(
+                                jsonb_set(
+                                    info, 
+                                    '{pending}', 
+                                    (info ->> 'private')::jsonb
+                                ), 
+                                '{isFollowingYou}', 
+                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
+                            )
+                WHERE notice_id = $1;
+                `
+                await db.query(noticeQuery, [notice_id])
+            } else if (isFollowingMe) { // 알림 창 밖에서 팔로우 요청을 하면
+                const noticeQuery2 = `
+                UPDATE "Notice"
+                SET info = jsonb_set(
+                                jsonb_set(
+                                    info, 
+                                    '{pending}', 
+                                    (info ->> 'private')::jsonb
+                                ), 
+                                '{isFollowingYou}', 
+                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
+                            )
+                WHERE user_id = $1 AND info ->> 'target_id' = $2
+                `
+                //user_id(팔로우 버튼 누른 주인 == 알림 주인)
+                await db.query(noticeQuery2, [follower_id, following_id])
+            }
+            // 처음 팔로우/팔로잉 관계가 형성되는 경우 알림 수정 필요 없음.
+
             // 상대에게 알림 생성
             const predata = {
                 user_id: following_id, 
@@ -139,10 +139,9 @@ module.exports = {
             await processNotice(db, predata);
             await sendPush(db, predata);
 
-            return true;
         } catch (e) {
             e.name = 'followUserError';
-            return false;
+            throw e
         }
     },
     unfollowUser: async(db, follower_id, unfollowing_id) => {
@@ -159,10 +158,9 @@ module.exports = {
             await db.query(updateQuery2, [follower_id]) 
             await db.query(noticeQuery, [unfollowing_id, follower_id])
 
-            return true;
         } catch (e) {
             e.name = 'unfollowUserError';
-            return false;
+            
         }
     },
     searchUser: async(db, searchTarget, searchScope, user_id) => {
@@ -569,22 +567,42 @@ module.exports = {
         WHERE U.user_id = $1
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
-        const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
+        const todoQuery = `
+        SELECT T.*, P.*
+        FROM "Todo" T
+        LEFT JOIN "Project" P ON T.project_id = P.project_id
+        WHERE T.user_id = $1
+        AND (
+            P.public_range = 'all'
+            OR (P.public_range = 'follow' AND EXISTS (
+                SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
+            ))
+            OR T.project_id IS NULL
+            )
+        ORDER BY T.date;
+        `;
         const projectQuery = `
         SELECT P.*, COUNT(DISTINCT T.todo_id) AS todo_count, COUNT(DISTINCT R.retrospect_id) AS retrospect_count
         FROM "Project" P
         LEFT JOIN "Todo" T ON P.project_id = T.project_id AND T.user_id = $1
         LEFT JOIN "Retrospect" R ON P.project_id = R.project_id AND R.user_id = $1
-        GROUP BY P.project_id 
-        HAVING P.user_id = $1
+        WHERE P.user_id = $1
+        AND (
+            P.public_range = 'all'
+            OR (P.public_range = 'follow' AND EXISTS (
+                SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
+            ))
+        )
+        GROUP BY P.project_id
         ORDER BY P.project_id;
         `;
         try {
             const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
-            const {rows: todoRows} = await db.query(todoQuery, [target_id]);
-            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
 
+            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
+            
+            const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
             
 
             return [targetRows[0], valueRows, todoRows, projectRows];
