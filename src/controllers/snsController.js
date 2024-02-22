@@ -173,15 +173,20 @@ module.exports = {
             
             let compressedBuffer;
             
-            if (metadata.width >= 320) {
+            if (metadata.width >= 200) {
                 compressedBuffer = await sharp(buffer)
-                    .resize({ width: 320 })
-                    .jpeg({ quality: 70 })
+                    .resize({ 
+                        width: 200,
+                        height:200,
+                        fit: sharp.fit.cover,
+                        position: sharp.strategy.entropy
+                    })
+                    .jpeg({ quality: 80 })
                     .withMetadata()
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
-                    .jpeg({ quality: 70 })
+                    .jpeg({ quality: 80 })
                     .withMetadata()
                     .toBuffer();
             }
