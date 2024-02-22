@@ -578,7 +578,7 @@ module.exports = {
                 SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
             ))
             OR T.project_id IS NULL
-            )
+        )
         ORDER BY T.date;
         `;
         const projectQuery = `
@@ -599,10 +599,9 @@ module.exports = {
         try {
             const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
-
+            const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
             const {rows: projectRows} = await db.query(projectQuery, [target_id]);
             
-            const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
             
 
             return [targetRows[0], valueRows, todoRows, projectRows];
