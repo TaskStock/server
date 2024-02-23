@@ -176,7 +176,7 @@ module.exports = {
             // console.log(metadata.height)
             // console.log(metadata.width / metadata.height)
             
-            if (metadata.width / metadata.height == 0.75) {
+            if (metadata.height / metadata.width == 0.75) {
                 // console.log("회전시키자")
                 compressedBuffer = await sharp(buffer)
                     .rotate(90)
