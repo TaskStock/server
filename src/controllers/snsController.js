@@ -182,7 +182,7 @@ module.exports = {
                     .rotate(90)
                     .resize({ 
                         width: 300,
-                        height: 300
+                        height: 400
                     })
                     .jpeg({ quality: 80 })
                     .toBuffer();
