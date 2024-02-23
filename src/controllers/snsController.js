@@ -179,12 +179,12 @@ module.exports = {
             if (metadata.width / metadata.height == 0.75) {
                 // console.log("회전시키자")
                 compressedBuffer = await sharp(buffer)
-                    .rotate(0)
+                    .rotate(90)
                     .resize({ 
                         width: 300,
-                        height: 300,
+                        height: 300
                     })
-                    .jpeg({ quality: 70 })
+                    .jpeg({ quality: 80 })
                     .toBuffer();
             } else {
                 compressedBuffer = await sharp(buffer)
@@ -192,8 +192,7 @@ module.exports = {
                         width: 300,
                         height: 300,
                     })
-                    .jpeg({ quality: 70 })
-                    .withMetadata()
+                    .jpeg({ quality: 80 })
                     .toBuffer();
             }
 
@@ -215,7 +214,7 @@ module.exports = {
             });
             //오류 발생 시 처리
             blobStream.on('error', err => {
-                next(err);
+                throw err;
             });
             //파일 업로드 완료 시
             blobStream.on('finish', async () => {
@@ -235,7 +234,7 @@ module.exports = {
                     try {
                         await beforeBlob.delete();
                     } catch (err) {
-                        next(err);
+                        throw err;
                     }
                 }
                 //게시 및 프로필 이미지 경로를 DB에 저장
