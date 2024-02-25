@@ -579,7 +579,7 @@ module.exports = {
             ))
             OR T.project_id IS NULL
         )
-        ORDER BY T.date;
+        ORDER BY T.todo_id;
         `;
         const projectQuery = `
         SELECT P.*, COUNT(DISTINCT T.todo_id) AS todo_count, COUNT(DISTINCT R.retrospect_id) AS retrospect_count
@@ -600,7 +600,7 @@ module.exports = {
             const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
             const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
-            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
+            const {rows: projectRows} = await db.query(projectQuery, [target_id, my_id]);
 
             return [targetRows[0], valueRows, todoRows, projectRows];
         } catch (e) {

@@ -176,25 +176,34 @@ module.exports = {
             // console.log(metadata.height)
             // console.log(metadata.width / metadata.height)
             
-            if (metadata.height / metadata.width == 0.75) {
-                // console.log("회전시키자")
-                compressedBuffer = await sharp(buffer)
-                    .rotate(90)
-                    .resize({ 
-                        width: 300,
-                        height: 400
-                    })
-                    .jpeg({ quality: 80 })
-                    .toBuffer();
-            } else {
-                compressedBuffer = await sharp(buffer)
-                    .resize({ 
-                        width: 300,
-                        height: 300,
-                    })
-                    .jpeg({ quality: 80 })
-                    .toBuffer();
-            }
+            // if (metadata.height / metadata.width == 0.75) {
+            //     // console.log("회전시키자")
+            //     compressedBuffer = await sharp(buffer)
+            //         .rotate(90)
+            //         .resize({ 
+            //             width: 300,
+            //             height: 400
+            //         })
+            //         .jpeg({ quality: 80 })
+            //         .toBuffer();
+            // } else {
+            //     compressedBuffer = await sharp(buffer)
+            //         .resize({ 
+            //             width: 300,
+            //             height: 300,
+            //         })
+            //         .jpeg({ quality: 80 })
+            //         .toBuffer();
+            // }
+
+            compressedBuffer = await sharp(buffer)
+                .rotate()
+                .resize({ 
+                    width: 300,
+                    height: 300,
+                })
+                .jpeg({ quality: 80 })
+                .toBuffer();
 
             const metadataAfter = await sharp(compressedBuffer).metadata();
             // console.log("After processing:", metadataAfter);
