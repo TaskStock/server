@@ -285,7 +285,7 @@ module.exports = {
                 const user_name = await accountModel.getUserNameById(db, user_id);
 
                 message = `
-                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n==user_info==\nuser_name: ${user_name}\nuser_id: ${user_id}\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
+                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n==USER INFO==\nuser_name: ${user_name}\nuser_id: ${user_id}\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
                 `;
                 await slackClient.chat.postMessage({
                     channel: '#error',
