@@ -50,7 +50,7 @@ module.exports = {
         RETURNING pending
         `;
 
-        const privateQuery = 'SELECT private FROM "User" from user_id = $1'
+        const privateQuery = 'SELECT private FROM "User" WHERE user_id = $1'
 
         try {
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
