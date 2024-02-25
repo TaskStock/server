@@ -3,6 +3,7 @@ const accountModel = require('../models/accountModel.js');
 const admin = require('../config/FCMconfig.js');
 const slackClient = require('../config/slackConfig.js');
 const db = require('../config/db.js');
+const jwt = require('jsonwebtoken');
 
 module.exports = {
     // TODO : 알림 DB에 추가. user_id, content, notice_type => noticeData에 넣어서 전달
@@ -279,8 +280,12 @@ module.exports = {
             } 
             if (noticeData.type === 'error') {
                 const errorData = noticeData;
+                const accessToken = jwt.decode(noticeData.accessToken);
+                const user_id = accessToken.user_id;
+                const user_name = await accountModel.getUserNameById(db, user_id);
+
                 message = `
-                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
+                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n==user_info==\nuser_name: ${user_name}\nuser_id: ${user_id}\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
                 `;
                 await slackClient.chat.postMessage({
                     channel: '#error',
