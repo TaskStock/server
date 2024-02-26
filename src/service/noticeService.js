@@ -157,7 +157,7 @@ module.exports = {
     sendMultiPushBeforeMidnight: async(region) => {
         const tokens = await noticeModel.getAllFCMTokensInRegion(db, region);
 
-        let tokenChuncks = [];D
+        let tokenChuncks = [];
         
         if (tokens.length == 0) {
             // console.log('FCM토큰이 0개일 경우 알림 발송 안함')
@@ -280,13 +280,25 @@ module.exports = {
             } 
             if (noticeData.type === 'error') {
                 const errorData = noticeData;
-                const accessToken = jwt.decode(noticeData.accessToken);
-                const user_id = accessToken.user_id;
-                const user_name = await accountModel.getUserNameById(db, user_id);
+                let accessToken;
+                let message;
 
-                message = `
-                ===:rotating_light:서버 에러 발생:rotating_light:===\n\n==USER INFO==\nuser_name: ${user_name}\nuser_id: ${user_id}\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
-                `;
+                if (errorData.ReqHeaders.authorization === undefined || errorData.ReqHeaders.authorization === null) {
+                    message = `
+                    ===:rotating_light:서버 에러 발생:rotating_light:===\n\n==USER INFO==\naccess token이 안 넘어옴. 유저 정보 알 수 없음\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
+                    `;
+
+                } else {
+                    accessToken = jwt.decode(errorData.ReqHeaders.authorization.split(' ')[1]);
+                    const user_id = accessToken.user_id;
+                    const user_name = await accountModel.getUserNameById(db, user_id);
+
+                    message = `
+                    ===:rotating_light:서버 에러 발생:rotating_light:===\n\n==USER INFO==\nuser_name: ${user_name}\nuser_id: ${user_id}\n\n===STACK TRACE===\n${errorData.stack}\n\n===ERROR INFO===\n${errorData.message}\n\n===REQUEST BODY===\n${JSON.stringify(errorData.ReqBody)}
+                    `;
+                }
+                
+                
                 await slackClient.chat.postMessage({
                     channel: '#error',
                     text: message

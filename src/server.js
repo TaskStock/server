@@ -92,7 +92,8 @@ app.use(async (err, req, res, next) => {
     // 슬랙 알림 전송
     err.type = 'error';
     err.ReqBody = req.body;
-    err.accessToken = req.headers.authorization.split(' ')[1];
+    err.ReqHeaders = req.headers;
+
     await sendSlack(err);   
     
     // 로그 기록 - 배포 버전에선 삭제
