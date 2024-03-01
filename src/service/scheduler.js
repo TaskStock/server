@@ -239,7 +239,7 @@ function alarmSchedulerIn9AM(timezone){
 module.exports = {
     scheduling: () => {
         // const timeZones = ['Asia/Seoul']; // 타임존 목록
-        const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
+        const timeZones = ['America/New_York', 'Asia/Seoul', 'Europe/London']; // 타임존 목록
         timeZones.forEach(tz => {settlementScheduler(tz), alarmSchedulerIn11PM(tz), alarmSchedulerIn9AM(tz)}); // 각 타임존에 대해 함수 호출
     }
 }
