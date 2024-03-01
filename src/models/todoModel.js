@@ -122,9 +122,9 @@ module.exports = {
             });
         return todo;
     },
-    updateTodoDate: async(db, todo_id, user_id, date)=>{
-        const query = "update \"Todo\" set date=$1 where user_id=$2 and todo_id=$3";
-        const values = [date, user_id, todo_id];
+    updateTodoDate: async(db, todo_id, user_id, date, index)=>{
+        const query = "update \"Todo\" set date=$1, index=$2 where user_id=$3 and todo_id=$4";
+        const values = [date, index, user_id, todo_id];
 
         await db.query(query, values)
             .then(res => {
