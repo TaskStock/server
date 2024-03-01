@@ -369,7 +369,15 @@ module.exports = {
                 }
 
                 const tomorrow = transdate.plusOneDay(todo.date, region);
-                await todoModel.updateTodoDate(cn, todo_id, user_id, tomorrow);
+                const end_date = transdate.plusOneDay(tomorrow, region);
+
+                const index = await todoModel.getHighestIndex(cn, user_id, tomorrow, end_date);
+                let nextIndex = 1;
+                if(index !== undefined){
+                    nextIndex = index.index + 1;
+                }
+
+                await todoModel.updateTodoDate(cn, todo_id, user_id, tomorrow, nextIndex);
             }
             await cn.query('COMMIT');
 			return res.json({result: "success"});
