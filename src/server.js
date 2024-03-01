@@ -43,6 +43,15 @@ const siuserRouter = require("./routers/siuserRouter.js");
 const wishlistRouter = require("./routers/wishlistRouter.js");
 const badgeRouter = require("./routers/badgeRouter.js");
 
+// pm2 설정
+let isDisableKeepAlive = false;
+app.use(function(req, res, next){
+    if(isDisableKeepAlive){
+        res.set('Connection', 'close');
+    }
+    next();
+});
+
 app.get('/', (req, res) => {
     res.send('Hello, Express')
 });
@@ -68,6 +77,14 @@ app.use("/siuser", passport.authenticate('jwt', { session: false }), siuserRoute
 app.use("/wishlist", passport.authenticate('jwt', { session: false }), wishlistRouter);
 app.use("/badge", passport.authenticate('jwt', { session: false }), badgeRouter);
 
+
+// 스케쥴러
+if (process.env.IS_SCHEDULER==='true') {
+    console.log('스케쥴러 설정됨');
+    const scheduler = require("./service/scheduler.js");
+    scheduler.scheduling();
+}
+
 // 오류 처리 미들웨어
 app.use(async (err, req, res, next) => {
     console.log('오류처리 미들웨어 호출')
@@ -75,7 +92,9 @@ app.use(async (err, req, res, next) => {
     // 슬랙 알림 전송
     err.type = 'error';
     err.ReqBody = req.body;
-    await sendSlack(err);
+    err.ReqHeaders = req.headers;
+
+    await sendSlack(err);   
     
     // 로그 기록 - 배포 버전에선 삭제
     // console.error(err.stack);
@@ -88,10 +107,15 @@ app.use(async (err, req, res, next) => {
     
 });
 
-// 스케쥴러
-// const scheduler = require("./service/scheduler.js");
-// scheduler.scheduling();
-
-app.listen(app.get('port'), ()=>{
-    console.log(app.get('port'), '번 포트에서 대기 중')
+app.listen(app.get('port'), () => {
+    process.send('ready');   // pm2 설정
+    console.log(app.get('port'), '번 포트에서 대기 중');
+});
+// pm2 설정
+process.on('SIGINT', function() {
+    isDisableKeepAlive = true;
+    app.close(function (){
+        console.log('server closed');
+        process.exit(0);
+    });
 });

@@ -11,58 +11,51 @@ const OAuth2 = google.auth.OAuth2;
 const oauth2Client = new OAuth2(
     process.env.OAUTH_CLIENT_ID,
     process.env.OAUTH_CLIENT_SECRET,
-    process.env.OAUTH_REDIRECT_URL
 );
 
 //메일 형식 세팅
 let htmlBody, attachedfile;
-function createMailOptions(code, type) {
+function createMailOptions(_code, type) {
+    let code_1 = _code.toString().charAt(0)
+    let code_2 = _code.toString().charAt(1)
+    let code_3 = _code.toString().charAt(2)
+    let code_4 = _code.toString().charAt(3)
+    let code_5 = _code.toString().charAt(4)
+    let code_6 = _code.toString().charAt(5)
+
     switch (type) {
         case "register":
-            htmlBody = registerHTML(code);
+            htmlBody = registerHTML(code_1, code_2, code_3, code_4, code_5, code_6);
             attachedfile = [{
-                filename: 'logo_background.png',
-                path: __dirname + '/../public/images/logo_background.png',
+                filename: 'full_logo_dark.png',
+                path: __dirname + '/../public/images/full_logo_dark.png',
                 cid: 'unique@nodemailer.com'
             }]
             break;
         case "changePW":
-            htmlBody = changePWHTML(code);
+            htmlBody = changePWHTML(code_1, code_2, code_3, code_4, code_5, code_6);
             attachedfile = [{
-                filename: 'padang.png',
-                path: __dirname + '/../public/images/padang.png',
+                filename: 'full_logo_dark.png',
+                path: __dirname + '/../public/images/full_logo_dark.png',
                 cid: 'unique@nodemailer.com'
             }]
             break;
         default:
-            htmlBody = registerHTML(code);
+            htmlBody = registerHTML(code_1, code_2, code_3, code_4, code_5, code_6);
             attachedfile = [{
                 filename: 'padang.png',
-                path: __dirname + '/../public/images/padang.png',
+                path: __dirname + '/../public/images/full_logo_dark.png',
                 cid: 'unique@nodemailer.com'
             }]
             break;
     }
 }
 
-oauth2Client.setCredentials({
-    refresh_token: process.env.OAUTH_REFRESH_TOKEN
-});
-const accessToken = oauth2Client.getAccessToken();
 
 module.exports = async (email, code, type) => {
     const transporter = mailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            type: 'OAuth2',
-            user: process.env.OAUTH_USER,
-            clientId: process.env.OAUTH_CLIENT_ID,
-            clientSecret: process.env.OAUTH_CLIENT_SECRET,
-            refreshToken: process.env.OAUTH_REFRESH_TOKEN,
-            accessToken: accessToken
-        },
+        service: 'gmail',
+        auth: { user: `${process.env.OAUTH_USER}`, pass: `${process.env.OAUTH_APP_SECRET}`}
     });
 
     let _code = code
@@ -71,18 +64,16 @@ module.exports = async (email, code, type) => {
     createMailOptions(_code, _type)
 
     try {
-        const info = await transporter.sendMail({
-            from: `TaskStock TEAM <${process.env.OAUTH_USER}>`,
+        await transporter.sendMail({
+            from: `Team TASKSTOCK <${process.env.OAUTH_USER}>`,
             to: email,
-            subject: "[TaskStock] 이메일 인증 코드입니다.",
+            subject: "[TASKSTOCK] 이메일 인증 코드입니다.",
             html: htmlBody,
             attachments: attachedfile
         });
         return {result: true};
     } catch (error) {
-        next(error)
-        return {result: false};
+        throw error;
     }
-
 }
 

@@ -43,9 +43,6 @@ module.exports = {
                 if(value === undefined){
                     await cn.query('ROLLBACK');
                     return res.status(400).json({result: "fail", message: "value가 존재하지 않습니다."});
-                }else if(value.date.toISOString() !== sttime){
-                    await cn.query('ROLLBACK');
-                    return res.status(400).json({result: "fail", message: "오늘 날짜의 value가 없습니다."});
                 }else if(value.date.toISOString() === sttime){
                     const value_id = value.value_id;
                     const start = value.start;
@@ -174,8 +171,7 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, level, true);
-                        const percentage = calculate.rateOfIncrease(start, end);
-                        await accountModel.updateValueField(cn, user_id, end, percentage);
+                        await accountModel.updateValueField(cn, user_id, end, value.start);
                     }
     
                     await valueModel.updateValue(cn, user_id, value_id, start, end, updateLow, updateHigh);
@@ -221,8 +217,7 @@ module.exports = {
                 const updated_value = await valueModel.updateValueBecauseTodoComplete(cn, user_id, changeAmount, resultUtc);
                 const u_start = updated_value.start;
                 const u_end = updated_value.end;
-                const percentage = calculate.rateOfIncrease(u_start, u_end);
-                await accountModel.updateValueField(cn, user_id, u_end, percentage);
+                await accountModel.updateValueField(cn, user_id, u_end, u_start);
             }
 
             // 종목 통계정보 업데이트
@@ -293,8 +288,7 @@ module.exports = {
 
                     if(todo.check === true){
                         end = value.end + calculate.changeLevelForEnd(todo.level, 0, true);
-                        const percentage = calculate.rateOfIncrease(start, end);
-                        await accountModel.updateValueField(cn, user_id, end, percentage);
+                        await accountModel.updateValueField(cn, user_id, end, start);
                     }
     
                     await valueModel.updateValue(cn, user_id, value_id, start, end, updateLow, updateHigh);

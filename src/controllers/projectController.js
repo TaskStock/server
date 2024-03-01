@@ -1,11 +1,13 @@
 const projectModel = require('../models/projectModel.js');
 const todoModel = require('../models/todoModel.js');
 
+const transdate = require('../service/transdateService.js');
+
 const db = require('../config/db.js');
 
 module.exports = {
     newProject: async(req, res, next) =>{
-        const {name, public_range} = req.body;
+        const {name, emoji, public_range} = req.body;
         const user_id = req.user.user_id;
         // public_range
         // none : 비공개
@@ -13,7 +15,7 @@ module.exports = {
         // all : 전체공개
         
         try{
-            await projectModel.insertProject(db, user_id, name, public_range);
+            await projectModel.insertProject(db, user_id, name, emoji, public_range);
 
 			return res.json({result: "success"});
         }catch(error){
@@ -21,11 +23,11 @@ module.exports = {
         }
     },
     updateProject: async(req, res, next) =>{
-        const {project_id, name, public_range, finished} = req.body;
+        const {project_id, name, emoji, public_range, finished} = req.body;
         const user_id = req.user.user_id;
         
         try{
-            await projectModel.updateProject(db, project_id, user_id, name, public_range, finished);
+            await projectModel.updateProject(db, project_id, user_id, name, emoji, public_range, finished);
 
 			return res.json({result: "success"});
         }catch(error){
@@ -67,13 +69,25 @@ module.exports = {
     deleteProject: async(req, res, next) =>{
         const {project_id} = req.body;
         const user_id = req.user.user_id;
+        const region = req.user.region;
         
+        const cn = await db.connect();
         try{
+            await cn.query('BEGIN');
+
+            const sttime = transdate.getSettlementTimeInUTC(region);
+            // user_id, project_id, date
+
+            await todoModel.deleteTodoBecauseDeleteProject(db, user_id, project_id, sttime);
             await projectModel.deleteProject(db, project_id, user_id);
 
+            await cn.query('COMMIT');
 			return res.json({result: "success"});
         }catch(error){
+            await cn.query('ROLLBACK');
             next(error);
+        }finally{
+            cn.release();
         }
     },
 }

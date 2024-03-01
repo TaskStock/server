@@ -1,9 +1,13 @@
 const accountModel = require('../models/accountModel.js');
 const badgeModel = require('../models/badgeModel.js');
+const noticeModel = require('../models/noticeModel.js');
+const noticeService = require('../service/noticeService.js');
 const mailer = require('../../nodemailer/mailer.js');
+const snsModel = require('../models/snsModel.js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const db = require('../config/db.js');
+const {bucket} = require('../config/multerConfig.js');
 
 
 // 회원가입 controller에서 value 생성하는 곳에만 사용
@@ -108,7 +112,9 @@ module.exports = {
 
             // 회원가입 후 자동으로 value 생성
             const settlementTime = transdate.getSettlementTimeInUTC(userData.region);
-            await valueModel.createByNewUser(cn, userData.user_id, settlementTime);
+            const value = await valueModel.createByNewUser(cn, userData.user_id, settlementTime);
+            await accountModel.updateValueField(cn, userData.user_id, value.start, 50000);
+
             await cn.query('COMMIT');
             return res.status(200).json({ 
                 result: "success",
@@ -187,7 +193,8 @@ module.exports = {
 
                 // 회원가입 후 자동으로 value 생성
                 const settlementTime = transdate.getSettlementTimeInUTC(registeredUser.region);
-                await valueModel.createByNewUser(cn, registeredUser.user_id, settlementTime);
+                const value = await valueModel.createByNewUser(cn, registeredUser.user_id, settlementTime);
+                await accountModel.updateValueField(cn, registeredUser.user_id, value.start, 50000);
 
                 await cn.query('COMMIT');
 
@@ -314,13 +321,24 @@ module.exports = {
         }
     },
     getUserInfo: async (req, res, next) => {
+        const cn = await db.connect();
         try {
+            await cn.query('BEGIN');
+
             const user_id = req.user.user_id;
-            const queryResult = await accountModel.getUserById(db, user_id);
-            const badges = await badgeModel.getBadges(db, user_id);
+            const queryResult = await accountModel.getUserById(cn, user_id); //array
+            const badges = await badgeModel.getBadges(cn, user_id); //array
+            const is_new_notice = await noticeModel.checkNewNotice(cn, user_id); //boolean
 
-            const {password, ...userData} = queryResult[0]
+            const {password, ...userData} = queryResult[0];
+            userData.is_new_notice = is_new_notice;
 
+            if(userData.dormant_count !== 0){
+                await accountModel.initializeDormantCount(cn, user_id);
+                userData.dormant_count = 0;
+            }
+
+            await cn.query('COMMIT');
             res.status(200).json({
                 result: "success",
                 message: "유저 정보 가져오기 성공",
@@ -328,7 +346,10 @@ module.exports = {
                 badges: badges
             });
         } catch (err) {
+            await cn.query('ROLLBACK');
             next(err);
+        }finally{
+            cn.release();
         }
     },
     sendMailForFindPassword: async (req, res, next) => {
@@ -417,21 +438,49 @@ module.exports = {
         try {
             await cn.query('BEGIN');
             const user_id = req.user.user_id;
-            const deleteResult = await accountModel.deleteUser(cn, user_id);
+            const content = req.body.content;
+            const email = 'unregister'
+            
 
-            if (deleteResult) {
+            await noticeModel.saveCustomerSuggestion(cn, user_id, content, email);
+            
+            const deleteResult = await accountModel.deleteUser(cn, user_id);
+            
+            if (deleteResult === true) {
+                // 서버에서 프로필 이미지 삭제
+                const beforeUrl = await snsModel.checkUserImage(cn, user_id);
+                console.log(beforeUrl);
+                // 'taskstock-bucket-1'이 문자열에 포함되어 있는지 확인
+                const intTheBucket = beforeUrl.includes("taskstock-bucket-1");
+                if (beforeUrl && intTheBucket) {
+
+                    const lastSlashIndex = beforeUrl.lastIndexOf('/') + 1; // 마지막 슬래시 위치 다음 인덱스
+                    const beforeFilename = beforeUrl.substring(lastSlashIndex); // 마지막 슬래시 이후 문자열 추출
+                    const beforeBlob = bucket.file(beforeFilename);
+                    try {
+                        await beforeBlob.delete();
+                    } catch (err) {
+                        next(err);
+                    }
+
+                }
+                const noticeData = {
+                    type: 'customer.suggestion',
+                    user_id: user_id,
+                    content: content,
+                    email: email
+                }
+                
+                await noticeService.sendSlack(noticeData);
+
                 await cn.query('COMMIT');
-                console.log("회원탈퇴 성공")
                 return res.status(200).json({ 
                     result: "success", 
-                    message: "회원탈퇴 성공" 
                 });
             } else {
                 await cn.query('ROLLBACK');
-                console.log("회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨")
                 return res.status(200).json({ 
                     result: "fail", 
-                    message: "회원탈퇴 오류 - 0개 또는 2개 이상의 유저가 삭제됨" 
                 });
             }
         } catch (err) {

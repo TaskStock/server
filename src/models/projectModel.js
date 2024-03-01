@@ -1,7 +1,7 @@
 module.exports = {
-    insertProject: async(db, user_id, name, public_range)=>{
-        const query = "insert into \"Project\" (user_id, name, public_range) VALUES ($1, $2, $3)";
-        const values = [user_id, name, public_range];
+    insertProject: async(db, user_id, name, emoji, public_range)=>{
+        const query = "insert into \"Project\" (user_id, name, emoji, public_range) VALUES ($1, $2, $3, $4)";
+        const values = [user_id, name, emoji, public_range];
 
         await db.query(query, values)
             .then(res => {
@@ -12,9 +12,9 @@ module.exports = {
                 throw e;
             });
     },
-    updateProject: async(db, project_id, user_id, name, public_range, finished)=>{
-        const query = "update \"Project\" set name=$1, public_range=$2, finished=$3 where user_id=$4 and project_id=$5";
-        const values = [name, public_range, finished, user_id, project_id];
+    updateProject: async(db, project_id, user_id, name, emoji, public_range, finished)=>{
+        const query = "update \"Project\" set name=$1, emoji=$2, public_range=$3, finished=$4 where user_id=$5 and project_id=$6";
+        const values = [name, emoji, public_range, finished, user_id, project_id];
 
         await db.query(query, values)
             .then(res => {

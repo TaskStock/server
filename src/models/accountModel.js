@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const { th } = require('date-fns/locale');
-const fs = require('fs');
 
 module.exports = {
     saveCode: async(db, authCode) => {
@@ -258,26 +257,40 @@ module.exports = {
     },
     deleteUser: async(db, user_id) => {
         try {
-            const query = 'DELETE FROM "User" WHERE user_id = $1 RETURNING image, strategy';
-            const queryResult = await db.query(query, [user_id])
-            const {image, strategy} = queryResult.rows[0];
+            // 나를 팔로우 하는 사람들(follower)의 팔로잉 카운트 감소
+            const followingQuery = `
+            UPDATE "User" U
+            SET following_count = U.following_count - 1
+            FROM "FollowMap" FM
+            WHERE U.user_id = FM.follower_id
+            AND FM.following_id = $1
+            AND FM.pending = false;
+            `;
+            // 내가 팔로우 하는 사람들(following)의 팔로워 카운트 감소
+            const followerQuery = `
+            UPDATE "User" U
+            SET follower_count = U.follower_count - 1
+            FROM "FollowMap" FM
+            WHERE U.user_id = FM.following_id
+            AND FM.follower_id = $1
+            AND FM.pending = false;
+            `;
 
-            if (queryResult.rowCount === 1) { // 삭제 성공
-                // 팔로우, 팔로잉 관계에 있는 사람들 카운트 조절
-                const followingQuery = 'UPDATE "User" SET following_count = following_count - 1 WHERE user_id IN (SELECT follower_id FROM "FollowMap" WHERE following_id = $1)';
-                const followerQuery = 'UPDATE "User" SET follower_count = follower_count - 1 WHERE user_id IN (SELECT following_id FROM "FollowMap" WHERE follower_id = $1)';
-                await db.query(followingQuery, [user_id]);
-                await db.query(followerQuery, [user_id]);
+            //유저 삭제
+            const deleteQuery = 'DELETE FROM "User" WHERE user_id = $1';
+                        
+            // target_id가 탈퇴한 사람인 알림 전부 삭제
+            const noticeDeleteQuery = `
+            DELETE FROM "Notice" WHERE (info ->> 'target_id')::int = $1
+            `
 
-                // 서버에서 프로필 이미지 삭제
-                if (strategy === 'local' && image !== '') {
-                    fs.promises.unlink(image)
-                }
+            await db.query(followingQuery, [user_id]);
+            await db.query(followerQuery, [user_id]);
+            await db.query(noticeDeleteQuery, [user_id]);
+            await db.query(deleteQuery, [user_id])
+            
+            return true;
 
-                return true;
-            } else {
-                return false;        
-            } 
         } catch (err) {
             err.name = 'deleteUserError';
             throw err;
@@ -285,7 +298,7 @@ module.exports = {
     }, 
     // 스케쥴러 위한 모델
     getUsersIdByRegion: async(db, region) => {
-        const query = 'select user_id from "User" where region = $1';
+        const query = 'select user_id from "User" where region = $1 and dormant_count < 30';
         const values = [region];
 
         const user_ids = await db.query(query, values)
@@ -302,6 +315,20 @@ module.exports = {
     // 현재 value 가치, value 상승률 업데이트
     updateValueField: async(db, user_id, cumulative_value, value_yesterday_ago)=>{
         const query = 'update "User" set cumulative_value=$1, value_yesterday_ago=$2 where user_id=$3';
+        const values = [cumulative_value, value_yesterday_ago, user_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(err => {
+                err.name = 'updateValueFieldError';
+                throw err;
+            });
+    },
+    // 스케쥴러 위한 업데이트 로직
+    updateValueFieldForScheduler: async(db, user_id, cumulative_value, value_yesterday_ago)=>{
+        const query = 'update "User" set cumulative_value=$1, value_yesterday_ago=$2, dormant_count = dormant_count + 1 where user_id=$3';
         const values = [cumulative_value, value_yesterday_ago, user_id];
 
         await db.query(query, values)
@@ -331,6 +358,20 @@ module.exports = {
             err.name = 'getPasswordByIdError';
             throw err;
         }
-    }
+    },
+    // dormant_count 0으로 초기화
+    initializeDormantCount: async(db, user_id)=>{
+        const query = 'update "User" set dormant_count=0 where user_id=$1';
+        const values = [user_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(err => {
+                err.name = 'updateValueFieldError';
+                throw err;
+            });
+    },
 }
 

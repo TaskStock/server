@@ -43,7 +43,10 @@ async function settlementJob(cn, user_id, startTime, sttime, tommorowsttime){
     // check==false인 todo만 가져와서 value에 반영
     const todos = await todoModel.readTodoForSchedulerWithCheckFalse(cn, user_id, startTime, sttime);
     for(let i=0;i<todos.length;i++){
-        const end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
+        let end = value.end - calculate.changeLevelForEnd(0, todos[i].level, false);
+        if(end<0){
+            end = 0;
+        }
         value = await valueModel.updateValueEnd(cn, value.value_id, end);
     }
 
@@ -77,8 +80,7 @@ async function settlementJob(cn, user_id, startTime, sttime, tommorowsttime){
     await valueModel.updateValueForMakedTodos(cn, tommorowValue.value_id, tv_end, tv_low, tv_high);
 
     // 4-2. user의 value 필드 업데이트
-    const percentage = calculateService.rateOfIncrease(tv_start, tv_end);
-    await accountModel.updateValueField(cn, user_id, tv_end, percentage);
+    await accountModel.updateValueFieldForScheduler(cn, user_id, tv_end, tv_start);
 }
 
 async function settlementJobManager(timezone, startTime, sttime, tommorowsttime){
@@ -186,8 +188,8 @@ function settlementScheduler(timezone){
 }
 
 // 알림 스케쥴링
-function alarmScheduler(timezone){
-    const nextAlarm = transdate.getAlarmTimeInUTC(timezone);
+function alarmSchedulerIn11PM(timezone){
+    const nextAlarm = transdate.getAlarmTime11PM(timezone);
     
     // const test = new Date();
     // test.setTime(test.getTime()+3000);
@@ -201,19 +203,43 @@ function alarmScheduler(timezone){
         .then((results)=>{
             results.forEach((result, index)=>{
                 if(result.status !== 'fulfilled'){
-                    console.log(`${index}번째 스케쥴러 실패:`, result.reason);
+                    console.log(`${index}번째 스케쥴러 실패(alarmSchedulerIn11PM) :`, result.reason);
                 }
             });
         });
 
-        alarmScheduler(timezone);
+        alarmSchedulerIn11PM(timezone);
+    });
+}
+
+function alarmSchedulerIn9AM(timezone){
+    const nextAlarm = transdate.getAlarmTime9AM(timezone);
+    
+    // const test = new Date();
+    // test.setTime(test.getTime()+3000);
+
+    schedule.scheduleJob(nextAlarm, async function() {
+        // 비동기로 각 스케쥴러 작업 실행
+
+        await Promise.allSettled([
+            notice.sendMultiPushInMorning(timezone)
+        ])
+        .then((results)=>{
+            results.forEach((result, index)=>{
+                if(result.status !== 'fulfilled'){
+                    console.log(`${index}번째 스케쥴러 실패(alarmSchedulerIn9AM) :`, result.reason);
+                }
+            });
+        });
+
+        alarmSchedulerIn9AM(timezone);
     });
 }
 
 module.exports = {
     scheduling: () => {
         // const timeZones = ['Asia/Seoul']; // 타임존 목록
-        const timeZones = ['America/New_York', 'Asia/Seoul']; // 타임존 목록
-        timeZones.forEach(tz => {settlementScheduler(tz), alarmScheduler(tz)}); // 각 타임존에 대해 함수 호출
+        const timeZones = ['America/New_York', 'Asia/Seoul', 'Europe/London']; // 타임존 목록
+        timeZones.forEach(tz => {settlementScheduler(tz), alarmSchedulerIn11PM(tz), alarmSchedulerIn9AM(tz)}); // 각 타임존에 대해 함수 호출
     }
 }

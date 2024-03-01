@@ -11,7 +11,23 @@ router.post('/register', accountController.register);
 router.post('/refresh', accountController.refresh); 
 
 // 아래는 전부 인증/인가가 필요한 라우터
-router.post('/login/email', passport.authenticate('local', { session: false }), accountController.login);
+router.post('/login/email', (req, res, next) => {
+    passport.authenticate('local', { session: false }, (err, user, info) => {
+        if (err) {
+            // 서버 에러 처리
+            return next(err);
+        }
+        if (!user) {
+            // 인증 실패 처리
+            return res.status(200).json(info);
+        }
+        // 인증 성공, accountController.login 호출
+        req.user = user; // accountController.login에서 사용자 정보에 접근할 수 있도록 req.user에 할당
+        return accountController.login(req, res, next);
+    })(req, res, next);
+});
+
+
 router.delete('/logout', passport.authenticate('jwt', { session: false }), accountController.logout);
 // router.post('/createSetting', accountController.createSetting);
 router.get('/getUserInfo', passport.authenticate('jwt', { session: false }), accountController.getUserInfo);

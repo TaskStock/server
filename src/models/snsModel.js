@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { processNotice, sendPush } = require('../service/noticeService.js')
 
 
@@ -19,7 +18,6 @@ module.exports = {
             return false;
         }
     },
-
     // 비공개인 애가 공개인 애한테 팔로우를 걸었어, 알람에 뜸 - 공개인 애가 비공개인 애한테 팔로우 요청을 보냄
     followUser: async(db, follower_id, following_id, notice_id) => {
         if (follower_id == following_id) {
@@ -34,71 +32,32 @@ module.exports = {
         */
         let isFollowingMe;
         let isFollowingYou;
-        let followerPrivate;
         let followingPending;
         
         const insertQuery = `
-        WITH inserted AS (
-            INSERT INTO "FollowMap" (follower_id, following_id, pending)
-            SELECT
-                $1,
-                $2,
-                CASE
-                    WHEN U.private = false THEN false
-                    ELSE true
-                END
-            FROM
-                "User" U
-            WHERE
-                U.user_id = $2
-            RETURNING follower_id, pending
-        )
-        SELECT i.pending, U.private
-        FROM inserted i
-        JOIN "User" U ON i.follower_id = U.user_id;
+        INSERT INTO "FollowMap" (follower_id, following_id, pending)
+        SELECT
+            $1,
+            $2,
+            CASE
+                WHEN U.private = false THEN false
+                ELSE true
+            END
+        FROM
+            "User" U
+        WHERE
+            U.user_id = $2
+        RETURNING pending
         `;
 
-        try {
-            if (notice_id != undefined) {
-                const noticeQuery = `
-                UPDATE "Notice"
-                SET info = jsonb_set(
-                                jsonb_set(
-                                    info, 
-                                    '{pending}', 
-                                    (info ->> 'private')::jsonb
-                                ), 
-                                '{isFollowingYou}', 
-                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
-                            )
-                WHERE notice_id = $1;
-                `
-                await db.query(noticeQuery, [notice_id])
-            } else {
-                const noticeQuery2 = `
-                UPDATE "Notice"
-                SET info = jsonb_set(
-                                jsonb_set(
-                                    info, 
-                                    '{pending}', 
-                                    (info ->> 'private')::jsonb
-                                ), 
-                                '{isFollowingYou}', 
-                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
-                            )
-                WHERE user_id = $1 AND info ->> 'target_id' = $2
-                `
-                //user_id(팔로우 버튼 누른 주인 == 알림 주인)
-                await db.query(noticeQuery2, [follower_id, following_id])
-            }
+        const privateQuery = 'SELECT private FROM "User" WHERE user_id = $1'
 
+        try {
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
             const followerPending = insertRows[0].pending;
-            followerPrivate = insertRows[0].private;
-            const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
-            const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
-            await db.query(updateQuery1, [following_id]) //await로 비동기 연산이 끝날 때까지 기다림
-            await db.query(updateQuery2, [follower_id])
+
+            const {rows: privateRows} = await db.query(privateQuery, [follower_id]);
+            const followerPrivate = privateRows[0].private;
             
             // 상대 입장에서의 isFollowingYou 체크 
             const checkQuery = 'SELECT pending FROM "FollowMap" WHERE follower_id = $1 AND following_id = $2';
@@ -115,6 +74,14 @@ module.exports = {
                 followingPending = false;
             }
 
+            if (followerPending == false) { //상대가 공개 계정이라 pending이 false면
+                const updateQuery1 = 'UPDATE "User" SET follower_count = follower_count + 1 WHERE user_id = $1';
+                const updateQuery2 = 'UPDATE "User" SET following_count = following_count + 1 WHERE user_id = $1';
+                await db.query(updateQuery1, [following_id])
+                await db.query(updateQuery2, [follower_id])
+            }
+
+
             // 상대 입장에서 isFollowingMe 체크
             const {rows: checkRows2} = await db.query(checkQuery, [follower_id, following_id]);
             if (checkRows2.length !== 0 && checkRows2[0].pending == false) {
@@ -122,6 +89,41 @@ module.exports = {
             } else {
                 isFollowingMe = false;
             }
+
+            //알림 상태 수정
+            if (notice_id != undefined) { // 알림 창에서 팔로우 요청을 하면
+                const noticeQuery = `
+                UPDATE "Notice"
+                SET info = jsonb_set(
+                                jsonb_set(
+                                    info, 
+                                    '{pending}', 
+                                    (info ->> 'private')::jsonb
+                                ), 
+                                '{isFollowingYou}', 
+                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
+                            )
+                WHERE notice_id = $1;
+                `
+                await db.query(noticeQuery, [notice_id])
+            } else if (isFollowingMe) { // 알림 창 밖에서 팔로우 요청을 하면
+                const noticeQuery2 = `
+                UPDATE "Notice"
+                SET info = jsonb_set(
+                                jsonb_set(
+                                    info, 
+                                    '{pending}', 
+                                    (info ->> 'private')::jsonb
+                                ), 
+                                '{isFollowingYou}', 
+                                ((NOT (info ->> 'private')::boolean)::text::jsonb)
+                            )
+                WHERE user_id = $1 AND info ->> 'target_id' = $2
+                `
+                //user_id(팔로우 버튼 누른 주인 == 알림 주인)
+                await db.query(noticeQuery2, [follower_id, following_id])
+            }
+            // 처음 팔로우/팔로잉 관계가 형성되는 경우 알림 수정 필요 없음.
 
             // 상대에게 알림 생성
             const predata = {
@@ -134,13 +136,12 @@ module.exports = {
                 followerPending: followerPending,
                 private: followerPrivate // 내 입장 private
             };
-            await processNotice(predata);
-            await sendPush(predata);
+            await processNotice(db, predata);
+            await sendPush(db, predata);
 
-            return true;
         } catch (e) {
             e.name = 'followUserError';
-            return false;
+            throw e
         }
     },
     unfollowUser: async(db, follower_id, unfollowing_id) => {
@@ -155,12 +156,11 @@ module.exports = {
             await db.query(query, [follower_id, unfollowing_id]);
             await db.query(updateQuery1, [unfollowing_id])
             await db.query(updateQuery2, [follower_id]) 
-            await db.query(noticeQuery, [follower_id, unfollowing_id])
+            await db.query(noticeQuery, [unfollowing_id, follower_id])
 
-            return true;
         } catch (e) {
             e.name = 'unfollowUserError';
-            return false;
+            
         }
     },
     searchUser: async(db, searchTarget, searchScope, user_id) => {
@@ -199,7 +199,7 @@ module.exports = {
                 return result;
             } catch (e) {
                 e.name = 'searchUserError';
-                return [];
+                throw e;
             }
         } else if (searchScope == 'follower') { //나를 팔로우하는 사람
             const query = `
@@ -224,7 +224,7 @@ module.exports = {
                 return rows;
             } catch (e) {
                 
-                return [];
+                throw e;
             }
         } else if (searchScope == 'following') { //내가 팔로우하는 사람(팔로잉)
             const query = `
@@ -249,7 +249,8 @@ module.exports = {
                 return rows;
             } catch (e) {
                 e.name = 'searchUserError';
-                return [];
+                
+                throw e;
             }
         } else {
             // console.log('searchScope error. 잘못된 검색 범위입니다.');
@@ -281,7 +282,6 @@ module.exports = {
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
-        WHERE FM.following_id = $1
     `;
         //내가 팔로우하는 사람들 (F.follower_id = user_id)
         const followingQuery = `
@@ -304,7 +304,6 @@ module.exports = {
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
-        WHERE FM.follower_id = $1
         `;
         
         try {
@@ -313,7 +312,69 @@ module.exports = {
             return [followerList, followingList]
         } catch (e) {
             e.name = 'showFollowListError';
-            return false;
+            throw e;
+        }
+    },
+    showTargetFollowList: async(db, user_id, target_id) => {
+        // user_id = 조회하는 사람(기준) = $1, target_id = 조회당하는 사람 = $2
+        //조회 당하는 사람을 팔로우하는 사람들 가져오기
+        const followerQuery = `
+        SELECT
+            U.user_id,
+            U.image,
+            U.user_name,
+            U.cumulative_value,
+            U.private,
+            U.strategy,
+            CASE
+                WHEN F2.pending IS NOT NULL THEN F2.pending
+                ELSE false
+            END AS "pending",
+            CASE
+                WHEN F2.pending IS NOT NULL AND F2.pending = false then true
+                ELSE false
+            END AS "isFollowingYou",
+            CASE 
+                WHEN F3.pending IS NOT NULL AND F3.pending = false then true
+                ELSE false
+            END AS "isFollowingMe"
+        FROM "User" U
+        JOIN "FollowMap" F1 ON U.user_id = F1.follower_id AND F1.following_id = $2
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        LEFT JOIN "FollowMap" F3 ON U.user_id = F3.follower_id AND F3.following_id = $1
+        `
+        // user_id = 조회하는 사람(기준) = $1, target_id = 조회당하는 사람 = $2
+        //조회 당하는 사람이 팔로우하는 사람들 가져오기
+        const followingQuery = `
+        SELECT
+        U.user_id,
+        U.image,
+        U.user_name,
+        U.cumulative_value,
+        U.private,
+        U.strategy,
+        F1.pending, 
+        CASE
+            WHEN F2.pending IS NOT NULL AND F2.pending = false THEN true
+            ELSE false
+        END AS "isFollowingYou",
+        CASE
+            WHEN F3.pending IS NOT NULL AND F3.pending = false THEN true
+            ELSE false
+        END AS "isFollowingMe"
+        FROM "User" U
+        JOIN "FollowMap" F1 ON U.user_id = F1.following_id AND F1.follower_id = $2
+        LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        LEFT JOIN "FollowMap" F3 ON U.user_id = F3.follower_id AND F3.following_id = $1
+        `
+        try {
+            const {rows: followerList} = await db.query(followerQuery, [user_id, target_id]);
+            const {rows: followingList} = await db.query(followingQuery, [user_id, target_id]);
+
+            return [followerList, followingList];
+        } catch (err) {
+            err.name = 'showTargetFollowListError'
+            throw err;
         }
     },
     editUserInfo: async(db, user_id, user_name, introduce) => {
@@ -322,28 +383,26 @@ module.exports = {
             await db.query(query, [user_name, introduce, user_id]);
             return true;
         } catch (e) {
-            
-            return false;
+            e.name = 'editUserInfoError';
+            throw e;
         }
     },
     editUserImage: async(db, user_id, image_path) => {
-        const checkQuery = 'SELECT image FROM "User" WHERE user_id = $1';
         const updateQuery = 'UPDATE "User" SET image = $1 WHERE user_id = $2';
         try {
-            const {rows} = await db.query(checkQuery, [user_id]);
-            const oldImagePath = rows[0].image;
-            if (oldImagePath !== '') { // 기본 이미지가 아닐 경우
-                try {
-                    await fs.promises.unlink(oldImagePath);
-                } catch (err) {
-                    throw err; // 에러 발생 시 함수 실행 중단
-                }
-            }
             await db.query(updateQuery, [image_path, user_id]);
-            return true;
         } catch (e) {
             e.name = 'editUserImageError';
-            return false;
+            throw e;
+        }
+    },
+    checkUserImage: async(db, user_id) => {
+        const query = 'SELECT image FROM "User" WHERE user_id = $1';
+        try {
+            const {rows} = await db.query(query, [user_id]);
+            return rows[0].image; // ''는 false로 판단(기본이미지), 빈문자열 아니면 true로 판단
+        } catch (e) {
+            return '';
         }
     },
     // 팔로워: 요청, 팔로잉: 수락
@@ -367,7 +426,9 @@ module.exports = {
             await db.query(followerCountQuery, [following_id]);
             await db.query(followingCountQuery, [follower_id]);
 
-            const {rows: followCheckRows} = await db.query(followCheckQuery, [following_id, follower_id]);
+            const {rows: followCheckRows} = await db.query(followCheckQuery, [follower_id, following_id]);
+            console.log(followCheckRows);
+            
             if (followCheckRows.rowCount !== 0 && followCheckRows[0].pending == false) {
                 acceptingNoticeQuery = `
                 UPDATE "Notice" 
@@ -400,13 +461,13 @@ module.exports = {
                 following_id: following_id, // 터치하면 이동할 대상
                 type: 'general' // 알림 타입
             };
-            await processNotice(predata);
-            await sendPush(predata);
+            await processNotice(db, predata);
+            await sendPush(db, predata);
 
             return true;
         } catch (e) {
             e.name = 'acceptPendingError';
-            return false;
+            throw e;
         }
     },
     changeDefaultImage: async(db, user_id) => {
@@ -416,7 +477,7 @@ module.exports = {
             return true;
         } catch (e) {
             e.name = 'changeDefaultImageError';
-            return false;
+            throw e;
         }
     },
     //팔로우 요청 취소
@@ -472,7 +533,7 @@ module.exports = {
 
         } catch (e) {
             e.name = 'cancelFollowError';
-            return false;
+            throw e;
         }
     },
     userDetail: async(db, my_id, target_id) => {
@@ -482,6 +543,7 @@ module.exports = {
             U.image,
             U.user_name,
             U.cumulative_value,
+            value_yesterday_ago,
             U.private,
             CASE
                 WHEN F1.pending IS NOT NULL THEN F1.pending
@@ -505,13 +567,40 @@ module.exports = {
         WHERE U.user_id = $1
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
-        const todoQuery = 'SELECT * FROM "Todo" WHERE user_id = $1 ORDER BY date';
-        const projectQuery = 'SELECT * FROM "Project" WHERE user_id = $1 ORDER BY project_id';
+        const todoQuery = `
+        SELECT T.*
+        FROM "Todo" T
+        LEFT JOIN "Project" P ON T.project_id = P.project_id
+        WHERE T.user_id = $1
+        AND (
+            P.public_range = 'all'
+            OR (P.public_range = 'follow' AND EXISTS (
+                SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
+            ))
+            OR T.project_id IS NULL
+        )
+        ORDER BY T.todo_id;
+        `;
+        const projectQuery = `
+        SELECT P.*, COUNT(DISTINCT T.todo_id) AS todo_count, COUNT(DISTINCT R.retrospect_id) AS retrospect_count
+        FROM "Project" P
+        LEFT JOIN "Todo" T ON P.project_id = T.project_id AND T.user_id = $1
+        LEFT JOIN "Retrospect" R ON P.project_id = R.project_id AND R.user_id = $1
+        WHERE P.user_id = $1
+        AND (
+            P.public_range = 'all'
+            OR (P.public_range = 'follow' AND EXISTS (
+                SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
+            ))
+        )
+        GROUP BY P.project_id
+        ORDER BY P.project_id;
+        `;
         try {
             const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
-            const {rows: todoRows} = await db.query(todoQuery, [target_id]);
-            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
+            const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
+            const {rows: projectRows} = await db.query(projectQuery, [target_id, my_id]);
 
             return [targetRows[0], valueRows, todoRows, projectRows];
         } catch (e) {
