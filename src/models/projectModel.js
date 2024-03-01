@@ -25,6 +25,19 @@ module.exports = {
                 throw e;
             });
     },
+    finishProject: async(db, project_id, user_id)=>{
+        const query = "update \"Project\" set finished=true where user_id=$1 and project_id=$2";
+        const values = [user_id, project_id];
+
+        await db.query(query, values)
+            .then(res => {
+                // console.log(res.rows[0]);
+            })
+            .catch(e => {
+                e.name = 'finishProjectError';
+                throw e;
+            });
+    },
     readProject: async(db, project_id, user_id)=>{
         const query = "select * from \"Project\" where user_id=$1 and project_id=$2";
         const values = [user_id, project_id];

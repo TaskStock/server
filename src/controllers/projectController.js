@@ -34,6 +34,18 @@ module.exports = {
             next(error);
         }
     },
+    finishProject: async(req, res, next) =>{
+        const {project_id} = req.body;
+        const user_id = req.user.user_id;
+        
+        try{
+            await projectModel.finishProject(db, project_id, user_id);
+
+			return res.json({result: "success"});
+        }catch(error){
+            next(error);
+        }
+    },
     // 프로젝트와 해당 프로젝트의 todo들 반환
     readProjectWithTodos: async(req, res, next) =>{
         const project_id = req.params.project_id;
