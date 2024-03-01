@@ -60,9 +60,10 @@ module.exports = {
     },
     // "2024-06"과 같은 문자열을 받아 해당 달의 시작 utc를 반환
     getStartOfMonthTime: (date, timezone) =>{
-        const monthstart = utcToZonedTime(date, timezone);
+        const nowZoneTime = utcToZonedTime(date, timezone);
+        const startOfMonthUTC = zonedTimeToUtc(nowZoneTime, timezone);
 
-        return monthstart;
+        return startOfMonthUTC;
     },
     // "2024-06"과 같은 문자열을 받아 다음 달의 시작 utc를 반환
     getNextMonthTime: (date, timezone) =>{
