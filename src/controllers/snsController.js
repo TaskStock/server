@@ -172,27 +172,38 @@ module.exports = {
             // console.log("Before processing:", metadata);
             
             let compressedBuffer;
+            // console.log(metadata.width)
+            // console.log(metadata.height)
+            // console.log(metadata.width / metadata.height)
             
-            if (metadata.width / metadata.height == 0.75) {
-                compressedBuffer = await sharp(buffer)
-                    .rotate(90)
-                    .resize({ 
-                        width: 300,
-                        height: 300,
-                    })
-                    .jpeg({ quality: 70 })
-                    .withMetadata()
-                    .toBuffer();
-            } else {
-                compressedBuffer = await sharp(buffer)
-                    .resize({ 
-                        width: 300,
-                        height: 300,
-                    })
-                    .jpeg({ quality: 70 })
-                    .withMetadata()
-                    .toBuffer();
-            }
+            // if (metadata.height / metadata.width == 0.75) {
+            //     // console.log("회전시키자")
+            //     compressedBuffer = await sharp(buffer)
+            //         .rotate(90)
+            //         .resize({ 
+            //             width: 300,
+            //             height: 400
+            //         })
+            //         .jpeg({ quality: 80 })
+            //         .toBuffer();
+            // } else {
+            //     compressedBuffer = await sharp(buffer)
+            //         .resize({ 
+            //             width: 300,
+            //             height: 300,
+            //         })
+            //         .jpeg({ quality: 80 })
+            //         .toBuffer();
+            // }
+
+            compressedBuffer = await sharp(buffer)
+                .rotate()
+                .resize({ 
+                    width: 300,
+                    height: 300,
+                })
+                .jpeg({ quality: 80 })
+                .toBuffer();
 
             const metadataAfter = await sharp(compressedBuffer).metadata();
             // console.log("After processing:", metadataAfter);
@@ -212,7 +223,7 @@ module.exports = {
             });
             //오류 발생 시 처리
             blobStream.on('error', err => {
-                next(err);
+                throw err;
             });
             //파일 업로드 완료 시
             blobStream.on('finish', async () => {
@@ -232,7 +243,7 @@ module.exports = {
                     try {
                         await beforeBlob.delete();
                     } catch (err) {
-                        next(err);
+                        throw err;
                     }
                 }
                 //게시 및 프로필 이미지 경로를 DB에 저장

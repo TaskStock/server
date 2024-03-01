@@ -50,7 +50,7 @@ module.exports = {
         RETURNING pending
         `;
 
-        const privateQuery = 'SELECT private FROM "User" from user_id = $1'
+        const privateQuery = 'SELECT private FROM "User" WHERE user_id = $1'
 
         try {
             const {rows: insertRows} = await db.query(insertQuery, [follower_id, following_id]);
@@ -568,7 +568,7 @@ module.exports = {
         `;
         const valueQuery = 'SELECT * FROM "Value" WHERE user_id = $1 ORDER BY date';
         const todoQuery = `
-        SELECT T.*, P.*
+        SELECT T.*
         FROM "Todo" T
         LEFT JOIN "Project" P ON T.project_id = P.project_id
         WHERE T.user_id = $1
@@ -578,8 +578,8 @@ module.exports = {
                 SELECT 1 FROM "FollowMap" WHERE follower_id = $2 AND following_id = $1 AND pending = false
             ))
             OR T.project_id IS NULL
-            )
-        ORDER BY T.date;
+        )
+        ORDER BY T.todo_id;
         `;
         const projectQuery = `
         SELECT P.*, COUNT(DISTINCT T.todo_id) AS todo_count, COUNT(DISTINCT R.retrospect_id) AS retrospect_count
@@ -599,11 +599,8 @@ module.exports = {
         try {
             const {rows: targetRows} = await db.query(userQuery, [target_id, my_id]);
             const {rows: valueRows} = await db.query(valueQuery, [target_id]);
-
-            const {rows: projectRows} = await db.query(projectQuery, [target_id]);
-            
             const {rows: todoRows} = await db.query(todoQuery, [target_id, my_id]);
-            
+            const {rows: projectRows} = await db.query(projectQuery, [target_id, my_id]);
 
             return [targetRows[0], valueRows, todoRows, projectRows];
         } catch (e) {
