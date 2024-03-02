@@ -282,6 +282,7 @@ module.exports = {
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.follower_id AND FM.following_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.following_id AND F2.follower_id = $1
+        ORDER BY U.cumulative_value DESC
     `;
         //내가 팔로우하는 사람들 (F.follower_id = user_id)
         const followingQuery = `
@@ -304,6 +305,7 @@ module.exports = {
         FROM "User" U
         JOIN "FollowMap" FM ON U.user_id = FM.following_id AND FM.follower_id = $1
         LEFT JOIN "FollowMap" F2 ON U.user_id = F2.follower_id AND F2.following_id = $1
+        ORDER BY U.cumulative_value DESC
         `;
         
         try {
