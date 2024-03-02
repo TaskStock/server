@@ -74,8 +74,8 @@ module.exports = {
             const values = await valueModel.getValues(db, user_id, trans_start_date, trans_end_date);
 
             values.forEach( value =>{
-                if(value.end<0){
-                    value.end=0;
+                if(value.low<0){
+                    value.low=0;
                 }
             });
 
