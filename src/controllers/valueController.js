@@ -73,6 +73,12 @@ module.exports = {
         try{
             const values = await valueModel.getValues(db, user_id, trans_start_date, trans_end_date);
 
+            values.forEach( value =>{
+                if(value.end<0){
+                    value.end=0;
+                }
+            });
+
             return res.json({values: values});
         }catch(error){
             next(error);
