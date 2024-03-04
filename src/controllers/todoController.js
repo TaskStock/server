@@ -63,7 +63,11 @@ module.exports = {
                     const isHaveStockitem = await sivaluemapModel.getMapping(cn, stockitem_id, sttime, user_id);
                     if(isHaveStockitem.length === 0){   // 이미 가져온 종목이 아니라면
                         const updated_stockitem = await stockitemModel.increaseTakecount(cn, stockitem_id);
-                        const success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+                        let success_rate = updated_stockitem.success_count/updated_stockitem.take_count;
+
+                        if(success_rate === undefined || success_rate === null || success_rate > 1){
+                            success_rate = 1;
+                        }
 
                         // 성공률 업데이트하고 해당 종목 등록한 리스트에 유저 추가
                         const sivalue_id = await sivalueModel.updateSuccessrate(cn, stockitem_id, sttime, success_rate);
