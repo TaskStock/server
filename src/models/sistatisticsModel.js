@@ -13,11 +13,9 @@ module.exports = {
             });
     },
     updateSistatistics: async(db, stockitem_id, total_count, total_success_count, dayOfWeek)=>{
-        // 0 : 일요일, 1 : 월요일, 2 : 화요일, 3 : 수요일, 4 : 목요일, 5 : 금요일, 6 : 토요일
+        // 1 : 월요일, 2 : 화요일, 3 : 수요일, 4 : 목요일, 5 : 금요일, 6 : 토요일, 7 : 일요일
         let query;
-        if(dayOfWeek === 0){
-            query = 'update "SIStatistics" set total_count=total_count+$1, total_success_count=total_success_count+$2, sunday=sunday+$1, s_sunday=s_sunday+$2 where stockitem_id=$3';
-        }else if(dayOfWeek === 1){
+        if(dayOfWeek === 1){
             query = 'update "SIStatistics" set total_count=total_count+$1, total_success_count=total_success_count+$2, monday=monday+$1, s_monday=s_monday+$2 where stockitem_id=$3';
         }else if(dayOfWeek === 2){
             query = 'update "SIStatistics" set total_count=total_count+$1, total_success_count=total_success_count+$2, tuesday=tuesday+$1, s_tuesday=s_tuesday+$2 where stockitem_id=$3';
@@ -29,6 +27,8 @@ module.exports = {
             query = 'update "SIStatistics" set total_count=total_count+$1, total_success_count=total_success_count+$2, friday=friday+$1, s_friday=s_friday+$2 where stockitem_id=$3';
         }else if(dayOfWeek === 6){
             query = 'update "SIStatistics" set total_count=total_count+$1, total_success_count=total_success_count+$2, saturday=saturday+$1, s_saturday=s_saturday+$2 where stockitem_id=$3';
+        }else if(dayOfWeek === 7){
+            query = 'update "SIStatistics" set total_count=total_count+$1, total_success_count=total_success_count+$2, sunday=sunday+$1, s_sunday=s_sunday+$2 where stockitem_id=$3';
         }
         const values = [total_count, total_success_count, stockitem_id];
 
